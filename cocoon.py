@@ -1,6 +1,8 @@
 # CONSTANTS
 
 DIGITS = '0123456789'
+ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+WHITESPACES = ' \t\n\v\r'
 
 # ERRORS
 
@@ -17,16 +19,45 @@ class IllegalCharError(Error):
     def __init__(self, details):
         super().__init__('Illegal Character', details)
 
-# TOKENS
+class SyntaxError(Error):        # di pa gamit
+    def __init__(self, details):
+        super().__init__('Syntax Error', details)
+
+# POSITION
+
+class Position:
+    def __init__(self, idx, ln, col):
+        self.idx = idx
+        self.ln = ln
+        self.col = col
+    
+    def advance(self, current_char):
+        self.idx += 1
+        self.col += 1
+
+        if current_char == '\n':
+            self.ln += 1
+            self.col = 0
+
+        return self
+    
+    def copy(self):
+        return Position(self.idx, self.ln, self.col)
+
+# TOKENS (TT means token type)
 
 TT_INT = 'INT'
 TT_FLOAT = 'FLOAT'
+TT_STR = 'TEXT'
+TT_BOOL = 'BOOL'
 TT_PLUS = 'PLUS'
 TT_MINUS = 'MINUS'
 TT_MUL = 'MUL'
 TT_DIV = 'DIV'
 TT_LPAREN = 'LPAREN'
 TT_RPAREN = 'RPAREN'
+TT_ASSIGN = 'ASSIGNMENT'
+TT_ID = 'IDENTIFIER'
 
 class Token:
     def __init__(self, type_, value=None):
@@ -54,7 +85,12 @@ class Lexer:
         tokens = []
 
         while self.current_char != None:
-            if self.current_char in ' \t':
+            if self.current_char in WHITESPACES:
+                self.advance()
+            elif self.current_char == '"':
+                tokens.append(self.make_string())
+            elif self.current_char in ALPHABET:
+                tokens.append(Token(TT_ID))
                 self.advance()
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
@@ -76,6 +112,9 @@ class Lexer:
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN))
                 self.advance()
+            elif self.current_char == '=':
+                tokens.append(Token(TT_ASSIGN))
+                self.advance()
             else:
                 char = self.current_char
                 self.advance()
@@ -83,6 +122,22 @@ class Lexer:
             
         return tokens, None
     
+    def make_string(self):
+        text_str = ''
+        q_count = 0
+
+        while self.current_char != None and self.current_char in ALPHABET + WHITESPACES + '"':
+            if self.current_char == '"':
+                if q_count == 2:
+                    break
+                q_count += 1
+                text_str += '"'
+            else:
+                text_str += self.current_char
+            self.advance()
+
+        return Token(TT_STR, text_str)
+
     def make_number(self):
         num_str = ''
         dot_count = 0
