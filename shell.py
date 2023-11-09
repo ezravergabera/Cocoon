@@ -1,8 +1,9 @@
-import basic
+import cocoon
 
 while True:
-    text = input('basic > ')
-    result, error = basic.run(text)
+    text = input('cocoon > ')
+
+    result, error = cocoon.run(text)
 
     if error:
         print(error.as_string())
