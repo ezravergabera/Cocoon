@@ -3,8 +3,10 @@
 DIGITS = '0123456789'
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 WHITESPACES = ' \t\n\v\r'
-SPECIALCHARS = '%=~<>_&()[].!^"\',:;@?'
+OPERATORS = '+-/*^%'
+RELATIONAL = '=!><'
 PUNCTUATIONS = '()[]'
+KEYWORDS = {"true", "false", "number", "num", "decimal", "deci", "text", "character", "char", "boolean", "bool", "done", "next", "give", "group", "build"}
 
 # ERRORS
 
@@ -23,10 +25,6 @@ class Error:
 class IllegalCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Illegal Character', details)
-
-class SyntaxError(Error):        # di pa gamit
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Syntax Error', details)
 
 # POSITION
 
@@ -53,21 +51,21 @@ class Position:
 
 # TOKENS (TT means token type)
 
-TT_INT = 'INT'
-TT_FLOAT = 'FLOAT'
-TT_STR = 'TEXT'
-TT_BOOL = 'BOOL'
-TT_PLUS = 'PLUS'
-TT_MINUS = 'MINUS'
-TT_MUL = 'MUL'
-TT_DIV = 'DIV'
-TT_MOD = 'MODULO'
-TT_LPAREN = 'LPAREN'
-TT_RPAREN = 'RPAREN'
-TT_UNARY = 'Unary_Operator'
-TT_OP = 'Arithmetic_Operator'
+TT_INT = 'Number'
+TT_FLOAT = 'Decimal'
+TT_STR = 'Text'
+TT_BOOL = 'Bool'
+TT_LPAREN = 'Left_Paren'
+TT_RPAREN = 'Right_Paren'
+TT_LSQUARE = 'Left_Square'
+TT_RSQUARE = 'Right_Square'
 TT_ASSIGN = 'Assignment_Operator'
-TT_ID = 'IDENTIFIER'
+TT_OP = 'Arithmetic_Operator'
+TT_UNARY = 'Unary_Operator'
+TT_REL = 'Relational_Boolean'
+TT_LOG = 'Logical_Boolean'
+TT_RWORD = 'Reserved_Word'
+TT_ID = 'Identifier'
 
 class Token:
     def __init__(self, type_, value=None):
@@ -104,24 +102,8 @@ class Lexer:
                 tokens.append(self.make_identifier())
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
-            elif self.current_char == '+':
-                tokens.append(Token(TT_PLUS))
-                self.advance()
-            elif self.current_char == '-':
-                tokens.append(Token(TT_MINUS))
-                self.advance()
-            elif self.current_char == '*':
-                tokens.append(Token(TT_MUL))
-                self.advance()
-            elif self.current_char == '/':
-                tokens.append(Token(TT_DIV))
-                self.advance()
             elif self.current_char in PUNCTUATIONS:
-                tokens.append(Token(TT_LPAREN))
-                self.advance()
-            elif self.current_char == ')':
-                tokens.append(Token(TT_RPAREN))
-                self.advance()
+                tokens.append(self.make_punctuation())
             elif self.current_char == '=':
                 tokens.append(Token(TT_ASSIGN))
                 self.advance()
@@ -134,15 +116,16 @@ class Lexer:
         return tokens, None
     
     def make_punctuation(self):
-        punctuation = ''
-
         if self.current_char in PUNCTUATIONS:
             if self.current_char == '(':
-                punctuation += self.current_char
+                return Token(TT_LPAREN)
             elif self.current_char == ')':
-                punctuation += self.current_char
+                return Token(TT_RPAREN)
             elif self.current_char == '[':
-                punctuation += self.current_char
+                return Token(TT_LSQUARE)
+            elif self.current_char == ']':
+                return Token(TT_RSQUARE)
+        self.advance()
 
     def make_identifier(self):
         id_str = ''
@@ -154,8 +137,11 @@ class Lexer:
                 id_str += self.current_char
             self.advance()
 
-        return Token(TT_ID, id_str)
-
+        if id_str in KEYWORDS:
+            return Token(TT_RWORD, id_str)
+        else:
+            return Token(TT_ID, id_str)
+    
     def make_string(self):
         text_str = ''
         q_count = 0
