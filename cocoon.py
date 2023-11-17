@@ -55,9 +55,24 @@ class Position:
         if current_char == '\n':
             self.ln += 1
             self.col = 0
-
+ 
         return self
     
+    def stepback(self, current_char):
+        self.idx -= 1
+        self.col -= 1
+
+        if current_char == '\n':
+            self.ln -=1
+            previousNLidx = self.ftext.rfind('\n')
+
+            if previousNLidx != -1:
+                self.col = (self.idx - previousNLidx) - 1
+            else:
+                self.col = self.idx
+
+        return self
+
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftext)
 
@@ -104,6 +119,16 @@ class Lexer:
         self.pos.advance(self.current_char)
         self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
 
+    def stepback(self):
+        self.pos.stepback(self.current_char)
+        self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
+
+    def check(self):
+        self.advance()
+        char = self.current_char
+        self.stepback()
+        return char
+
     def make_tokens(self):
         tokens = []
 
@@ -112,11 +137,14 @@ class Lexer:
                 self.advance()
             elif self.current_char == '"':
                 tokens.append(self.make_string())
-            elif self.current_char in ALPHABET:
-                tokens.append(self.make_identifier())
+            elif self.current_char in ALPHABET + '_':
+                result = self.make_identifier()
+                if isinstance(result, Token):
+                    tokens.append(result)
+                elif isinstance(result, Error):
+                    return [], result
             elif self.current_char in DIGITS:
                 result = self.make_number()
-                
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
@@ -145,11 +173,15 @@ class Lexer:
                 return Token(TT_LSQUARE)
             elif self.current_char == ']':
                 return Token(TT_RSQUARE)
+            elif self.current_char == ',':
+                return Token(TT_COMMA)
+            elif self.current_char == ':':
+                return Token(TT_SEMICOLON)
 
     def make_identifier(self):
         id_str = ''
 
-        while self.current_char != None and self.current_char in ALPHABET + WHITESPACES:
+        while self.current_char != None and self.current_char in ALPHABET + DIGITS + WHITESPACES + '_':
             if self.current_char in WHITESPACES:
                 break
             else:
@@ -181,13 +213,18 @@ class Lexer:
         num_str = ''
         dot_count = 0
         isValid = True
+        isIdentifier = False
         pos_start = self.pos.copy()
 
         while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.':
-            if self.current_char in ALPHABET:
-                isValid = False
-                if self.current_char in WHITESPACES:
+            check = self.check()
+            if self.current_char in WHITESPACES:
                     break
+            elif self.current_char in ALPHABET:
+                isValid = False
+                num_str += self.current_char
+            elif (not num_str and self.current_char in DIGITS) and check in ALPHABET:
+                isIdentifier = True
                 num_str += self.current_char
             elif self.current_char == '.':
                 if dot_count == 1:
@@ -203,6 +240,8 @@ class Lexer:
             return Token(TT_INT, int(num_str))
         elif dot_count == 2 and isValid == True:
             return SyntaxError(pos_start, self.pos, f'{num_str}')
+        elif isIdentifier:
+            return IllegalIdentifierError(pos_start, self.pos, f'{num_str}')
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
