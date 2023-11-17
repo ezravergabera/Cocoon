@@ -26,6 +26,18 @@ class IllegalCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Illegal Character', details)
 
+class IllegalIdentifierError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Illegal Identifier', details)
+
+class IllegalNumberError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Illegal Number', details)
+
+class SyntaxError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Syntax Error', details)
+
 # POSITION
 
 class Position:
@@ -59,6 +71,8 @@ TT_LPAREN = 'Left_Paren'
 TT_RPAREN = 'Right_Paren'
 TT_LSQUARE = 'Left_Square'
 TT_RSQUARE = 'Right_Square'
+TT_COMMA = 'Comma'
+TT_SEMICOLON = 'Semicolon'
 TT_ASSIGN = 'Assignment_Operator'
 TT_OP = 'Arithmetic_Operator'
 TT_UNARY = 'Unary_Operator'
@@ -73,7 +87,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        if self.value: return f'{self.type}: {self.value}'
+        if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
 
 # LEXER
@@ -101,9 +115,15 @@ class Lexer:
             elif self.current_char in ALPHABET:
                 tokens.append(self.make_identifier())
             elif self.current_char in DIGITS:
-                tokens.append(self.make_number())
+                result = self.make_number()
+                
+                if isinstance(result, Token):
+                    tokens.append(result)
+                elif isinstance(result, Error):
+                    return [], result
             elif self.current_char in PUNCTUATIONS:
                 tokens.append(self.make_punctuation())
+                self.advance()
             elif self.current_char == '=':
                 tokens.append(Token(TT_ASSIGN))
                 self.advance()
@@ -111,8 +131,8 @@ class Lexer:
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                return [], IllegalCharError(pos_start, self.pos, "'" + char + "'")
-            
+                return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
+
         return tokens, None
     
     def make_punctuation(self):
@@ -125,7 +145,6 @@ class Lexer:
                 return Token(TT_LSQUARE)
             elif self.current_char == ']':
                 return Token(TT_RSQUARE)
-        self.advance()
 
     def make_identifier(self):
         id_str = ''
@@ -161,10 +180,18 @@ class Lexer:
     def make_number(self):
         num_str = ''
         dot_count = 0
+        isValid = True
+        pos_start = self.pos.copy()
 
-        while self.current_char != None and self.current_char in DIGITS + '.':
-            if self.current_char == '.':
+        while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.':
+            if self.current_char in ALPHABET:
+                isValid = False
+                if self.current_char in WHITESPACES:
+                    break
+                num_str += self.current_char
+            elif self.current_char == '.':
                 if dot_count == 1:
+                    dot_count += 1
                     break
                 dot_count += 1
                 num_str += '.'
@@ -172,8 +199,12 @@ class Lexer:
                 num_str += self.current_char
             self.advance()
 
-        if dot_count == 0:
+        if dot_count == 0 and isValid == True:
             return Token(TT_INT, int(num_str))
+        elif dot_count == 2 and isValid == True:
+            return SyntaxError(pos_start, self.pos, f'{num_str}')
+        elif isValid == False:
+            return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
             return Token(TT_FLOAT, float(num_str))
 
