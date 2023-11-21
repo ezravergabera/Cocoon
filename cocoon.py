@@ -5,8 +5,10 @@ ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 WHITESPACES = ' \t\n\v\r'
 OPERATORS = '+-/*^%'
 RELATIONAL = '=!><'
+LOGICAL = {"NOT", "AND", "OR", "not", "and", "or"}
 PUNCTUATIONS = '()[]'
 KEYWORDS = {"true", "false", "number", "num", "decimal", "deci", "text", "character", "char", "boolean", "bool", "done", "next", "give", "group", "build"}
+UNTRACKED = '&$#@`~?}{\\:;|'
 
 # ERRORS
 
@@ -37,6 +39,10 @@ class IllegalNumberError(Error):
 class SyntaxError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Syntax Error', details)
+
+class ValueError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Value Error', details)
 
 # POSITION
 
@@ -180,9 +186,14 @@ class Lexer:
 
     def make_identifier(self):
         id_str = ''
+        pos_start = self.pos.copy()
+        isUntracked = True
 
-        while self.current_char != None and self.current_char in ALPHABET + DIGITS + WHITESPACES + '_':
-            if self.current_char in WHITESPACES:
+        while self.current_char != None and self.current_char in ALPHABET + DIGITS + WHITESPACES + '_' + UNTRACKED:
+            if self.current_char in UNTRACKED:
+                isUntracked = False
+                id_str += self.current_char
+            elif self.current_char in WHITESPACES:
                 break
             else:
                 id_str += self.current_char
@@ -190,6 +201,8 @@ class Lexer:
 
         if id_str in KEYWORDS:
             return Token(TT_RWORD, id_str)
+        elif isUntracked == False:
+            return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
             return Token(TT_ID, id_str)
     
