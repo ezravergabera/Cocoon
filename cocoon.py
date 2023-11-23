@@ -7,7 +7,8 @@ OPERATORS = '+-/*^%'
 RELATIONAL = '=!><'
 LOGICAL = {"NOT", "AND", "OR", "not", "and", "or"}
 PUNCTUATIONS = '()[]'
-KEYWORDS = {"true", "false", "number", "num", "decimal", "deci", "text", "character", "char", "boolean", "bool", "done", "next", "give", "group", "build"}
+KEYWORDS = {"true", "false", "number", "num", "decimal", "deci", "text", "character", "char", "boolean", "bool", "done", "next", "give", "group", "build", "ask", "askmore", "more", "show", "get", "repeat", "while", "enough", "empty", "undefined", "undef"}
+RESERVEDWORDS = {"exit", "raise", "raising"}
 UNTRACKED = '&$#@`~?}{\\:;|'
 
 # ERRORS
@@ -99,6 +100,7 @@ TT_OP = 'Arithmetic_Operator'
 TT_UNARY = 'Unary_Operator'
 TT_REL = 'Relational_Boolean'
 TT_LOG = 'Logical_Boolean'
+TT_KWORD = 'Keyword'
 TT_RWORD = 'Reserved_Word'
 TT_ID = 'Identifier'
 
@@ -200,6 +202,8 @@ class Lexer:
             self.advance()
 
         if id_str in KEYWORDS:
+            return Token(TT_KWORD, id_str)
+        elif id_str in RESERVEDWORDS:
             return Token(TT_RWORD, id_str)
         elif isUntracked == True:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
