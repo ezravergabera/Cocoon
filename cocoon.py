@@ -223,6 +223,9 @@ class Lexer:
                 break
             elif isUnary or isValid == False:
                 operator += self.current_char
+                if len(operator) == 2:
+                    self.advance()
+                    break
             else:
                 operator += self.current_char
                 self.advance()
