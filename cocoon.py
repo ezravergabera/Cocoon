@@ -1,7 +1,7 @@
 # CONSTANTS
 
-DIGITS = '0123456789'
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+DIGITS = '0123456789'
 WHITESPACES = ' \t\n\v\r'
 OPERATORS = '+-/*^%'
 RELATIONAL = '=!><'
@@ -85,24 +85,24 @@ class Position:
 
 # TOKENS (TT means token type)
 
-TT_INT = 'Number'
-TT_FLOAT = 'Decimal'
-TT_STR = 'Text'
-TT_BOOL = 'Bool'
-TT_LPAREN = 'Left_Paren'
-TT_RPAREN = 'Right_Paren'
-TT_LSQUARE = 'Left_Square'
-TT_RSQUARE = 'Right_Square'
-TT_COMMA = 'Comma'
-TT_SEMICOLON = 'Semicolon'
+TT_ID = 'Identifier'
 TT_ASSIGN = 'Assignment_Operator'
 TT_OP = 'Arithmetic_Operator'
 TT_UNARY = 'Unary_Operator'
 TT_REL = 'Relational_Boolean'
 TT_LOG = 'Logical_Boolean'
+TT_INT = 'Number'
+TT_FLOAT = 'Decimal'
+TT_STR = 'Text'
+TT_BOOL = 'Bool'
 TT_KWORD = 'Keyword'
 TT_RWORD = 'Reserved_Word'
-TT_ID = 'Identifier'
+TT_COMMA = 'Comma'
+TT_SEMICOLON = 'Semicolon'
+TT_LSQUARE = 'Left_Square'
+TT_RSQUARE = 'Right_Square'
+TT_LPAREN = 'Left_Paren'
+TT_RPAREN = 'Right_Paren'
 
 class Token:
     def __init__(self, type_, value=None):
@@ -143,25 +143,25 @@ class Lexer:
         while self.current_char != None:
             if self.current_char in WHITESPACES:
                 self.advance()
-            elif self.current_char == '"':
-                tokens.append(self.make_string())
             elif self.current_char in ALPHABET + '_':
                 result = self.make_identifier()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+            elif self.current_char == '=':
+                tokens.append(Token(TT_ASSIGN))
+                self.advance()
             elif self.current_char in DIGITS:
                 result = self.make_number()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+            elif self.current_char == '"':
+                tokens.append(self.make_string())
             elif self.current_char in PUNCTUATIONS:
                 tokens.append(self.make_punctuation())
-                self.advance()
-            elif self.current_char == '=':
-                tokens.append(Token(TT_ASSIGN))
                 self.advance()
             else:
                 pos_start = self.pos.copy()
@@ -171,21 +171,6 @@ class Lexer:
 
         return tokens, None
     
-    def make_punctuation(self):
-        if self.current_char in PUNCTUATIONS:
-            if self.current_char == '(':
-                return Token(TT_LPAREN)
-            elif self.current_char == ')':
-                return Token(TT_RPAREN)
-            elif self.current_char == '[':
-                return Token(TT_LSQUARE)
-            elif self.current_char == ']':
-                return Token(TT_RSQUARE)
-            elif self.current_char == ',':
-                return Token(TT_COMMA)
-            elif self.current_char == ':':
-                return Token(TT_SEMICOLON)
-
     def make_identifier(self):
         id_str = ''
         pos_start = self.pos.copy()
@@ -209,22 +194,6 @@ class Lexer:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
             return Token(TT_ID, id_str)
-    
-    def make_string(self):
-        text_str = ''
-        q_count = 0
-
-        while self.current_char != None and self.current_char in ALPHABET + WHITESPACES + '"':
-            if self.current_char == '"':
-                if q_count == 2:
-                    break
-                q_count += 1
-                text_str += '"'
-            else:
-                text_str += self.current_char
-            self.advance()
-
-        return Token(TT_STR, text_str)
 
     def make_number(self):
         num_str = ''
@@ -264,6 +233,37 @@ class Lexer:
         else:
             return Token(TT_FLOAT, float(num_str))
 
+    def make_string(self):
+        text_str = ''
+        q_count = 0
+
+        while self.current_char != None and self.current_char in ALPHABET + WHITESPACES + '"':
+            if self.current_char == '"':
+                if q_count == 2:
+                    break
+                q_count += 1
+                text_str += '"'
+            else:
+                text_str += self.current_char
+            self.advance()
+
+        return Token(TT_STR, text_str)
+
+    def make_punctuation(self):
+        if self.current_char in PUNCTUATIONS:
+            if self.current_char == ',':
+                return Token(TT_COMMA)
+            elif self.current_char == ':':
+                return Token(TT_SEMICOLON)
+            elif self.current_char == '[':
+                return Token(TT_LSQUARE)
+            elif self.current_char == ']':
+                return Token(TT_RSQUARE)
+            elif self.current_char == '(':
+                return Token(TT_LPAREN)
+            elif self.current_char == ')':
+                return Token(TT_RPAREN)
+            
 # RUN
 
 def run(fn, text):
