@@ -187,21 +187,21 @@ class Lexer:
     def make_identifier(self):
         id_str = ''
         pos_start = self.pos.copy()
-        isUntracked = True
+        isUntracked = False
 
         while self.current_char != None and self.current_char in ALPHABET + DIGITS + WHITESPACES + '_' + UNTRACKED:
-            if self.current_char in UNTRACKED:
-                isUntracked = False
-                id_str += self.current_char
-            elif self.current_char in WHITESPACES:
+            if self.current_char in WHITESPACES:
                 break
+            elif self.current_char in UNTRACKED:
+                isUntracked = True
+                id_str += self.current_char
             else:
                 id_str += self.current_char
             self.advance()
 
         if id_str in KEYWORDS:
             return Token(TT_RWORD, id_str)
-        elif isUntracked == False:
+        elif isUntracked == True:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
             return Token(TT_ID, id_str)
@@ -229,11 +229,11 @@ class Lexer:
         isIdentifier = False
         pos_start = self.pos.copy()
 
-        while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.':
+        while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.' + UNTRACKED:
             check = self.check()
             if self.current_char in WHITESPACES:
                     break
-            elif self.current_char in ALPHABET:
+            elif self.current_char in ALPHABET + UNTRACKED:
                 isValid = False
                 num_str += self.current_char
             elif (not num_str and self.current_char in DIGITS) and check in ALPHABET:
