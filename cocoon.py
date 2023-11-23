@@ -4,6 +4,7 @@ ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 DIGITS = '0123456789'
 WHITESPACES = ' \t\n\v\r'
 OPERATORS = '+-/*^%'
+UNARY = '+-'
 RELATIONAL = '=!><'
 LOGICAL = {"NOT", "AND", "OR", "not", "and", "or"}
 PUNCTUATIONS = '()[]'
@@ -152,6 +153,12 @@ class Lexer:
             elif self.current_char == '=':
                 tokens.append(Token(TT_ASSIGN))
                 self.advance()
+            elif self.current_char in OPERATORS:
+                result = self.make_operator()
+                if isinstance(result, Token):
+                    tokens.append(result)
+                elif isinstance(result, Error):
+                    return [], result
             elif self.current_char in DIGITS:
                 result = self.make_number()
                 if isinstance(result, Token):
@@ -195,6 +202,41 @@ class Lexer:
         else:
             return Token(TT_ID, id_str)
 
+    def make_operator(self):
+        operator = ''
+        isUnary = False
+        isValid = True
+        pos_start = self.pos.copy()
+
+        while self.current_char != None and self.current_char in OPERATORS + WHITESPACES:
+            check = self.check()
+            if check != None:
+                if self.current_char in OPERATORS and check in UNARY:
+                    if self.current_char == check:
+                        isUnary = True
+                    else:
+                        isValid = False
+                elif self.current_char in UNARY and check in ALPHABET + DIGITS:
+                    isUnary = True
+
+            if self.current_char in WHITESPACES:
+                break
+            elif isUnary or isValid == False:
+                operator += self.current_char
+            else:
+                operator += self.current_char
+                self.advance()
+                break
+            self.advance()
+            
+        if isUnary:
+            return Token(TT_UNARY, operator)
+        elif isValid == False:
+            return SyntaxError(pos_start, self.pos, f'{operator}')
+        else:
+            return Token(TT_OP, operator)
+        
+
     def make_number(self):
         num_str = ''
         dot_count = 0
@@ -204,13 +246,14 @@ class Lexer:
 
         while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.' + UNTRACKED:
             check = self.check()
+            if check != None:
+                if (not num_str and self.current_char in DIGITS) and check in ALPHABET:
+                    isIdentifier = True
+
             if self.current_char in WHITESPACES:
                     break
-            elif self.current_char in ALPHABET + UNTRACKED:
+            elif self.current_char in ALPHABET + UNTRACKED and isIdentifier == False:
                 isValid = False
-                num_str += self.current_char
-            elif (not num_str and self.current_char in DIGITS) and check in ALPHABET:
-                isIdentifier = True
                 num_str += self.current_char
             elif self.current_char == '.':
                 if dot_count == 1:
@@ -222,7 +265,7 @@ class Lexer:
                 num_str += self.current_char
             self.advance()
 
-        if dot_count == 0 and isValid == True:
+        if dot_count == 0 and isValid == True and isIdentifier == False:
             return Token(TT_INT, int(num_str))
         elif dot_count == 2 and isValid == True:
             return SyntaxError(pos_start, self.pos, f'{num_str}')
