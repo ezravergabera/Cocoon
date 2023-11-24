@@ -139,6 +139,12 @@ class Lexer:
         char = self.current_char
         self.stepback()
         return char if char is not None else ''
+    
+    def backtrack(self):
+        self.stepback()
+        char = self.current_char
+        self.advance()        
+        return char if char is not None else ''
 
     def make_tokens(self):
         tokens = []
@@ -223,11 +229,14 @@ class Lexer:
 
         while self.current_char != None and self.current_char in OPERATORS + WHITESPACES:
             check = self.check()
+            backtrack = self.backtrack()
             if self.current_char in OPERATORS and check in UNARY and check not in WHITESPACES:
                 if self.current_char == check:
                     isUnary = True
                 else:
                     isValid = False
+            elif backtrack in ALPHABET + DIGITS and self.current_char in OPERATORS and check in ALPHABET + DIGITS and backtrack not in WHITESPACES and check not in WHITESPACES:
+                isValid = True
             elif self.current_char in UNARY and check in ALPHABET + DIGITS and check not in WHITESPACES:
                 isUnary = True
 
