@@ -162,7 +162,7 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
-            elif self.current_char in DIGITS:
+            elif self.current_char in DIGITS + '.' and check not in WHITESPACES:
                 result = self.make_number()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -276,7 +276,6 @@ class Lexer:
             elif self.current_char == '.':
                 if dot_count == 1:
                     dot_count += 1
-                    break
                 dot_count += 1
                 num_str += '.'
             else:
