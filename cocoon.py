@@ -9,6 +9,7 @@ RELATIONAL = '=!><'
 LOGICAL = {"NOT", "AND", "OR", "not", "and", "or"}
 PUNCTUATIONS = '()[]'
 KEYWORDS = {"true", "false", "number", "num", "decimal", "deci", "text", "character", "char", "boolean", "bool", "done", "next", "give", "group", "build", "ask", "askmore", "more", "show", "get", "repeat", "while", "enough", "empty", "undefined", "undef"}
+NOISEWORDS = {"do", "start", "end"}
 RESERVEDWORDS = {"exit", "raise", "raising"}
 UNTRACKED = '&$#@`~?}{\\:;|'
 
@@ -98,6 +99,7 @@ TT_STR = 'Text'
 TT_BOOL = 'Bool'
 TT_KWORD = 'Keyword'
 TT_RWORD = 'Reserved_Word'
+TT_NWORD = 'Noise_Word'
 TT_COMMA = 'Comma'
 TT_SEMICOLON = 'Semicolon'
 TT_LSQUARE = 'Left_Square'
@@ -197,6 +199,10 @@ class Lexer:
             return Token(TT_KWORD, id_str)
         elif id_str in RESERVEDWORDS:
             return Token(TT_RWORD, id_str)
+        elif id_str in NOISEWORDS:
+            return Token(TT_NWORD, id_str)
+        elif id_str in LOGICAL:
+            return Token(TT_LOG, id_str)
         elif isUntracked == True:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
@@ -223,9 +229,6 @@ class Lexer:
                 break
             elif isUnary or isValid == False:
                 operator += self.current_char
-                if len(operator) == 2:
-                    self.advance()
-                    break
             else:
                 operator += self.current_char
                 self.advance()
