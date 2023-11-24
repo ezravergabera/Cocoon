@@ -138,12 +138,13 @@ class Lexer:
         self.advance()
         char = self.current_char
         self.stepback()
-        return char
+        return char if char is not None else ''
 
     def make_tokens(self):
         tokens = []
 
         while self.current_char != None:
+            check = self.check()
             if self.current_char in WHITESPACES:
                 self.advance()
             elif self.current_char in ALPHABET + '_':
@@ -152,7 +153,7 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
-            elif self.current_char == '=':
+            elif self.current_char == '=' and check in WHITESPACES:
                 tokens.append(Token(TT_ASSIGN))
                 self.advance()
             elif self.current_char in OPERATORS:
@@ -163,6 +164,12 @@ class Lexer:
                     return [], result
             elif self.current_char in DIGITS:
                 result = self.make_number()
+                if isinstance(result, Token):
+                    tokens.append(result)
+                elif isinstance(result, Error):
+                    return [], result
+            elif self.current_char in RELATIONAL:
+                result = self.make_relational()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
@@ -216,19 +223,21 @@ class Lexer:
 
         while self.current_char != None and self.current_char in OPERATORS + WHITESPACES:
             check = self.check()
-            if check != None:
-                if self.current_char in OPERATORS and check in UNARY:
-                    if self.current_char == check:
-                        isUnary = True
-                    else:
-                        isValid = False
-                elif self.current_char in UNARY and check in ALPHABET + DIGITS:
+            if self.current_char in OPERATORS and check in UNARY and check not in WHITESPACES:
+                if self.current_char == check:
                     isUnary = True
+                else:
+                    isValid = False
+            elif self.current_char in UNARY and check in ALPHABET + DIGITS and check not in WHITESPACES:
+                isUnary = True
 
             if self.current_char in WHITESPACES:
                 break
             elif isUnary or isValid == False:
                 operator += self.current_char
+                if len(operator) == 2:
+                    self.advance()
+                    break
             else:
                 operator += self.current_char
                 self.advance()
@@ -252,14 +261,14 @@ class Lexer:
 
         while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.' + UNTRACKED:
             check = self.check()
-            if check != None:
-                if (not num_str and self.current_char in DIGITS) and check in ALPHABET:
-                    isIdentifier = True
 
             if self.current_char in WHITESPACES:
                     break
-            elif self.current_char in ALPHABET + UNTRACKED and isIdentifier == False:
+            elif self.current_char in ALPHABET + UNTRACKED:
                 isValid = False
+                num_str += self.current_char
+            elif (not num_str and self.current_char in DIGITS) and check in ALPHABET and check not in WHITESPACES:
+                isIdentifier = True
                 num_str += self.current_char
             elif self.current_char == '.':
                 if dot_count == 1:
@@ -281,6 +290,27 @@ class Lexer:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
             return Token(TT_FLOAT, float(num_str))
+
+    def make_relational(self):
+        rel_str = ''
+        isValid = True
+        pos_start = self.pos.copy()
+
+        while self.current_char != None and self.current_char in RELATIONAL + WHITESPACES:
+            if self.current_char in WHITESPACES or len(rel_str) == 2:
+                break
+            elif self.current_char in {">", "<"} or rel_str in {">", "<"} and self.current_char == '=':
+                isValid = True
+                rel_str += self.current_char
+            else:
+                isValid = False
+                rel_str += self.current_char
+            self.advance()
+
+        if rel_str in {"==", "!=", ">=", "<="} or isValid:
+            return Token(TT_REL, rel_str)
+        elif isValid == False:
+            return SyntaxError(pos_start, self.pos, f'{rel_str}')
 
     def make_string(self):
         text_str = ''
