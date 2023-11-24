@@ -259,11 +259,14 @@ class Lexer:
         isIdentifier = False
         pos_start = self.pos.copy()
 
-        while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.' + UNTRACKED:
+        while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.' + UNTRACKED + '_':
             check = self.check()
 
             if self.current_char in WHITESPACES:
-                    break
+                break
+            elif num_str and self.current_char == '_' and check == '_' or isValid == False:
+                isValid = False
+                num_str += self.current_char
             elif self.current_char in ALPHABET + UNTRACKED:
                 isValid = False
                 num_str += self.current_char
@@ -277,7 +280,8 @@ class Lexer:
                 dot_count += 1
                 num_str += '.'
             else:
-                num_str += self.current_char
+                if self.current_char != '_':
+                    num_str += self.current_char
             self.advance()
 
         if dot_count == 0 and isValid == True and isIdentifier == False:
