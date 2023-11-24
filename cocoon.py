@@ -6,11 +6,54 @@ WHITESPACES = ' \t\n\v\r'
 OPERATORS = '+-/*^%'
 UNARY = '+-'
 RELATIONAL = '=!><'
-LOGICAL = {"NOT", "AND", "OR", "not", "and", "or"}
+LOGICAL = {
+    "NOT", 
+    "AND", 
+    "OR", 
+    "not", 
+    "and", 
+    "or"
+}
 PUNCTUATIONS = '()[]'
-KEYWORDS = {"true", "false", "number", "num", "decimal", "deci", "text", "character", "char", "boolean", "bool", "done", "next", "give", "group", "build", "ask", "askmore", "more", "show", "get", "repeat", "while", "enough", "empty", "undefined", "undef"}
-NOISEWORDS = {"do", "start", "end"}
-RESERVEDWORDS = {"exit", "raise", "raising"}
+KEYWORDS = {
+    "true", 
+    "false", 
+    "number", 
+    "num", 
+    "decimal", 
+    "deci", 
+    "text", 
+    "character", 
+    "char", 
+    "boolean", 
+    "bool", 
+    "done", 
+    "next", 
+    "give", 
+    "group", 
+    "build", 
+    "ask", 
+    "askmore", 
+    "more", 
+    "show", 
+    "get", 
+    "repeat", 
+    "while", 
+    "enough", 
+    "empty", 
+    "undefined", 
+    "undef"
+}
+NOISEWORDS = {
+    "do", 
+    "start", 
+    "end"
+}
+RESERVEDWORDS = {
+    "exit", 
+    "raise", 
+    "raising"
+}
 UNTRACKED = '&$#@`~?}{\\:;|'
 
 # ERRORS
@@ -100,6 +143,7 @@ TT_BOOL = 'Bool'
 TT_KWORD = 'Keyword'
 TT_RWORD = 'Reserved_Word'
 TT_NWORD = 'Noise_Word'
+TT_COMMENTS = 'Comments'
 TT_COMMA = 'Comma'
 TT_SEMICOLON = 'Semicolon'
 TT_LSQUARE = 'Left_Square'
@@ -168,6 +212,8 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+            elif self.current_char == '.' and check == '.' and check not in WHITESPACES:
+                self.ignore_comments()
             elif self.current_char in DIGITS + '.' and check not in WHITESPACES:
                 result = self.make_number()
                 if isinstance(result, Token):
@@ -220,6 +266,24 @@ class Lexer:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
             return Token(TT_ID, id_str)
+        
+    def ignore_comments(self):
+        self.advance()
+        check = self.check()
+        dot_count = 0
+        
+        if self.current_char == '.' and check == '.' and check not in WHITESPACES:
+            while dot_count != 3:
+                if self.current_char == '.':
+                    dot_count += 1
+                else:
+                    dot_count = 0
+                self.advance()
+        else:
+            self.advance()
+            while self.current_char != '\n':
+                self.advance()
+            self.advance()
 
     def make_operator(self):
         operator = ''
