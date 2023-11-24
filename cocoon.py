@@ -54,7 +54,14 @@ RESERVEDWORDS = {
     "raise", 
     "raising"
 }
-UNTRACKED = '&$#@`~?}{\\:;|'
+UNTRACKED = '$#@`~?}{\\:;'
+INVALID = {
+    "!",
+    "&",
+    "|",
+    "&&",
+    "||"
+}
 
 # ERRORS
 
@@ -89,6 +96,10 @@ class SyntaxError(Error):
 class ValueError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Value Error', details)
+
+class InvalidRelationalSymbol(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Invalid Symbol', details)
 
 # POSITION
 
@@ -219,6 +230,8 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+            elif (self.current_char in INVALID and check in WHITESPACES) or (self.current_char in INVALID and self.current_char == check):
+                return [], self.invalid_relational()
             elif self.current_char in RELATIONAL:
                 result = self.make_relational()
                 if isinstance(result, Token):
@@ -365,6 +378,37 @@ class Lexer:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
             return Token(TT_FLOAT, float(num_str))
+
+    def invalid_relational(self):
+        rel_str = ''
+
+        while self.current_char != None and self.current_char in INVALID:
+            check = self.check()
+            rel_str += self.current_char
+            pos_start = self.pos.copy()
+
+            if rel_str == '!' and check in WHITESPACES:
+                self.advance()
+                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "not" or "NOT" instead.')
+            elif rel_str == '&' and check in WHITESPACES:
+                self.advance()
+                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "and" or "AND" instead.')
+            elif rel_str == '|' and check in WHITESPACES:
+                self.advance()
+                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "or" or "OR" instead.')
+            elif rel_str == '&' and check == '&':
+                self.advance()
+                rel_str += self.current_char
+                self.advance()
+                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "and" or "AND" instead.')
+            elif rel_str == '|' and check == '|':
+                self.advance()
+                rel_str += self.current_char
+                self.advance()
+                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "or" or "OR" instead.')
+            else:
+                self.advance()
+                return IllegalCharError(pos_start, self.pos, f"'{self.current_char}'")
 
     def make_relational(self):
         rel_str = ''
