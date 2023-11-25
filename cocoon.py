@@ -224,7 +224,7 @@ class Lexer:
                     return [], result
             elif self.current_char == '.' and check == '.' and check not in WHITESPACES:
                 self.ignore_comments()
-            elif self.current_char in DIGITS + '.' and check not in WHITESPACES:
+            elif self.current_char in DIGITS + '.':
                 result = self.make_number()
                 if isinstance(result, Token):
                     tokens.append(result)
