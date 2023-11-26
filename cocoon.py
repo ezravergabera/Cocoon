@@ -142,15 +142,15 @@ class Position:
 # TOKENS (TT means token type)
 
 TT_ID = 'Identifier'
-TT_ASSIGN = 'Assignment_Operator'
+TT_ASSIGN = 'Assignment'
 TT_PLUS = 'PLUS'
 TT_MINUS = 'MINUS'
 TT_MUL = 'MUL'
 TT_DIV = 'DIV'
 TT_MOD = 'MOD'
-TT_UNARY = 'Unary_Operator'
-TT_REL = 'Relational_Boolean'
-TT_LOG = 'Logical_Boolean'
+TT_UNARY = 'Unary'
+TT_REL = 'Relational'
+TT_LOG = 'Logical'
 TT_INT = 'Number'
 TT_FLOAT = 'Decimal'
 TT_STR = 'Text'
@@ -173,6 +173,10 @@ class Token:
 
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'
+        return f'{self.type}'
+    
+    def __str__(self):
+        if self.value: return format(self.type,'>20') + '      ' + str(self.value)
         return f'{self.type}'
 
 # LEXER
@@ -219,7 +223,7 @@ class Lexer:
                 elif isinstance(result, Error):
                     return [], result
             elif self.current_char == '=' and check in WHITESPACES:
-                tokens.append(Token(TT_ASSIGN))
+                tokens.append(Token(TT_ASSIGN, self.current_char))
                 self.advance()
             elif self.current_char in OPERATORS:
                 result = self.make_operator()
@@ -243,8 +247,13 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
-            elif self.current_char == '"':
-                tokens.append(self.make_string())
+            elif self.current_char == '"' or self.current_char == "'":
+                result = self.make_string()
+
+                if isinstance(result, Token):
+                    tokens.append(result)
+                elif isinstance(result, Error):
+                    return [], result
             elif self.current_char in PUNCTUATIONS:
                 tokens.append(self.make_punctuation())
                 self.advance()
@@ -254,7 +263,7 @@ class Lexer:
                 self.advance()
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
         
-        tokens.append(Token(TT_EOF))
+        tokens.append(Token('TT_EOF', TT_EOF))
         return tokens, None
     
     def make_identifier(self):
@@ -271,6 +280,9 @@ class Lexer:
             else:
                 id_str += self.current_char
             self.advance()
+
+        if id_str == 'exit':
+            exit()
 
         if id_str in KEYWORDS:
             return Token(TT_KWORD, id_str)
@@ -340,15 +352,15 @@ class Lexer:
         elif isValid == False:
             return SyntaxError(pos_start, self.pos, f'{operator}')
         elif operator == '+':
-            return Token(TT_PLUS)
+            return Token(TT_PLUS, operator)
         elif operator == '-':
-            return Token(TT_MINUS)
+            return Token(TT_MINUS, operator)
         elif operator == '*':
-            return Token(TT_MUL)
+            return Token(TT_MUL, operator)
         elif operator == '/':
-            return Token(TT_DIV)
+            return Token(TT_DIV, operator)
         elif operator == '%':
-            return Token(TT_MOD)
+            return Token(TT_MOD, operator)
         
 
     def make_number(self):
@@ -447,35 +459,60 @@ class Lexer:
 
     def make_string(self):
         text_str = ''
-        q_count = 0
+        stop = self.current_char
+        text_str += stop
+        pos_start = self.pos.copy()
+        self.advance()
 
-        while self.current_char != None and self.current_char in ALPHABET + WHITESPACES + '"':
-            if self.current_char == '"':
-                if q_count == 2:
-                    break
-                q_count += 1
-                text_str += '"'
-            else:
-                text_str += self.current_char
+        while self.current_char != None and self.current_char != stop:
+            text_str += self.current_char
             self.advance()
-
+        
+        if self.current_char == '"' or self.current_char == "'":
+            text_str += stop
+            self.advance()
+        else:
+            return SyntaxError(pos_start, self.pos, "Must be enclosed by \" or \'.")
         return Token(TT_STR, text_str)
 
     def make_punctuation(self):
         if self.current_char in PUNCTUATIONS:
-            if self.current_char == ',':
-                return Token(TT_COMMA)
-            elif self.current_char == ':':
-                return Token(TT_SEMICOLON)
-            elif self.current_char == '[':
-                return Token(TT_LSQUARE)
-            elif self.current_char == ']':
-                return Token(TT_RSQUARE)
-            elif self.current_char == '(':
-                return Token(TT_LPAREN)
-            elif self.current_char == ')':
-                return Token(TT_RPAREN)
-            
+            char = self.current_char
+            if char == ',':
+                return Token(TT_COMMA, char)
+            elif char == ':':
+                return Token(TT_SEMICOLON, char)
+            elif char == '[':
+                return Token(TT_LSQUARE, char)
+            elif char == ']':
+                return Token(TT_RSQUARE, char)
+            elif char == '(':
+                return Token(TT_LPAREN, char)
+            elif char == ')':
+                return Token(TT_RPAREN, char)
+
+# SYMBOL TABLE
+
+def tok_to_str(tokens):
+    tok_str = ''
+
+    if(tokens != None):
+        for tok in tokens:
+            tok_str += str(tok) + '\n'
+
+    return tok_str
+
+def output_to_symbolTable(tokens):
+    filename = 'symbolTable.txt'
+
+    with open(filename, "w") as f:
+        f.write('')
+
+    with open(filename, "a") as f:
+        f.write(format('TOKENS', '>20') + '      ' + 'LEXEMES' + '\n')
+        f.write('-----------------------------------------------\n')
+        f.write(tok_to_str(tokens))
+
 # RUN
 
 def run(fn, text):
