@@ -311,7 +311,7 @@ class Lexer:
                 self.advance()
         else:
             self.advance()
-            while self.current_char != '\n':
+            while self.current_char != '\n' and self.current_char != None:
                 self.advance()
             self.advance()
 
