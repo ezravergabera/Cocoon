@@ -143,7 +143,11 @@ class Position:
 
 TT_ID = 'Identifier'
 TT_ASSIGN = 'Assignment_Operator'
-TT_OP = 'Arithmetic_Operator'
+TT_PLUS = 'PLUS'
+TT_MINUS = 'MINUS'
+TT_MUL = 'MUL'
+TT_DIV = 'DIV'
+TT_MOD = 'MOD'
 TT_UNARY = 'Unary_Operator'
 TT_REL = 'Relational_Boolean'
 TT_LOG = 'Logical_Boolean'
@@ -160,6 +164,7 @@ TT_LSQUARE = 'Left_Square'
 TT_RSQUARE = 'Right_Square'
 TT_LPAREN = 'Left_Paren'
 TT_RPAREN = 'Right_Paren'
+TT_EOF = 'EOF'
 
 class Token:
     def __init__(self, type_, value=None):
@@ -248,7 +253,8 @@ class Lexer:
                 char = self.current_char
                 self.advance()
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
-
+        
+        tokens.append(Token(TT_EOF))
         return tokens, None
     
     def make_identifier(self):
@@ -333,8 +339,16 @@ class Lexer:
             return Token(TT_UNARY, operator)
         elif isValid == False:
             return SyntaxError(pos_start, self.pos, f'{operator}')
-        else:
-            return Token(TT_OP, operator)
+        elif operator == '+':
+            return Token(TT_PLUS)
+        elif operator == '-':
+            return Token(TT_MINUS)
+        elif operator == '*':
+            return Token(TT_MUL)
+        elif operator == '/':
+            return Token(TT_DIV)
+        elif operator == '%':
+            return Token(TT_MOD)
         
 
     def make_number(self):
