@@ -8,4 +8,6 @@ while True:
     if error:
         print(error.as_string())
     else:
+        cocoon.output_to_symbolTable(result)
+        result.pop()
         print(result)
