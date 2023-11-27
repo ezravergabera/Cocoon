@@ -120,21 +120,6 @@ class Position:
             self.col = 0
  
         return self
-    
-    def stepback(self, current_char):
-        self.idx -= 1
-        self.col -= 1
-
-        if current_char == '\n':
-            self.ln -=1
-            previousNLidx = self.ftext.rfind('\n')
-
-            if previousNLidx != -1:
-                self.col = (self.idx - previousNLidx) - 1
-            else:
-                self.col = self.idx
-
-        return self
 
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftext)
@@ -167,9 +152,10 @@ TT_RPAREN = 'Right_Paren'
 TT_EOF = 'EOF'
 
 class Token:
-    def __init__(self, type_, value=None):
+    def __init__(self, type_, value=None, pos_start=-1):
         self.type = type_
         self.value = value
+        self.pos_start = pos_start
 
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'
@@ -193,20 +179,18 @@ class Lexer:
         self.pos.advance(self.current_char)
         self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
 
-    def stepback(self):
-        self.pos.stepback(self.current_char)
-        self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
-
     def check(self):
-        self.advance()
-        char = self.current_char
-        self.stepback()
+        try:
+            char = self.text[self.pos.idx + 1] if self.pos.idx < len(self.text) else None
+        except IndexError:
+            char = ''
         return char if char is not None else ''
     
     def backtrack(self):
-        self.stepback()
-        char = self.current_char
-        self.advance()        
+        try:
+            char = self.text[self.pos.idx - 1] if self.pos.idx < len(self.text) else None
+        except IndexError:
+            char = ''     
         return char if char is not None else ''
 
     def make_tokens(self):
@@ -249,7 +233,6 @@ class Lexer:
                     return [], result
             elif self.current_char == '"' or self.current_char == "'":
                 result = self.make_string()
-
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
@@ -285,17 +268,17 @@ class Lexer:
             exit()
 
         if id_str in KEYWORDS:
-            return Token(TT_KWORD, id_str)
+            return Token(TT_KWORD, id_str, self.pos)
         elif id_str in RESERVEDWORDS:
-            return Token(TT_RWORD, id_str)
+            return Token(TT_RWORD, id_str, self.pos)
         elif id_str in NOISEWORDS:
-            return Token(TT_NWORD, id_str)
+            return Token(TT_NWORD, id_str, self.pos)
         elif id_str in LOGICAL:
-            return Token(TT_LOG, id_str)
+            return Token(TT_LOG, id_str, self.pos)
         elif isUntracked == True:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
-            return Token(TT_ID, id_str)
+            return Token(TT_ID, id_str, self.pos)
         
     def ignore_comments(self):
         self.advance()
@@ -348,19 +331,19 @@ class Lexer:
             self.advance()
             
         if isUnary:
-            return Token(TT_UNARY, operator)
+            return Token(TT_UNARY, operator, self.pos)
         elif isValid == False:
             return SyntaxError(pos_start, self.pos, f'{operator}')
         elif operator == '+':
-            return Token(TT_PLUS, operator)
+            return Token(TT_PLUS, operator, self.pos)
         elif operator == '-':
-            return Token(TT_MINUS, operator)
+            return Token(TT_MINUS, operator, self.pos)
         elif operator == '*':
-            return Token(TT_MUL, operator)
+            return Token(TT_MUL, operator, self.pos)
         elif operator == '/':
-            return Token(TT_DIV, operator)
+            return Token(TT_DIV, operator, self.pos)
         elif operator == '%':
-            return Token(TT_MOD, operator)
+            return Token(TT_MOD, operator, self.pos)
         
 
     def make_number(self):
@@ -395,7 +378,7 @@ class Lexer:
             self.advance()
 
         if dot_count == 0 and isValid == True and isIdentifier == False:
-            return Token(TT_INT, int(num_str))
+            return Token(TT_INT, int(num_str), self.pos)
         elif dot_count == 2 and isValid == True:
             return SyntaxError(pos_start, self.pos, f'{num_str}')
         elif isIdentifier:
@@ -403,7 +386,7 @@ class Lexer:
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
-            return Token(TT_FLOAT, float(num_str))
+            return Token(TT_FLOAT, float(num_str), self.pos)
 
     def invalid_relational(self):
         rel_str = ''
@@ -453,7 +436,7 @@ class Lexer:
             self.advance()
 
         if rel_str in {"==", "!=", ">=", "<="} or isValid:
-            return Token(TT_REL, rel_str)
+            return Token(TT_REL, rel_str, self.pos)
         elif isValid == False:
             return SyntaxError(pos_start, self.pos, f'{rel_str}')
 
@@ -473,23 +456,23 @@ class Lexer:
             self.advance()
         else:
             return SyntaxError(pos_start, self.pos, "Must be enclosed by \" or \'.")
-        return Token(TT_STR, text_str)
+        return Token(TT_STR, text_str, self.pos)
 
     def make_punctuation(self):
         if self.current_char in PUNCTUATIONS:
             char = self.current_char
             if char == ',':
-                return Token(TT_COMMA, char)
+                return Token(TT_COMMA, char, self.pos)
             elif char == ':':
-                return Token(TT_SEMICOLON, char)
+                return Token(TT_SEMICOLON, char, self.pos)
             elif char == '[':
-                return Token(TT_LSQUARE, char)
+                return Token(TT_LSQUARE, char, self.pos)
             elif char == ']':
-                return Token(TT_RSQUARE, char)
+                return Token(TT_RSQUARE, char, self.pos)
             elif char == '(':
-                return Token(TT_LPAREN, char)
+                return Token(TT_LPAREN, char, self.pos)
             elif char == ')':
-                return Token(TT_RPAREN, char)
+                return Token(TT_RPAREN, char, self.pos)
 
 # SYMBOL TABLE
 

@@ -3,7 +3,7 @@ import sys
 
 def run(filename):
     if(filename):
-        if(filename.lower().endswith('.cocn')):
+        if(filename.lower().endswith('.kkun')):
             try:
                 with open(filename, 'r') as f:
                     text = f.read()
