@@ -17,6 +17,7 @@ def run(filename):
                     print(format('TOKENS', '>20') + '      ' + 'LEXEMES')
                     print('-----------------------------------------------')
                     print(cocoon.tok_to_str(result))
+                    cocoon.output_to_symbolTable(result)
                     # result.pop()      # diko alam kung mas okay ba to or yung ginayang formatting lang sa symbol table
                     # print(result)
             except FileNotFoundError:
