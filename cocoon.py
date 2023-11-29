@@ -101,6 +101,10 @@ class InvalidRelationalSymbol(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Invalid Symbol', details)
 
+class ReferenceError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Reference Error', details)
+
 # POSITION
 
 class Position:
@@ -216,7 +220,11 @@ class Lexer:
                 elif isinstance(result, Error):
                     return [], result
             elif self.current_char == '.' and check == '.' and check not in WHITESPACES:
-                self.ignore_comments()
+                result = self.ignore_comments()
+
+                if isinstance(result, Error):
+                    return [], result
+
             elif self.current_char in DIGITS + '.':
                 result = self.make_number()
                 if isinstance(result, Token):
@@ -264,7 +272,9 @@ class Lexer:
                 id_str += self.current_char
             self.advance()
 
-        if id_str == 'exit':
+        if id_str == 'exit' and self.fn != "<stdin>":
+            return ReferenceError(pos_start, self.pos, 'Usage of a reserved word.')
+        elif id_str == 'exit':
             exit()
 
         if id_str in KEYWORDS:
@@ -281,12 +291,16 @@ class Lexer:
             return Token(TT_ID, id_str, self.pos)
         
     def ignore_comments(self):
+        pos_start = self.pos.copy()
         self.advance()
         check = self.check()
         dot_count = 0
         
         if self.current_char == '.' and check == '.' and check not in WHITESPACES:
             while dot_count != 3:
+                if self.check() == '':
+                    return SyntaxError(pos_start, self.pos, 'Closing symbol not found.')
+                
                 if self.current_char == '.':
                     dot_count += 1
                 else:
