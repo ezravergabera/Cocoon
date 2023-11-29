@@ -89,9 +89,9 @@ class IllegalNumberError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Illegal Number', details)
 
-class SyntaxError(Error):
+class LexicalError(Error):
     def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Syntax Error', details)
+        super().__init__(pos_start, pos_end, 'Lexical Error', details)
 
 class ValueError(Error):
     def __init__(self, pos_start, pos_end, details):
@@ -299,7 +299,7 @@ class Lexer:
         if self.current_char == '.' and check == '.' and check not in WHITESPACES:
             while dot_count != 3:
                 if self.check() == '':
-                    return SyntaxError(pos_start, self.pos, 'Closing symbol not found.')
+                    return LexicalError(pos_start, self.pos, 'Closing symbol not found.')
                 
                 if self.current_char == '.':
                     dot_count += 1
@@ -347,7 +347,7 @@ class Lexer:
         if isUnary:
             return Token(TT_UNARY, operator, self.pos)
         elif isValid == False:
-            return SyntaxError(pos_start, self.pos, f'{operator}')
+            return LexicalError(pos_start, self.pos, f'{operator}')
         elif operator == '+':
             return Token(TT_PLUS, operator, self.pos)
         elif operator == '-':
@@ -394,7 +394,7 @@ class Lexer:
         if dot_count == 0 and isValid == True and isIdentifier == False:
             return Token(TT_INT, int(num_str), self.pos)
         elif dot_count == 2 and isValid == True:
-            return SyntaxError(pos_start, self.pos, f'{num_str}')
+            return LexicalError(pos_start, self.pos, f'{num_str}')
         elif isIdentifier:
             return IllegalIdentifierError(pos_start, self.pos, f'{num_str}')
         elif isValid == False:
@@ -452,7 +452,7 @@ class Lexer:
         if rel_str in {"==", "!=", ">=", "<="} or isValid:
             return Token(TT_REL, rel_str, self.pos)
         elif isValid == False:
-            return SyntaxError(pos_start, self.pos, f'{rel_str}')
+            return LexicalError(pos_start, self.pos, f'{rel_str}')
 
     def make_string(self):
         text_str = ''
@@ -469,7 +469,7 @@ class Lexer:
             text_str += stop
             self.advance()
         else:
-            return SyntaxError(pos_start, self.pos, "Must be enclosed by \" or \'.")
+            return LexicalError(pos_start, self.pos, "Must be enclosed by \" or \'.")
         return Token(TT_STR, text_str, self.pos)
 
     def make_punctuation(self):
