@@ -159,6 +159,7 @@ resultBox = Text(
     bg = "#d5d5d5",
     highlightthickness = 0)
 
+resultBox['state'] = 'disable'
 
 resultBox.place(
     x = 315, y = 471,
@@ -180,15 +181,31 @@ textBox_bg = canvas.create_image(
     image=textBox_img)
 
 
+#Frame to hold both text widgets
+text_frame = Frame(window, bg="#d5d5d5")
+text_frame.place(x=315, y=75, width=630, height=256)
+
 textBox = Text(
+    text_frame,
     bd=0,
     bg="#d5d5d5",
-    highlightthickness=0)
+    highlightthickness=0,
+    wrap=NONE,
+    padx=5,
+    pady=5
+)
+textBox.pack(side=LEFT, fill=Y)
 
-textBox.place(
-    x=315, y=75,
-    width=630,
-    height=256)
+# Scrollbar for both text widgets
+scrollbar = Scrollbar(window, command=textBox.yview)
+scrollbar.place(x=948, y=75, height=256)
+
+result_scrollbar = Scrollbar(window, command=resultBox.yview)
+result_scrollbar.place(x=945, y=471, height=184)
+
+textBox['yscrollcommand'] = scrollbar.set
+resultBox['yscrollcommand'] = result_scrollbar.set
+
 
 
 canvas.create_text(
@@ -223,7 +240,6 @@ saveAsButton.place(
     x=372.66, y=352.79,
     width=177.45, height=35.16
 )
-
 
 
 runLexerButton = PhotoImage(file = f"public/img/img1.png")
