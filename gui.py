@@ -107,6 +107,24 @@ def open_file_dialog():
         fileName_label.delete(0, END)
         fileName_label.insert(INSERT, filename[-1])
 
+def save_as_file():
+    filename = filedialog.asksaveasfilename(
+        initialdir=currentdir,
+        defaultextension=".kkun",
+        filetypes=[("KKUN files", "*.kkun")],
+    )
+    if filename:
+        with open(filename, "w") as f:
+            code = textBox.get("1.0", END)
+            f.write(code)
+        
+        # Update filename label
+        fileName_label['state'] = 'normal'
+        fileName_label.delete(0, END)
+        fileName_label.insert(INSERT, os.path.basename(filename))
+        fileName_label['state'] = 'readonly'
+
+
 window = Tk()
 
 window.geometry("983x689")
@@ -192,20 +210,20 @@ fileName_label.insert(-1, 'Write a code: ')
 fileName_label.place(x=315, y=25)
 fileName_label['state'] = 'readonly'
 
+saveAsButton_img = PhotoImage(file=f"public/img/img0.png")
+saveAsButton = Button(
+    image=saveAsButton_img,
+    borderwidth=0,
+    highlightthickness=0,
+    command=save_as_file,
+    relief="flat"
+)
 
-img0 = PhotoImage(file = f"public/img/img0.png")
-b0 = Button(
-    image = img0,
-    borderwidth = 0,
-    highlightthickness = 0,
-    command = btn_clicked,
-    relief = "flat")
+saveAsButton.place(
+    x=372.66, y=352.79,
+    width=177.45, height=35.16
+)
 
-
-b0.place(
-    x = 372, y = 352,
-    width = 177,
-    height = 35)
 
 
 runLexerButton = PhotoImage(file = f"public/img/img1.png")
