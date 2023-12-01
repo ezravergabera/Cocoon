@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">Cocoon Lexical Analyzer</h1>
 
-`A Python-based programming language designed for young learners.`
+> A Python-based programming language designed for young learners.
 
 ## How to use
 
