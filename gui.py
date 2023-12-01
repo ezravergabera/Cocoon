@@ -89,7 +89,7 @@ def handle_drop(event):
     if all(file.lower().endswith('.kkun') for file in files):
         if len(files) > 1:
             for file in files:
-                if ic(os.path.basename(file)) not in ic(listbox.get(0, END)):
+                if os.path.basename(file) not in listbox.get(0, END):
                     listbox.insert(tk.END, os.path.basename(file))
                     dropped_files.append(file)
         else:
