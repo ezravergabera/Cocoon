@@ -1,7 +1,9 @@
 import os
 import cocoon
+import tkinter as tk
 from tkinter import *
 from tkinter import filedialog
+from tkinterdnd2 import TkinterDnD, DND_FILES
 
 currentdir = os.path.dirname(os.path.abspath(__file__))
 dragged_file = None  # Global variable to store the dragged file path
@@ -78,6 +80,48 @@ def check_clipboard():
 
     window.after(100, check_clipboard)  # Check clipboard every 100 milliseconds
 
+
+# DRAG AND DROP SECTION
+
+def handle_drop(event):
+    file_path = event.data
+    if file_path.lower().endswith('.kkun'):
+        dropped_files.append(file_path)
+
+        listbox.delete(0, tk.END)
+        for file in dropped_files:
+            listbox.insert(tk.END, os.path.basename(file))
+
+        update_text_content(file_path)
+
+        filename = os.path.basename(file_path)
+        fileName_label['state'] = 'normal'
+        fileName_label.delete(0, END)
+        fileName_label.insert(INSERT, filename)
+        fileName_label['state'] = 'readonly'
+
+    else:
+        tk.messagebox.showwarning("Invalid File", "Please drop a file with .kkun extension.")
+
+def update_text_content(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+        textBox.delete(1.0, tk.END)
+        textBox.insert(tk.END, content)
+
+def update_text_on_selection(event=None):
+    selected_index = listbox.curselection()
+    if selected_index:
+        selected_file = dropped_files[selected_index[0]]
+        update_text_content(selected_file)
+
+         # Update fileName_label with the selected filename
+        filename = os.path.basename(selected_file)
+        fileName_label['state'] = 'normal'
+        fileName_label.delete(0, END)
+        fileName_label.insert(INSERT, filename)
+        fileName_label['state'] = 'readonly'
+
 def on_drag_start(event):
     global dragged_file
     # Define data to be dragged (e.g., the selected file)
@@ -98,6 +142,7 @@ def on_drop():
         textBox.insert(0, file_path)
         listbox.insert("end", file_path)
 
+
 def open_file_dialog():
     file_path = filedialog.askopenfilename(initialdir=currentdir, filetypes=(("KKUN files", "*.kkun"),))
     if file_path.lower().endswith('.kkun'):
@@ -106,6 +151,14 @@ def open_file_dialog():
         read_file(filename[-1])
         fileName_label.delete(0, END)
         fileName_label.insert(INSERT, filename[-1])
+
+        # Append the opened file to the dropped_files list
+        dropped_files.append(file_path)
+
+        # Update the listbox with the opened file
+        listbox.delete(0, tk.END)
+        for file in dropped_files:
+            listbox.insert(tk.END, os.path.basename(file))
 
 def save_as_file():
     filename = filedialog.asksaveasfilename(
@@ -124,12 +177,21 @@ def save_as_file():
         fileName_label.insert(INSERT, os.path.basename(filename))
         fileName_label['state'] = 'readonly'
 
+        # Append the newly saved file to the dropped_files list
+        dropped_files.append(filename)
 
-window = Tk()
+        # Update the listbox with the new file
+        listbox.delete(0, tk.END)
+        for file in dropped_files:
+            listbox.insert(tk.END, os.path.basename(file))
+
+
+window = TkinterDnD.Tk()
 
 window.geometry("983x689")
 window.title("Cocoon Lexical Analyzer")
 window.configure(bg = "#252525")
+dropped_files = []
 
 canvas = Canvas(
     window,
@@ -280,6 +342,9 @@ listbox.bind('<B1-Motion>', on_drag_start)
 listbox.bind('<Enter>', on_drag_enter)
 listbox.bind('<Leave>', on_drag_leave)
 listbox.bind('<ButtonRelease-1>', on_drop)
+listbox.drop_target_register(DND_FILES)
+listbox.dnd_bind('<<Drop>>', handle_drop)
+listbox.bind('<<ListboxSelect>>', update_text_on_selection)
 
 window.resizable(False, False)
 window.mainloop()
