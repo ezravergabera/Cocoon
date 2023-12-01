@@ -1,5 +1,6 @@
+from Cocoon.tokens import tok_to_str, output_to_symbolTable
+from shell import run
 import os
-import cocoon
 import tkinter as tk
 from tkinter import *
 from tkinter import filedialog
@@ -16,7 +17,7 @@ def run_lexer():
         filename = fileName_label.get()
         text = textBox.get("1.0", END)
 
-        result, error = cocoon.run(filename, text)
+        result, error = run(filename, text)
 
         if error:
             print(error.as_string())
@@ -25,14 +26,14 @@ def run_lexer():
             resultBox.insert(INSERT, error.as_string())
             resultBox['state'] = 'disable'
         else:
-            cocoon.output_to_symbolTable(result)
+            output_to_symbolTable(result)
             result.pop()
             print(result)
             textResult = ''
             textResult += (format("File name:", ">20") + "      " + filename + "\n")
             textResult += (format('TOKENS', '>20') + '      ' + 'LEXEMES' + "\n")
             textResult += ('-----------------------------------------------' + "\n")
-            textResult += (cocoon.tok_to_str(result))
+            textResult += (tok_to_str(result))
             resultBox['state'] = 'normal'
             resultBox.delete("1.0", END)
             resultBox.insert(INSERT, textResult)
@@ -41,7 +42,7 @@ def run_lexer():
     else:
         text = textBox.get("1.0", END)
 
-        result, error = cocoon.run("<stdin>", text)
+        result, error = run("<stdin>", text)
 
         if error:
             print(error.as_string())
@@ -50,14 +51,14 @@ def run_lexer():
             resultBox.insert(INSERT, error.as_string())
             resultBox['state'] = 'disable'
         else:
-            cocoon.output_to_symbolTable(result)
+            output_to_symbolTable(result)
             result.pop()
             print(result)
             textResult = ''
             textResult += (format("File name:", ">20") + "      " + "<stdin>" + "\n")
             textResult += (format('TOKENS', '>20') + '      ' + 'LEXEMES' + "\n")
             textResult += ('-----------------------------------------------' + "\n")
-            textResult += (cocoon.tok_to_str(result))
+            textResult += (tok_to_str(result))
             resultBox['state'] = 'normal'
             resultBox.delete("1.0", END)
             resultBox.insert(INSERT, textResult)

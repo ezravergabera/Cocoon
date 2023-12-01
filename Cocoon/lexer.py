@@ -1,175 +1,8 @@
-# CONSTANTS
-
-ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-DIGITS = '0123456789'
-WHITESPACES = ' \t\n\v\r'
-OPERATORS = '+-/*^%'
-UNARY = '+-'
-RELATIONAL = '=!><'
-LOGICAL = {
-    "NOT", 
-    "AND", 
-    "OR", 
-    "not", 
-    "and", 
-    "or"
-}
-PUNCTUATIONS = '()[]'
-KEYWORDS = {
-    "true", 
-    "false", 
-    "number", 
-    "num", 
-    "decimal", 
-    "deci", 
-    "text", 
-    "character", 
-    "char", 
-    "boolean", 
-    "bool", 
-    "done", 
-    "next", 
-    "give", 
-    "group", 
-    "build", 
-    "ask", 
-    "askmore", 
-    "more", 
-    "show", 
-    "get", 
-    "repeat", 
-    "while", 
-    "enough", 
-    "empty", 
-    "undefined", 
-    "undef"
-}
-NOISEWORDS = {
-    "do", 
-    "start", 
-    "end"
-}
-RESERVEDWORDS = {
-    "exit", 
-    "raise", 
-    "raising"
-}
-UNTRACKED = '$#@`~?}{\\:;'
-INVALID = {
-    "!",
-    "&",
-    "|",
-    "&&",
-    "||"
-}
-
-# ERRORS
-
-class Error:
-    def __init__(self, pos_start, pos_end, error_name, details):
-        self.pos_start = pos_start
-        self.pos_end = pos_end
-        self.error_name = error_name
-        self.details = details
-    
-    def as_string(self):
-        result = f'{self.error_name}: {self.details}'
-        result += f'\nFile {self.pos_start.fn}, line {self.pos_start.ln + 1}'
-        return result
-    
-class IllegalCharError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Illegal Character', details)
-
-class IllegalIdentifierError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Illegal Identifier', details)
-
-class IllegalNumberError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Illegal Number', details)
-
-class LexicalError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Lexical Error', details)
-
-class ValueError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Value Error', details)
-
-class InvalidRelationalSymbol(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Invalid Symbol', details)
-
-class ReferenceError(Error):
-    def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Reference Error', details)
-
-# POSITION
-
-class Position:
-    def __init__(self, idx, ln, col, fn, ftext):
-        self.idx = idx
-        self.ln = ln
-        self.col = col
-        self.fn = fn
-        self.ftext = ftext
-
-    def advance(self, current_char):
-        self.idx += 1
-        self.col += 1
-
-        if current_char == '\n':
-            self.ln += 1
-            self.col = 0
- 
-        return self
-
-    def copy(self):
-        return Position(self.idx, self.ln, self.col, self.fn, self.ftext)
-
-# TOKENS (TT means token type)
-
-TT_ID = 'Identifier'
-TT_ASSIGN = 'Assignment'
-TT_PLUS = 'PLUS'
-TT_MINUS = 'MINUS'
-TT_MUL = 'MUL'
-TT_DIV = 'DIV'
-TT_MOD = 'MOD'
-TT_UNARY = 'Unary'
-TT_REL = 'Relational'
-TT_LOG = 'Logical'
-TT_INT = 'Number'
-TT_FLOAT = 'Decimal'
-TT_STR = 'Text'
-TT_BOOL = 'Bool'
-TT_KWORD = 'Keyword'
-TT_RWORD = 'Reserved_Word'
-TT_NWORD = 'Noise_Word'
-TT_COMMA = 'Comma'
-TT_SEMICOLON = 'Semicolon'
-TT_LSQUARE = 'Left_Square'
-TT_RSQUARE = 'Right_Square'
-TT_LPAREN = 'Left_Paren'
-TT_RPAREN = 'Right_Paren'
-TT_EOF = 'EOF'
-
-class Token:
-    def __init__(self, type_, value=None, pos_start=-1):
-        self.type = type_
-        self.value = value
-        self.pos_start = pos_start
-
-    def __repr__(self):
-        if self.value: return f'{self.type}:{self.value}'
-        return f'{self.type}'
-    
-    def __str__(self):
-        if self.value: return format(self.type,'>20') + '      ' + str(self.value)
-        return f'{self.type}'
-
-# LEXER
+from .constants import ALPHABET, DIGITS, WHITESPACES, OPERATORS, UNARY, RELATIONAL, LOGICAL, PUNCTUATIONS, CONSTANTS, KEYWORDS, NOISEWORDS, RESERVEDWORDS, UNTRACKED, INVALID
+from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, ValueError, InvalidRelationalSymbol, ReferenceError
+from .position import Position
+from .tokens import Token
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_MOD, TT_UNARY, TT_REL, TT_LOG, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -220,11 +53,11 @@ class Lexer:
                 elif isinstance(result, Error):
                     return [], result
             elif self.current_char == '.' and check == '.' and check not in WHITESPACES:
-                result = self.ignore_comments()
-
-                if isinstance(result, Error):
+                result = self.make_comments()
+                if isinstance(result, Token):
+                    tokens.append(result)
+                elif isinstance(result, Error):
                     return [], result
-
             elif self.current_char in DIGITS + '.':
                 result = self.make_number()
                 if isinstance(result, Token):
@@ -277,28 +110,35 @@ class Lexer:
         elif id_str == 'exit':
             exit()
 
-        if id_str in KEYWORDS:
-            return Token(TT_KWORD, id_str, self.pos)
+        if id_str in CONSTANTS:
+            return Token(TT_DTYPE, id_str)
+        elif id_str in KEYWORDS:
+            return Token(TT_KWORD, id_str)
+        elif id_str == 'true' or id_str == 'false':
+            return Token(TT_BOOL, id_str)
         elif id_str in RESERVEDWORDS:
-            return Token(TT_RWORD, id_str, self.pos)
+            return Token(TT_RWORD, id_str)
         elif id_str in NOISEWORDS:
-            return Token(TT_NWORD, id_str, self.pos)
+            return Token(TT_NWORD, id_str)
         elif id_str in LOGICAL:
-            return Token(TT_LOG, id_str, self.pos)
+            return Token(TT_LOG, id_str)
         elif isUntracked == True:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
-            return Token(TT_ID, id_str, self.pos)
+            return Token(TT_ID, id_str)
         
-    def ignore_comments(self):
+    def make_comments(self):
         pos_start = self.pos.copy()
+        comment_str = ''
+        comment_str += self.current_char
         self.advance()
         check = self.check()
         dot_count = 0
         
         if self.current_char == '.' and check == '.' and check not in WHITESPACES:
             while dot_count != 3:
-                if self.check() == '':
+                comment_str += self.current_char
+                if self.check() == '' and self.check() != None:
                     return LexicalError(pos_start, self.pos, 'Closing symbol not found.')
                 
                 if self.current_char == '.':
@@ -307,10 +147,16 @@ class Lexer:
                     dot_count = 0
                 self.advance()
         else:
+            comment_str += self.current_char
             self.advance()
             while self.current_char != '\n' and self.current_char != None:
+                comment_str += self.current_char
                 self.advance()
+                
+        if self.current_char == '\n':
             self.advance()
+
+        return Token(TT_COMMENT, comment_str)
 
     def make_operator(self):
         operator = ''
@@ -345,19 +191,19 @@ class Lexer:
             self.advance()
             
         if isUnary:
-            return Token(TT_UNARY, operator, self.pos)
+            return Token(TT_UNARY, operator)
         elif isValid == False:
             return LexicalError(pos_start, self.pos, f'{operator}')
         elif operator == '+':
-            return Token(TT_PLUS, operator, self.pos)
+            return Token(TT_PLUS, operator)
         elif operator == '-':
-            return Token(TT_MINUS, operator, self.pos)
+            return Token(TT_MINUS, operator)
         elif operator == '*':
-            return Token(TT_MUL, operator, self.pos)
+            return Token(TT_MUL, operator)
         elif operator == '/':
-            return Token(TT_DIV, operator, self.pos)
+            return Token(TT_DIV, operator)
         elif operator == '%':
-            return Token(TT_MOD, operator, self.pos)
+            return Token(TT_MOD, operator)
         
 
     def make_number(self):
@@ -392,7 +238,7 @@ class Lexer:
             self.advance()
 
         if dot_count == 0 and isValid == True and isIdentifier == False:
-            return Token(TT_INT, int(num_str), self.pos)
+            return Token(TT_INT, int(num_str))
         elif dot_count == 2 and isValid == True:
             return LexicalError(pos_start, self.pos, f'{num_str}')
         elif isIdentifier:
@@ -400,7 +246,7 @@ class Lexer:
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
-            return Token(TT_FLOAT, float(num_str), self.pos)
+            return Token(TT_FLOAT, float(num_str))
 
     def invalid_relational(self):
         rel_str = ''
@@ -450,7 +296,7 @@ class Lexer:
             self.advance()
 
         if rel_str in {"==", "!=", ">=", "<="} or isValid:
-            return Token(TT_REL, rel_str, self.pos)
+            return Token(TT_REL, rel_str)
         elif isValid == False:
             return LexicalError(pos_start, self.pos, f'{rel_str}')
 
@@ -470,50 +316,20 @@ class Lexer:
             self.advance()
         else:
             return LexicalError(pos_start, self.pos, "Must be enclosed by \" or \'.")
-        return Token(TT_STR, text_str, self.pos)
+        return Token(TT_STR, text_str)
 
     def make_punctuation(self):
         if self.current_char in PUNCTUATIONS:
             char = self.current_char
             if char == ',':
-                return Token(TT_COMMA, char, self.pos)
+                return Token(TT_COMMA, char)
             elif char == ':':
-                return Token(TT_SEMICOLON, char, self.pos)
+                return Token(TT_SEMICOLON, char)
             elif char == '[':
-                return Token(TT_LSQUARE, char, self.pos)
+                return Token(TT_LSQUARE, char)
             elif char == ']':
-                return Token(TT_RSQUARE, char, self.pos)
+                return Token(TT_RSQUARE, char)
             elif char == '(':
-                return Token(TT_LPAREN, char, self.pos)
+                return Token(TT_LPAREN, char)
             elif char == ')':
-                return Token(TT_RPAREN, char, self.pos)
-
-# SYMBOL TABLE
-
-def tok_to_str(tokens):
-    tok_str = ''
-
-    if(tokens != None):
-        for tok in tokens:
-            tok_str += str(tok) + '\n'
-
-    return tok_str
-
-def output_to_symbolTable(tokens):
-    filename = 'symbolTable.txt'
-
-    with open(filename, "w") as f:
-        f.write('')
-
-    with open(filename, "a") as f:
-        f.write(format('TOKENS', '>20') + '      ' + 'LEXEMES' + '\n')
-        f.write('-----------------------------------------------\n')
-        f.write(tok_to_str(tokens))
-
-# RUN
-
-def run(fn, text):
-    lexer = Lexer(fn, text)
-    tokens, error = lexer.make_tokens()
-
-    return tokens, error
+                return Token(TT_RPAREN, char)
