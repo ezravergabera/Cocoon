@@ -177,23 +177,85 @@ def save_as_file():
             code = textBox.get("1.0", END)
             f.write(code)
         
+        # Update fileName_label with the selected filename
         fileName_label['state'] = 'normal'
-        filename = os.path.basename(filename)
-        read_file(filename)
         fileName_label.delete(0, END)
-        fileName_label.insert(INSERT, filename)
+        fileName_label.insert(INSERT, os.path.basename(filename))
+        fileName_label['state'] = 'readonly'
 
-        listbox.selection_clear(0, END)
+        # Update the listbox selection
+        update_listbox_selection(filename)
 
-        if 'Drag and Drop Files Here' in listbox.get(0, END):
-            listbox.delete(0, 0)
+# UPDATE LIST BOX SELECTION
+def update_listbox_selection(filename):
+    listbox.selection_clear(0, END)
+    
+    if 'Drag and Drop Files Here' in listbox.get(0, END):
+        listbox.delete(0, 0)
 
-        if os.path.basename(filename) not in listbox.get(0, END):
-            listbox.insert(END, os.path.basename(filename))
-            dropped_files.append(filename)
+    if os.path.basename(filename) not in listbox.get(0, END):
+        listbox.insert(END, os.path.basename(filename))
+        dropped_files.append(filename)
 
-        index = listbox.get(0, END).index(os.path.basename(filename))
-        listbox.selection_set(index)
+    index = listbox.get(0, END).index(os.path.basename(filename))
+    listbox.selection_set(index)
+
+# UPDATE LINE NUMBERS
+def update_line_numbers():
+    # Disable the binding temporarily to prevent updating line numbers
+    textBox.unbind('<KeyRelease>')
+
+    # Delete previous line numbers
+    line_numbers.config(state='normal')
+    line_numbers.delete("1.0", END)
+
+
+    # Get the number of lines in the main textBox
+    total_lines = textBox.index("end-1c").split('.')[0]
+
+
+    # Calculate the width based on the maximum line number
+    width = len(total_lines)
+    line_numbers.configure(width=width)
+
+
+    # Insert line numbers
+    for i in range(1, int(total_lines) + 1):
+        line_numbers.insert(tk.END, f"{i}\n" if i < int(total_lines) else str(i))
+
+
+    # Update the scrollbar range
+    scrollbar.config(command=textBox.yview)
+    line_numbers.config(yscrollcommand=scrollbar.set)
+
+    # Set the state of line_numbers to 'disabled' to make it read-only
+    line_numbers.config(state='disabled')
+
+    # Re-enable the binding after updating line numbers
+    textBox.bind('<KeyRelease>', lambda event: update_line_numbers())
+
+
+# SCROLL LINE NUMBERS ALONG WITH TEXTBOX
+def on_scroll(*args):
+    line_numbers.yview_moveto(float(args[0]))
+    textBox.yview_moveto(float(args[0]))
+
+# FILE UPDATER WITH NUMBER LINE
+def update_text_content(file_path):
+    # Clear existing content in line_numbers and textBox
+    line_numbers.delete("1.0", tk.END)
+    textBox.delete("1.0", tk.END)
+
+    with open(file_path, 'r') as file:
+        content = file.readlines()
+
+        # Insert line numbers and content
+        for i, line in enumerate(content, start=1):
+            line_numbers.insert(tk.END, f"{i: >4} {line}")
+            textBox.insert(tk.END, line)
+            # Call the update_line_numbers function to set up initially
+            update_line_numbers()
+       
 
 # WINDOW
 window = TkinterDnD.Tk()
@@ -256,6 +318,19 @@ textBox_bg = canvas.create_image(
 text_frame = Frame(window, bg="#d5d5d5")
 text_frame.place(x=315, y=75, width=630, height=256)
 
+# LINE NUMBERS.WIDGET
+line_numbers = Text(
+    text_frame,
+    bd=0,
+    bg="#d5d5d5",
+    highlightthickness=0,
+    wrap=NONE,
+    padx=5,
+    pady=5,
+    width=4,  # Set an initial width
+)
+line_numbers.pack(side=LEFT, fill=Y)
+
 # TEXTBOX.WIDGET
 textBox = Text(
     text_frame,
@@ -273,12 +348,15 @@ textBox.pack(side=LEFT, fill=Y)
 # SCROLLBAR FOR TEXTBOX
 scrollbar = Scrollbar(window, command=textBox.yview)
 scrollbar.place(x=928, y=75, height=258, width=19)
-textBox['yscrollcommand'] = scrollbar.set
+textBox['yscrollcommand'] = on_scroll
 
 # SCROLLBAR FOR RESULTBOX
 result_scrollbar = Scrollbar(window, command=resultBox.yview)
 result_scrollbar.place(x=928, y=471, height=185.5, width=19)
 resultBox['yscrollcommand'] = result_scrollbar.set
+
+# TEXTBOX BIND
+textBox.bind('<Configure>', lambda e: update_line_numbers())
 
 # RESULT TEXT
 canvas.create_text(
