@@ -186,16 +186,7 @@ def save_as_file():
         # Update the listbox selection
         update_listbox_selection(filename)
 
-        if 'Drag and Drop Files Here' in listbox.get(0, END):
-            listbox.delete(0, 0)
-
-        if os.path.basename(filename) not in listbox.get(0, END):
-            listbox.insert(END, os.path.basename(filename))
-            dropped_files.append(filename)
-
-        index = listbox.get(0, END).index(os.path.basename(filename))
-        listbox.selection_set(index)
-
+# UPDATE LIST BOX SELECTION
 def update_listbox_selection(filename):
     listbox.selection_clear(0, END)
     
@@ -265,7 +256,6 @@ def update_text_content(file_path):
             # Call the update_line_numbers function to set up initially
             update_line_numbers()
        
-
 
 # WINDOW
 window = TkinterDnD.Tk()
