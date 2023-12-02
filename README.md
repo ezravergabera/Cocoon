@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/img/samplelogo.png" width = 30%/>
+  <img src="public/img/cocoonlogo.png" width = 30%/>
 </p>
 <h1 align="center">Cocoon Lexical Analyzer</h1>
 
