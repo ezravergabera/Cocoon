@@ -1,4 +1,4 @@
-from Cocoon.tokens import tok_to_str, output_to_symbolTable
+from Cocoon.tokens import print_tokens, output_to_symbolTable
 from shell import run
 import os
 import tkinter as tk
@@ -28,11 +28,7 @@ def run_lexer():
             output_to_symbolTable(result)
             result.pop()
             print(result)
-            textResult = ''
-            textResult += (format("File name:", ">20") + "      " + filename + "\n")
-            textResult += (format('TOKENS', '>20') + '      ' + 'LEXEMES' + "\n")
-            textResult += ('-----------------------------------------------' + "\n")
-            textResult += (tok_to_str(result))
+            textResult = print_tokens(result)
             resultBox['state'] = 'normal'
             resultBox.delete("1.0", END)
             resultBox.insert(INSERT, textResult)
@@ -53,11 +49,7 @@ def run_lexer():
             output_to_symbolTable(result)
             result.pop()
             print(result)
-            textResult = ''
-            textResult += (format("File name:", ">20") + "      " + "<stdin>" + "\n")
-            textResult += (format('TOKENS', '>20') + '      ' + 'LEXEMES' + "\n")
-            textResult += ('-----------------------------------------------' + "\n")
-            textResult += (tok_to_str(result))
+            textResult = print_tokens(result)
             resultBox['state'] = 'normal'
             resultBox.delete("1.0", END)
             resultBox.insert(INSERT, textResult)
@@ -102,6 +94,7 @@ def handle_drop(event):
         listbox.selection_clear(0, END)
         index = listbox.get(0, END).index(os.path.basename(files[-1]))
         listbox.selection_set(index)
+        listbox.selection_anchor(index)
 
         filename = os.path.basename(files[-1])
         fileName_label['state'] = 'normal'
@@ -135,13 +128,6 @@ def update_text_on_selection(event=None):
         fileName_label.insert(INSERT, filename)
         fileName_label['state'] = 'readonly'
 
-# READS AND DISPLAYS FILE'S CONTENTS TO THE TEXTBOX
-def read_file(file):
-    with open(file, "r") as f:
-        text = f.read()
-        textBox.delete("1.0", END)
-        textBox.insert(INSERT, text)
-
 # OPEN FILE
 def open_file_dialog():
     fpath = filedialog.askopenfilename(initialdir=currentdir, filetypes=(("KKUN files", "*.kkun"),))
@@ -149,7 +135,7 @@ def open_file_dialog():
     if file_path.lower().endswith('.kkun'):
         fileName_label['state'] = 'normal'
         filename = os.path.basename(file_path)
-        read_file(file_path)
+        update_text_content(file_path)
         fileName_label.delete(0, END)
         fileName_label.insert(INSERT, filename)
 
@@ -164,6 +150,7 @@ def open_file_dialog():
 
         index = listbox.get(0, END).index(os.path.basename(file_path))
         listbox.selection_set(index)
+        listbox.selection_anchor(index)
 
 # SAVE AS FILE
 def save_as_file():
@@ -174,7 +161,7 @@ def save_as_file():
     )
     if filename:
         with open(filename, "w") as f:
-            code = textBox.get("1.0", END)
+            code = textBox.get("0.0", END)
             f.write(code)
         
         # Update fileName_label with the selected filename
@@ -199,6 +186,7 @@ def update_listbox_selection(filename):
 
     index = listbox.get(0, END).index(os.path.basename(filename))
     listbox.selection_set(index)
+    listbox.selection_anchor(index)
 
 # UPDATE LINE NUMBERS
 def update_line_numbers():
@@ -224,9 +212,9 @@ def update_line_numbers():
         line_numbers.insert(tk.END, f"{i}\n" if i < int(total_lines) else str(i))
 
 
-    # Update the scrollbar range
-    scrollbar.config(command=textBox.yview)
+    # Update the scrollbar range and move the yview of the line numbers to the position of the scrollbar
     line_numbers.config(yscrollcommand=scrollbar.set)
+    line_numbers.yview_moveto(scrollbar.get()[0])
 
     # Set the state of line_numbers to 'disabled' to make it read-only
     line_numbers.config(state='disabled')
@@ -234,13 +222,7 @@ def update_line_numbers():
     # Re-enable the binding after updating line numbers
     textBox.bind('<KeyRelease>', lambda event: update_line_numbers())
 
-
-# SCROLL LINE NUMBERS ALONG WITH TEXTBOX
-def on_scroll(*args):
-    line_numbers.yview_moveto(float(args[0]))
-    textBox.yview_moveto(float(args[0]))
-
-# FILE UPDATER WITH NUMBER LINE
+# TEXTBOX UPDATER WITH NUMBER LINE
 def update_text_content(file_path):
     # Clear existing content in line_numbers and textBox
     line_numbers.delete("1.0", tk.END)
@@ -256,10 +238,46 @@ def update_text_content(file_path):
             # Call the update_line_numbers function to set up initially
             update_line_numbers()
        
+def combine_funcs(*funcs): 
+    def inner_combined_func(*args, **kwargs): 
+        for f in funcs: 
+            f(*args, **kwargs) 
+  
+    return inner_combined_func
+
+def on_scroll(*args):
+    line_numbers.yview_moveto(scrollbar.get()[0])
+
+def on_wheelscroll(*args):
+    line_numbers.yview_moveto(float(args[0]))
+    textBox.yview_moveto(float(args[0]))
+
+def prevent_scroll(event):
+    return "break"
+
+def new_file():
+    fileName_label['state'] = 'normal'
+    fileName_label.delete(0, END)
+    fileName_label.insert(0, 'Write a code: ')
+    fileName_label['state'] = 'readonly'
+
+    listbox.selection_clear(0, END)
+
+    textBox.delete("1.0", END)
+    update_line_numbers()
+
+def delete():
+    listbox.delete(ANCHOR)
+    new_file()
+
+def delete_all():
+    listbox.delete(0, END)
+    new_file()
 
 # WINDOW
 window = TkinterDnD.Tk()
 window.geometry("983x689")
+# window.iconbitmap("public/img/test.ico")
 window.title("Cocoon Lexical Analyzer")
 window.configure(bg = "#252525")
 dropped_files = []
@@ -327,8 +345,10 @@ line_numbers = Text(
     wrap=NONE,
     padx=5,
     pady=5,
-    width=4,  # Set an initial width
+    width=4  # Set an initial width
 )
+
+# LINE NUMBERS.POSITION
 line_numbers.pack(side=LEFT, fill=Y)
 
 # TEXTBOX.WIDGET
@@ -339,24 +359,32 @@ textBox = Text(
     highlightthickness=0,
     wrap=NONE,
     padx=5,
-    pady=5
+    pady=5,
 )
 
 # TEXTBOX.POSITION
 textBox.pack(side=LEFT, fill=Y)
 
+# TEXTBOX BIND
+textBox.bind('<Configure>', lambda e: update_line_numbers())
+
 # SCROLLBAR FOR TEXTBOX
-scrollbar = Scrollbar(window, command=textBox.yview)
+scrollbar = Scrollbar(window, command=combine_funcs(textBox.yview, line_numbers.yview))
 scrollbar.place(x=928, y=75, height=258, width=19)
-textBox['yscrollcommand'] = on_scroll
+
+# TEXTBOX.CONFIGURE
+textBox['yscrollcommand'] = combine_funcs(on_wheelscroll, scrollbar.set)
+
+# LINENUMBERS BIND
+line_numbers.bind('<MouseWheel>', prevent_scroll)
+
+# SCROLLBAR BIND
+scrollbar.bind("<B1-Motion>", on_scroll)
 
 # SCROLLBAR FOR RESULTBOX
 result_scrollbar = Scrollbar(window, command=resultBox.yview)
 result_scrollbar.place(x=928, y=471, height=185.5, width=19)
 resultBox['yscrollcommand'] = result_scrollbar.set
-
-# TEXTBOX BIND
-textBox.bind('<Configure>', lambda e: update_line_numbers())
 
 # RESULT TEXT
 canvas.create_text(
@@ -378,7 +406,42 @@ fileName_label.insert(-1, 'Write a code: ')
 fileName_label['state'] = 'readonly'
 
 # FILE NAME LABEL.POSITION
-fileName_label.place(x=315, y=25)
+fileName_label.place(x=315, y=25, width=637.69)
+
+# LISTBOX WIDGET
+listbox = Listbox(
+    bd=0,
+    bg="#d5d5d5",
+    selectbackground="#1A3A35",
+    selectmode=SINGLE,
+    highlightthickness=0)
+listbox.place(x=89, y=111, width=172, height=537)
+
+# LISTBOX DND
+listbox.insert(0, "Drag and Drop Files Here")
+listbox.drop_target_register(DND_FILES)
+
+# LISTBOX BIND
+listbox.dnd_bind('<<Drop>>', handle_drop)
+listbox.bind('<<ListboxSelect>>', update_text_on_selection)
+
+# NEW FILE BUTTON.IMAGE
+newFileButton_img = PhotoImage(file="public/img/newFileButton.png")
+
+# NEW FILE BUTTON.WIDGET
+newFileButton = Button(
+    image=newFileButton_img,
+    borderwidth=0,
+    highlightthickness=0,
+    command=new_file,
+    relief="flat"
+)
+
+# NEW FILE BUTTON.POSITION
+newFileButton.place(
+    x=343, y=353,
+    width=114, height=35.16
+)
 
 # SAVE AS BUTTON.IMAGE
 saveAsButton_img = PhotoImage(file=f"public/img/saveAsButton.png")
@@ -394,8 +457,8 @@ saveAsButton = Button(
 
 # SAVE AS BUTTON.POSITION
 saveAsButton.place(
-    x=372.66, y=352.79,
-    width=177.45, height=35.16
+    x=457, y=353,
+    width=146, height=35.16
 )
 
 # RUN LEXER BUTTON.IMAGE
@@ -411,9 +474,8 @@ runLexerButton = Button(
 
 # RUN LEXER BUTTON.POSITION
 runLexerButton.place(
-    x = 708, y = 352,
-    width = 177,
-    height = 35)
+    x = 771, y = 353,
+    width = 146, height = 35.16)
 
 # OPEN FILE BUTTON.IMAGE
 openFileButton_img = PhotoImage(file=f"public/img/openFileButton.png")
@@ -429,18 +491,37 @@ openFileButton = Button(
 # OPEN FILE BUTTON.POSITION
 openFileButton.place(x=70.5, y=59, width=209, height=33)
 
-# LISTBOX WIDGET
-listbox = Listbox(
-    bd=0,
-    bg="#d5d5d5",
-    selectbackground="lightblue",
-    selectmode=SINGLE,
-    highlightthickness=0)
-listbox.place(x=89, y=111, width=172, height=537)
-listbox.insert(0, "Drag and Drop Files Here")
-listbox.drop_target_register(DND_FILES)
-listbox.dnd_bind('<<Drop>>', handle_drop)
-listbox.bind('<<ListboxSelect>>', update_text_on_selection)
+# CLEAR BUTTON.IMAGE
+clearButton_img = PhotoImage(file=f"public/img/clearButton.png")
+
+# CLEAR BUTTON.WIDGET
+clearButton = Button(
+    image=clearButton_img,
+    borderwidth=0,
+    highlightthickness=0,
+    command=delete,
+    relief="flat")
+
+# CLEAR BUTTON.POSITION
+clearButton.place(
+    x=88, y=613,
+    width=77, height=35)
+
+# CLEAR ALL BUTTON.IMAGE
+clearAllButton_img = PhotoImage(file="public/img/clearAllButton.png")
+
+# CLEAR ALL BUTTON.WIDGET
+clearAllButton = Button(
+    image=clearAllButton_img,
+    borderwidth=0,
+    highlightthickness=0,
+    command=delete_all,
+    relief="flat")
+
+# CLEAR ALL BUTTON.POSITION
+clearAllButton.place(
+    x=165, y=613,
+    width=96, height=35)
 
 # WINDOW
 window.resizable(False, False)
