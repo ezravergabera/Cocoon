@@ -277,7 +277,7 @@ def delete_all():
 # WINDOW
 window = TkinterDnD.Tk()
 window.geometry("983x689")
-# window.iconbitmap("public/img/test.ico")
+window.iconbitmap("public/img/cocoonIcon.ico")
 window.title("Cocoon Lexical Analyzer")
 window.configure(bg = "#252525")
 dropped_files = []
