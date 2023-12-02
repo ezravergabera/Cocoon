@@ -8,7 +8,7 @@ class Token:
         return f'{self.type}'
     
     def __str__(self):
-        if self.value: return format(self.type,'>20') + '      ' + str(self.value)
+        if self.value: return f'{self.type: >20}    {str(self.value)}'
         return f'{self.type}'
 
 
@@ -21,14 +21,20 @@ def tok_to_str(tokens):
 
     return tok_str
 
+def print_tokens(tokens):
+    text = ''
+    text += (f'{"File name:": >20}    <stdin>\n')
+    text += (f'{"TOKENS": >20}    LEXEMES\n')
+    text += ('----------------------------------------\n')
+    text += (tok_to_str(tokens))
+
+    return text
 
 def output_to_symbolTable(tokens):
     filename = 'symbolTable.txt'
 
     with open(filename, "w") as f:
-        f.write('')
-
-    with open(filename, "a") as f:
-        f.write(format('TOKENS', '>20') + '      ' + 'LEXEMES' + '\n')
-        f.write('-----------------------------------------------\n')
+        f.write(f'{"File name:": >20}    {filename}\n')
+        f.write(f'{"TOKENS": >20}    LEXEMES\n')
+        f.write('----------------------------------------\n')
         f.write(tok_to_str(tokens))
