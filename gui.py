@@ -115,7 +115,7 @@ def update_text_content(file_path):
 # UPDATES THE TEXTBOX DISPLAY AND FILE NAME LABEL UPON SELECTION OF AN ELEMENT IN THE LISTBOX
 def update_text_on_selection(event=None):
     selected_index = listbox.curselection()
-    if selected_index and len(dropped_files) >= 2:
+    if selected_index and len(dropped_files) >= 1:
         sfile = dropped_files[selected_index[0]]
         selected_file = sfile.replace('{' , '').replace('}', '')
         update_text_content(selected_file)
