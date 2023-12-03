@@ -26,7 +26,6 @@ def run_lexer():
             resultBox['state'] = 'disable'
         else:
             output_to_symbolTable(result)
-            result.pop()
             print(result)
             textResult = print_tokens(filename, result)
             resultBox['state'] = 'normal'
@@ -35,7 +34,7 @@ def run_lexer():
             resultBox['state'] = 'disable'
 
     else:
-        filename = "<stdin"
+        filename = "<stdin>"
         text = textBox.get("1.0", END)
 
         result, error = run(filename, text)
@@ -48,7 +47,6 @@ def run_lexer():
             resultBox['state'] = 'disable'
         else:
             output_to_symbolTable(result)
-            result.pop()
             print(result)
             textResult = print_tokens(filename, result)
             resultBox['state'] = 'normal'
