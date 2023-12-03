@@ -2,6 +2,19 @@ from Cocoon.lexer import Lexer
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
 import sys
 
+def debug():
+    while True:
+        text = input("cocoon > ")
+
+        result, error = run("<stdin>", text)
+
+        if error:
+            print(error.as_string())
+        else:
+            output_to_symbolTable(result)
+            result.pop()
+            print(result)
+
 def run(fn, text):
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
