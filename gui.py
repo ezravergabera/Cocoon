@@ -28,16 +28,17 @@ def run_lexer():
             output_to_symbolTable(result)
             result.pop()
             print(result)
-            textResult = print_tokens(result)
+            textResult = print_tokens(filename, result)
             resultBox['state'] = 'normal'
             resultBox.delete("1.0", END)
             resultBox.insert(INSERT, textResult)
             resultBox['state'] = 'disable'
 
     else:
+        filename = "<stdin"
         text = textBox.get("1.0", END)
 
-        result, error = run("<stdin>", text)
+        result, error = run(filename, text)
 
         if error:
             print(error.as_string())
@@ -49,7 +50,7 @@ def run_lexer():
             output_to_symbolTable(result)
             result.pop()
             print(result)
-            textResult = print_tokens(result)
+            textResult = print_tokens(filename, result)
             resultBox['state'] = 'normal'
             resultBox.delete("1.0", END)
             resultBox.insert(INSERT, textResult)

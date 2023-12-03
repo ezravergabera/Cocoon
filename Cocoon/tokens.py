@@ -21,9 +21,9 @@ def tok_to_str(tokens):
 
     return tok_str
 
-def print_tokens(tokens):
+def print_tokens(fn, tokens):
     text = ''
-    text += (f'{"File name:": >20}    <stdin>\n')
+    text += (f'{"File name:": >20}    {fn}\n')
     text += (f'{"TOKENS": >20}    LEXEMES\n')
     text += ('----------------------------------------\n')
     text += (tok_to_str(tokens))
