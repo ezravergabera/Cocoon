@@ -26,9 +26,9 @@ class LexicalError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Lexical Error', details)
 
-class ValueError(Error):
+class InvalidDecimalError(Error):
     def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Value Error', details)
+        super().__init__(pos_start, pos_end, 'Invalid Decimal', details)
 
 class InvalidRelationalSymbol(Error):
     def __init__(self, pos_start, pos_end, details):

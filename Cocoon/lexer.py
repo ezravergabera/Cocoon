@@ -1,8 +1,8 @@
 from .constants import ALPHABET, DIGITS, WHITESPACES, OPERATORS, UNARY, RELATIONAL, LOGICAL, PUNCTUATIONS, CONSTANTS, KEYWORDS, NOISEWORDS, RESERVEDWORDS, UNTRACKED, INVALID
-from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, ValueError, InvalidRelationalSymbol, ReferenceError
+from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_MOD, TT_INCRE, TT_DECRE, TT_POSITIVE, TT_NEGATIVE, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_INCRE, TT_DECRE, TT_POSITIVE, TT_NEGATIVE, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -187,6 +187,10 @@ class Lexer:
             return Token(TT_MUL, operator)
         elif operator == '/':
             return Token(TT_DIV, operator)
+        elif operator == '~':
+            return Token(TT_INTDIV, operator)
+        elif operator == '^':
+            return Token(TT_EXPO, operator)
         elif operator == '%':
             return Token(TT_MOD, operator)
 
@@ -273,7 +277,10 @@ class Lexer:
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         else:
-            return Token(TT_FLOAT, float(num_str))
+            try:
+                return Token(TT_FLOAT, float(num_str))
+            except ValueError:
+                return InvalidDecimalError(pos_start, self.pos, "Invalid Decimal")
 
     def invalid_relational(self):
         rel_str = ''
@@ -366,7 +373,7 @@ class Lexer:
             char = self.current_char
             if char == ',':
                 return Token(TT_COMMA, char)
-            elif char == ':':
+            elif char == ';':
                 return Token(TT_SEMICOLON, char)
             elif char == '[':
                 return Token(TT_LSQUARE, char)

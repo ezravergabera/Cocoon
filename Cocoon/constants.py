@@ -1,7 +1,7 @@
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 DIGITS = '0123456789'
 WHITESPACES = ' \t\n\v\r'
-OPERATORS = '+-/*^%'
+OPERATORS = '+-/*^%~'
 UNARY = '+-'
 RELATIONAL = '=!><'
 LOGICAL = {
@@ -12,7 +12,7 @@ LOGICAL = {
     "and", 
     "or"
 }
-PUNCTUATIONS = '()[]'
+PUNCTUATIONS = ',;()[]'
 CONSTANTS = {
     "number", 
     "num", 
@@ -54,7 +54,7 @@ RESERVEDWORDS = {
     "raise", 
     "raising"
 }
-UNTRACKED = '$#@`~?}{\\:;'
+UNTRACKED = '$#@`?}{\\:'
 INVALID = {
     "!",
     "&",
