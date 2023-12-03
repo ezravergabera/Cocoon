@@ -2,7 +2,7 @@ from .constants import ALPHABET, DIGITS, WHITESPACES, OPERATORS, UNARY, RELATION
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, ValueError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_MOD, TT_UNARY, TT_REL, TT_LOG, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_MOD, TT_INCRE, TT_DECRE, TT_POSITIVE, TT_NEGATIVE, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -25,7 +25,7 @@ class Lexer:
     
     def backtrack(self):
         try:
-            char = self.text[self.pos.idx - 1] if self.pos.idx < len(self.text) else None
+            char = self.text[self.pos.idx - 1] if self.pos.idx > 0 else None
         except IndexError:
             char = ''     
         return char if char is not None else ''
@@ -121,12 +121,23 @@ class Lexer:
         elif id_str in NOISEWORDS:
             return Token(TT_NWORD, id_str)
         elif id_str in LOGICAL:
-            return Token(TT_LOG, id_str)
+            return self.make_logical(id_str)
         elif isUntracked == True:
             return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
         else:
             return Token(TT_ID, id_str)
         
+    def make_logical(self, log_str):
+        if log_str == 'NOT' or log_str == 'not':
+            return Token(TT_NOT, log_str)
+        elif log_str == 'AND' or log_str == 'and':
+            return Token(TT_AND, log_str)
+        elif log_str == 'OR' or log_str == 'or':
+            return Token(TT_OR, log_str)
+        else:
+            # for future if magkaerror man in this part
+            print("HALA MAY ERROR SA MAKE_LOGICAL")
+
     def make_comments(self):
         pos_start = self.pos.copy()
         comment_str = ''
@@ -157,44 +168,18 @@ class Lexer:
             self.advance()
 
         return Token(TT_COMMENT, comment_str)
-
+    
     def make_operator(self):
         operator = ''
-        isUnary = False
-        isValid = True
-        pos_start = self.pos.copy()
 
-        while self.current_char != None and self.current_char in OPERATORS + WHITESPACES:
-            check = self.check()
-            backtrack = self.backtrack()
-            if self.current_char in OPERATORS and check in UNARY and check not in WHITESPACES:
-                if self.current_char == check:
-                    isUnary = True
-                else:
-                    isValid = False
-            elif backtrack in ALPHABET + DIGITS and self.current_char in OPERATORS and check in ALPHABET + DIGITS and backtrack not in WHITESPACES and check not in WHITESPACES:
-                isValid = True
-            elif self.current_char in UNARY and check in ALPHABET + DIGITS and check not in WHITESPACES:
-                isUnary = True
+        result = self.make_unary()
+        if isinstance(result, Token):
+            return result
+        
+        operator += self.current_char
+        self.advance()
 
-            if self.current_char in WHITESPACES:
-                break
-            elif isUnary or isValid == False:
-                operator += self.current_char
-                if len(operator) == 2:
-                    self.advance()
-                    break
-            else:
-                operator += self.current_char
-                self.advance()
-                break
-            self.advance()
-            
-        if isUnary:
-            return Token(TT_UNARY, operator)
-        elif isValid == False:
-            return LexicalError(pos_start, self.pos, f'{operator}')
-        elif operator == '+':
+        if operator == '+':
             return Token(TT_PLUS, operator)
         elif operator == '-':
             return Token(TT_MINUS, operator)
@@ -204,7 +189,49 @@ class Lexer:
             return Token(TT_DIV, operator)
         elif operator == '%':
             return Token(TT_MOD, operator)
-        
+
+    def make_unary(self):
+        unary_str = ''
+        check = self.check()
+        backtrack = self.backtrack()
+
+        if self.current_char != None and self.current_char in UNARY:
+
+            # For scanning increments and decrements. 2 characters
+            if self.current_char == '+' and self.current_char == check and backtrack in WHITESPACES:
+                unary_str += self.current_char
+                self.advance()
+                unary_str += self.current_char
+                self.advance()
+                return Token(TT_INCRE, unary_str)
+            elif self.current_char == '-' and self.current_char == check and backtrack in WHITESPACES:
+                unary_str += self.current_char
+                self.advance()
+                unary_str += self.current_char
+                self.advance()
+                return Token(TT_DECRE, unary_str)
+            elif self.current_char == '+' and self.current_char == check and backtrack in ALPHABET + DIGITS:
+                unary_str += self.current_char
+                self.advance()
+                unary_str += self.current_char
+                self.advance()
+                return Token(TT_INCRE, unary_str)
+            elif self.current_char == '-' and self.current_char == check and backtrack in ALPHABET + DIGITS:
+                unary_str += self.current_char
+                self.advance()
+                unary_str += self.current_char
+                self.advance()
+                return Token(TT_DECRE, unary_str)
+
+            # For scanning positive and negative unary. 1 character
+            if self.current_char == '+' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS or backtrack in WHITESPACES):
+                unary_str += self.current_char
+                self.advance()
+                return Token(TT_POSITIVE, unary_str)
+            elif self.current_char == '-' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS or backtrack in WHITESPACES):
+                unary_str += self.current_char
+                self.advance()
+                return Token(TT_NEGATIVE, unary_str)
 
     def make_number(self):
         num_str = ''
@@ -281,24 +308,40 @@ class Lexer:
 
     def make_relational(self):
         rel_str = ''
-        isValid = True
-        pos_start = self.pos.copy()
+        check = self.check()
 
-        while self.current_char != None and self.current_char in RELATIONAL + WHITESPACES:
-            if self.current_char in WHITESPACES or len(rel_str) == 2:
-                break
-            elif self.current_char in {">", "<"} or rel_str in {">", "<"} and self.current_char == '=':
-                isValid = True
-                rel_str += self.current_char
-            else:
-                isValid = False
-                rel_str += self.current_char
+        if self.current_char == '>' and check == '=':
+            rel_str += self.current_char
             self.advance()
-
-        if rel_str in {"==", "!=", ">=", "<="} or isValid:
-            return Token(TT_REL, rel_str)
-        elif isValid == False:
-            return LexicalError(pos_start, self.pos, f'{rel_str}')
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_GREATEREQUAL, rel_str)
+        elif self.current_char == '<' and check == '=':
+            rel_str += self.current_char
+            self.advance()
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_LESSEQUAL, rel_str)
+        elif self.current_char == '=' and check == '=':
+            rel_str += self.current_char
+            self.advance()
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_EQUALTO, rel_str)
+        elif self.current_char == '!' and check == '=':
+            rel_str += self.current_char
+            self.advance()
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_NOTEQUAL, rel_str)
+        elif self.current_char == '>':
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_GREATER, rel_str)
+        elif self.current_char == '<':
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_LESS, rel_str)
 
     def make_string(self):
         text_str = ''
