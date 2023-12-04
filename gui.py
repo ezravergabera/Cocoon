@@ -196,24 +196,20 @@ def update_line_numbers():
     line_numbers.config(state='normal')
     line_numbers.delete("1.0", END)
 
-
     # Get the number of lines in the main textBox
     total_lines = textBox.index("end-1c").split('.')[0]
-
 
     # Calculate the width based on the maximum line number
     width = len(total_lines)
     line_numbers.configure(width=width)
 
-
     # Insert line numbers
     for i in range(1, int(total_lines) + 1):
         line_numbers.insert(tk.END, f"{i}\n" if i < int(total_lines) else str(i))
 
-
     # Update the scrollbar range and move the yview of the line numbers to the position of the scrollbar
-    line_numbers.config(yscrollcommand=scrollbar.set)
-    line_numbers.yview_moveto(scrollbar.get()[0])
+    line_numbers.config(yscrollcommand=scrollbarY.set)
+    line_numbers.yview_moveto(scrollbarY.get()[0])
 
     # Set the state of line_numbers to 'disabled' to make it read-only
     line_numbers.config(state='disabled')
@@ -244,8 +240,25 @@ def combine_funcs(*funcs):
   
     return inner_combined_func
 
-def on_scroll(*args):
-    line_numbers.yview_moveto(scrollbar.get()[0])
+def on_scroll(event):
+    line_numbers.yview_moveto(scrollbarY.get()[0])
+    new_xview = textBox.xview()[0]
+    textBox.xview_moveto(new_xview)
+    update_line_numbers()
+
+def show_scrollbar():
+    scrollbarX.place(x=315, y=319, height=14, width=613)
+    update_line_numbers()
+
+def hide_scrollbar():
+    scrollbarX.place_forget()
+    update_line_numbers()
+
+def check_scrollbar(*args):
+    if float(args[0]) <= 0.0 and float(args[1]) >= 1.0:
+        hide_scrollbar()
+    else:
+        show_scrollbar()
 
 def on_wheelscroll(*args):
     line_numbers.yview_moveto(float(args[0]))
@@ -314,8 +327,8 @@ resultBox['state'] = 'disable'
 # RESULTBOX.POSITION
 resultBox.place(
     x = 315, y = 471,
-    width = 630,
-    height = 184)
+    width = 613,
+    height = 186)
 
 # FILES LABEL
 file_label = Label(
@@ -333,7 +346,7 @@ textBox_bg = canvas.create_image(
 
 # TEXTBOX.FRAME TO HOLD BOTH TEXT WIDGETS
 text_frame = Frame(window, bg="#d5d5d5")
-text_frame.place(x=315, y=75, width=630, height=256)
+text_frame.place(x=315, y=75, width=613, height=258)
 
 # LINE NUMBERS.WIDGET
 line_numbers = Text(
@@ -367,18 +380,34 @@ textBox.pack(side=LEFT, fill=Y)
 # TEXTBOX BIND
 textBox.bind('<Configure>', lambda e: update_line_numbers())
 
-# SCROLLBAR FOR TEXTBOX
-scrollbar = Scrollbar(window, command=combine_funcs(textBox.yview, line_numbers.yview))
-scrollbar.place(x=928, y=75, height=258, width=19)
+# YVIEW SCROLLBAR FOR TEXTBOX
+scrollbarY = Scrollbar(window, command=combine_funcs(textBox.yview, line_numbers.yview))
+scrollbarY.place(x=928, y=75, height=258, width=19)
 
-# TEXTBOX.CONFIGURE
-textBox['yscrollcommand'] = combine_funcs(on_wheelscroll, scrollbar.set)
+# YVIEW TEXTBOX.CONFIGURE
+textBox['yscrollcommand'] = combine_funcs(on_wheelscroll, scrollbarY.set)
+
+# TEXTBOX.POSITION
+textBox.pack(side=BOTTOM, fill=X)
+
+# XVIEW SCROLLBAR FOR TEXTBOX
+scrollbarX = Scrollbar(window, command=textBox.xview, orient=HORIZONTAL)
+scrollbarX.place(x=315, y=319, height=14, width=613)
+
+# X SCROLL BAR DRAG
+scrollbarX.bind("<B1-Motion>", on_scroll)
+
+# Initially hide the scrollbar
+hide_scrollbar()
+
+# Attach the check_scrollbar function to the xscrollcommand
+textBox['xscrollcommand'] = combine_funcs(scrollbarX.set, check_scrollbar)
 
 # LINENUMBERS BIND
 line_numbers.bind('<MouseWheel>', prevent_scroll)
 
 # SCROLLBAR BIND
-scrollbar.bind("<B1-Motion>", on_scroll)
+scrollbarY.bind("<B1-Motion>", on_scroll)
 
 # SCROLLBAR FOR RESULTBOX
 result_scrollbar = Scrollbar(window, command=resultBox.yview)
