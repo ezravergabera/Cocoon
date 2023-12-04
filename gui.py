@@ -392,15 +392,14 @@ textBox.pack(side=BOTTOM, fill=X)
 
 # XVIEW SCROLLBAR FOR TEXTBOX
 scrollbarX = Scrollbar(window, command=textBox.xview, orient=HORIZONTAL)
-scrollbarX.place(x=315, y=319, height=14, width=613)
 
 # X SCROLL BAR DRAG
 scrollbarX.bind("<B1-Motion>", on_scroll)
 
-# Initially hide the scrollbar
+# SCROLLBAR HIDE
 hide_scrollbar()
 
-# Attach the check_scrollbar function to the xscrollcommand
+# TEXTBOX.CONFIGURE
 textBox['xscrollcommand'] = combine_funcs(scrollbarX.set, check_scrollbar)
 
 # LINENUMBERS BIND
