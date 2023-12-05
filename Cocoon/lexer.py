@@ -228,11 +228,11 @@ class Lexer:
                 return Token(TT_DECRE, unary_str)
 
             # For scanning positive and negative unary. 1 character
-            if self.current_char == '+' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS or backtrack in WHITESPACES):
+            if self.current_char == '+' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
                 unary_str += self.current_char
                 self.advance()
                 return Token(TT_POSITIVE, unary_str)
-            elif self.current_char == '-' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS or backtrack in WHITESPACES):
+            elif self.current_char == '-' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
                 unary_str += self.current_char
                 self.advance()
                 return Token(TT_NEGATIVE, unary_str)
