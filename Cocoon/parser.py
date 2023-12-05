@@ -1,5 +1,5 @@
-from .nodes import NumberNode, BinOpNode
-from .tokentypes import TT_INT, TT_FLOAT, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_EOF
+from .nodes import NumberNode, ArithOpNode, UnaryOpNode
+from .tokentypes import TT_INT, TT_FLOAT, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -29,7 +29,23 @@ class Parser:
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_INT, TT_FLOAT):
+        if tok.type == TT_LPAREN:
+            res.register(self.advance())
+            expr = res.register(self.expr())
+            if res.error: return res
+            if self.current_tok.type == TT_RPAREN:
+                res.register(self.advance())
+                return res.success(expr)
+            else:
+                return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected a closing symbol ')'"))
+
+        elif tok.type in (TT_POSITIVE, TT_NEGATIVE):
+            res.register(self.advance())
+            factor = res.register(self.factor())
+            if res.error: return res
+            return res.success(UnaryOpNode(tok, factor))
+
+        elif tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))
         
@@ -39,7 +55,7 @@ class Parser:
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
     def expr(self):
-        return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
+        return self.bin_op(self.term, (TT_PLUS, TT_MINUS, TT_INTDIV, TT_EXPO, TT_MOD))
 
     def bin_op(self, func, ops):
         res = ParseResult()
@@ -51,7 +67,7 @@ class Parser:
             res.register(self.advance())
             right = res.register(func())
             if res.error: return res
-            left = BinOpNode(left, op_tok, right)
+            left = ArithOpNode(left, op_tok, right)
 
         return res.success(left)
     
