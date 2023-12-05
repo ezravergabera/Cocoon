@@ -4,16 +4,16 @@ WHITESPACES = ' \t\n\v\r'
 OPERATORS = '+-/*^%~'
 UNARY = '+-'
 RELATIONAL = '=!><'
-LOGICAL = {
+LOGICAL = (
     "NOT", 
     "AND", 
     "OR", 
     "not", 
     "and", 
     "or"
-}
+)
 PUNCTUATIONS = ',;()[]'
-CONSTANTS = {
+CONSTANTS = (
     "number", 
     "num", 
     "decimal", 
@@ -23,17 +23,17 @@ CONSTANTS = {
     "char", 
     "boolean", 
     "bool"
-}
-KEYWORDS = {
+)
+KEYWORDS = (
     "show", 
     "get" 
-}
-NOISEWORDS = {
+)
+NOISEWORDS = (
     "do", 
     "start", 
     "end"
-}
-RESERVEDWORDS = {
+)
+RESERVEDWORDS = (
     "true", 
     "false", 
     "done", 
@@ -53,12 +53,12 @@ RESERVEDWORDS = {
     "exit", 
     "raise", 
     "raising"
-}
+)
 UNTRACKED = '$#@`?}{\\:'
-INVALID = {
+INVALID = (
     "!",
     "&",
     "|",
     "&&",
     "||"
-}
+)
