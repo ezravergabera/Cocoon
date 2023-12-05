@@ -1,3 +1,4 @@
+# Base Error
 class Error:
     def __init__(self, pos_start, pos_end, error_name, details):
         self.pos_start = pos_start
@@ -10,6 +11,7 @@ class Error:
         result += f'\nFile {self.pos_start.fn}, line {self.pos_start.ln + 1}'
         return result
     
+# Lexical Errors
 class IllegalCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Illegal Character', details)
@@ -37,3 +39,8 @@ class InvalidRelationalSymbol(Error):
 class ReferenceError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Reference Error', details)
+
+# Parser Errors
+class InvalidSyntaxError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Invalid Syntax', details)
