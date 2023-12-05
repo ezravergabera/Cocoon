@@ -60,4 +60,4 @@ TT_LPAREN = 'Left_Paren'
 TT_RPAREN = 'Right_Paren'
 
 # END OF FILE
-TT_EOF = 'EOF'
+TT_EOF = 'TT_EOF'
