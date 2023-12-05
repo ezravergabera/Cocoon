@@ -1,10 +1,11 @@
 from Cocoon.lexer import Lexer
+from Cocoon.parser import Parser
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
 import sys
 
-def debug():
+def debug_lexer():
     while True:
-        text = input("cocoon > ")
+        text = input("lexer > ")
 
         result, error = run("<stdin>", text)
 
@@ -15,11 +16,33 @@ def debug():
             result.pop()
             print(result)
 
+def debug_parser():
+    while True:
+        text = input("parser > ")
+
+        result, error = run("<stdin>", text)
+
+        if error: print(error.as_string())
+        else: print(result)
+
 def run(fn, text):
+    # Lexer
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
 
-    return tokens, error
+    # return tokens, error
+
+    # Parser
+    if error: return None, error
+
+    parser = Parser(tokens)
+    ast = parser.parse()
+
+    return ast.node, ast.error
+
+#* Function Calls
+# debug_lexer()
+debug_parser()
 
 def run_file(filename):
     if(filename):
