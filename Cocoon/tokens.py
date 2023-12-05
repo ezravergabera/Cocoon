@@ -6,10 +6,6 @@ class Token:
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
-    
-    def __str__(self):
-        if self.value: return f'{self.type: >20}    {str(self.value)}'
-        return f'{self.type}'
 
 
 def tok_to_str(tokens):
@@ -17,7 +13,10 @@ def tok_to_str(tokens):
 
     if(tokens != None):
         for tok in tokens:
-            tok_str += str(tok) + '\n'
+            if tok.value:
+                tok_str += f'{tok.type: >20}    {tok.value}\n'
+            else:
+                tok_str += f'{str(tok.type): >20}    {tok.type}\n'
 
     return tok_str
 
