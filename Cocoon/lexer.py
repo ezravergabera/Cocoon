@@ -49,7 +49,7 @@ class Lexer:
                     return [], result
                 
             # Scans assignment operator
-            elif self.current_char == '=' and check in WHITESPACES:
+            elif self.current_char == '=':
                 tokens.append(Token(TT_ASSIGN, self.current_char, self.pos))
                 self.advance()
 
