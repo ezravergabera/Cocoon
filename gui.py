@@ -34,7 +34,7 @@ def run_lexer():
             resultBox['state'] = 'disable'
 
     else:
-        filename = "<stdin>"
+        filename = "Unnamed KKUN File"
         text = textBox.get("1.0", END)
 
         result, error = run(filename, text)
