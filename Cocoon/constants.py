@@ -12,7 +12,7 @@ LOGICAL = (
     "and", 
     "or"
 )
-PUNCTUATIONS = ',;()[]'
+PUNCTUATIONS = '.,;()[]'
 CONSTANTS = (
     "number", 
     "num", 
