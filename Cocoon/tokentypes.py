@@ -52,6 +52,7 @@ TT_NWORD = 'Noise_Word'
 TT_COMMENT = 'Comment'
 
 # PUNTUATIONS
+TT_DOT = 'Dot'
 TT_COMMA = 'Comma'
 TT_SEMICOLON = 'Semicolon'
 TT_LSQUARE = 'Left_Square'

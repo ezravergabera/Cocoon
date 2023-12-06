@@ -2,7 +2,7 @@ from .constants import ALPHABET, DIGITS, WHITESPACES, OPERATORS, UNARY, RELATION
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_INCRE, TT_DECRE, TT_POSITIVE, TT_NEGATIVE, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_INCRE, TT_DECRE, TT_POSITIVE, TT_NEGATIVE, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -12,10 +12,12 @@ class Lexer:
         self.current_char = None
         self.advance()
 
+    # Scan Character Method
     def advance(self):
         self.pos.advance(self.current_char)
         self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
 
+    # Look-Ahead Method
     def check(self):
         try:
             char = self.text[self.pos.idx + 1] if self.pos.idx < len(self.text) else None
@@ -23,6 +25,7 @@ class Lexer:
             char = ''
         return char if char is not None else ''
     
+    # Look-Behind Method
     def backtrack(self):
         try:
             char = self.text[self.pos.idx - 1] if self.pos.idx > 0 else None
@@ -30,12 +33,13 @@ class Lexer:
             char = ''     
         return char if char is not None else ''
 
+    # Tokenization Method
     def make_tokens(self):
         tokens = []
 
         while self.current_char != None:
             check = self.check()
-
+            
             # Skips through whitespaces
             if self.current_char in WHITESPACES:
                 self.advance()
@@ -47,11 +51,6 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
-                
-            # Scans assignment operator
-            elif self.current_char == '=':
-                tokens.append(Token(TT_ASSIGN, self.current_char, self.pos))
-                self.advance()
 
             # Scans arithmetic operators: +, -, *, /, ~, ^, % and unary operators: +, -, ++, --
             elif self.current_char in OPERATORS:
@@ -80,8 +79,8 @@ class Lexer:
             # Scans for invalid relational symbols such as !, &, |, &&, and ||
             elif (self.current_char in INVALID and check in WHITESPACES) or (self.current_char in INVALID and self.current_char == check):
                 return [], self.invalid_relational()
-            
-            # Scans for relational lexemes
+
+            # Scans for assignment operator and relational lexemes
             elif self.current_char in RELATIONAL:
                 result = self.make_relational()
                 if isinstance(result, Token):
@@ -97,10 +96,12 @@ class Lexer:
                 elif isinstance(result, Error):
                     return [], result
                 
-            # Scans for puntuations such as ,, ;, [, ], (, and )
+            # Scans for puntuations such as ., ,, ;, [, ], (, and )
             elif self.current_char in PUNCTUATIONS:
                 tokens.append(self.make_punctuation())
                 self.advance()
+
+            # Returns an error when an invalid character is scanned
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
@@ -108,9 +109,10 @@ class Lexer:
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
         
         # End of File
-        tokens.append(Token(TT_EOF, 'EOF', self.pos))
+        tokens.append(Token('TT_EOF', TT_EOF))
         return tokens, None
     
+    # Scanner Methods
     def make_identifier(self):
         pos_start = self.pos.copy()
         id_str = ''
@@ -298,6 +300,8 @@ class Lexer:
             return IllegalIdentifierError(pos_start, self.pos, f'{num_str}')
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
+        elif num_str == '.':
+            return Token(TT_DOT, num_str)
         else:
             try:
                 return Token(TT_FLOAT, float(num_str), pos_start)
@@ -340,7 +344,11 @@ class Lexer:
         rel_str = ''
         check = self.check()
 
-        if self.current_char == '>' and check == '=':
+        if self.current_char == '=' and check != '=':
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_ASSIGN, rel_str)
+        elif self.current_char == '>' and check == '=':
             rel_str += self.current_char
             self.advance()
             rel_str += self.current_char
@@ -394,6 +402,8 @@ class Lexer:
     def make_punctuation(self):
         if self.current_char in PUNCTUATIONS:
             char = self.current_char
+            if char == '.':
+                return Token(TT_DOT, char)
             if char == ',':
                 return Token(TT_COMMA, char, self.pos)
             elif char == ';':
