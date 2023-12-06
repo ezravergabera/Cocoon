@@ -43,7 +43,7 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
-            elif self.current_char == '=' and check in WHITESPACES:
+            elif self.current_char == '=':
                 tokens.append(Token(TT_ASSIGN, self.current_char))
                 self.advance()
             elif self.current_char in OPERATORS:
