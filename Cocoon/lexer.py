@@ -35,58 +35,76 @@ class Lexer:
 
         while self.current_char != None:
             check = self.check()
+            
+            # Skips through whitespaces
             if self.current_char in WHITESPACES:
                 self.advance()
+
+            # Scans constants, keywords, reserved words, noise words, logical, and identifiers
             elif self.current_char in ALPHABET + '_':
                 result = self.make_identifier()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
-            elif self.current_char == '=':
-                tokens.append(Token(TT_ASSIGN, self.current_char))
-                self.advance()
+
+            # Scans arithmetic operators: +, -, *, /, ~, ^, % and unary operators: +, -, ++, --
             elif self.current_char in OPERATORS:
                 result = self.make_operator()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+                
+            # Scans for single line comment and multiline comment
             elif self.current_char == '.' and check == '.' and check not in WHITESPACES:
                 result = self.make_comments()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+                
+            # Scans for number and decimal lexemes
             elif self.current_char in DIGITS + '.':
                 result = self.make_number()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+                
+            # Scans for invalid relational symbols such as !, &, |, &&, and ||
             elif (self.current_char in INVALID and check in WHITESPACES) or (self.current_char in INVALID and self.current_char == check):
                 return [], self.invalid_relational()
+
+            # Scans for assignment operator and relational lexemes
             elif self.current_char in RELATIONAL:
                 result = self.make_relational()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+                
+            # Scans for string literals enclosed with " or '
             elif self.current_char == '"' or self.current_char == "'":
                 result = self.make_string()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+                
+            # Scans for puntuations such as ,, ;, [, ], (, and )
             elif self.current_char in PUNCTUATIONS:
                 tokens.append(self.make_punctuation())
                 self.advance()
+
+            # Returns an error when an invalid character is scanned
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
         
+        # End of File
         tokens.append(Token('TT_EOF', TT_EOF))
         return tokens, None
     
@@ -317,7 +335,11 @@ class Lexer:
         rel_str = ''
         check = self.check()
 
-        if self.current_char == '>' and check == '=':
+        if self.current_char == '=' and check != '=':
+            rel_str += self.current_char
+            self.advance()
+            return Token(TT_ASSIGN, rel_str)
+        elif self.current_char == '>' and check == '=':
             rel_str += self.current_char
             self.advance()
             rel_str += self.current_char
