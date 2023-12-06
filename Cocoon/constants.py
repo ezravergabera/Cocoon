@@ -46,7 +46,6 @@ RESERVEDWORDS = (
     "more", 
     "repeat", 
     "while", 
-    "enough", 
     "empty", 
     "undefined", 
     "undef",
