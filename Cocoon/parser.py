@@ -52,18 +52,18 @@ class Parser:
         return res.failure(InvalidSyntaxError(tok.pos_start, tok.pos_end, "Expected number or decimal"))
 
     def term(self):
-        return self.bin_op(self.factor, (TT_MUL, TT_DIV))
+        return self.arith_op(self.factor, (TT_MUL, TT_DIV))
 
     def expr(self):
-        return self.bin_op(self.term, (TT_PLUS, TT_MINUS, TT_INTDIV, TT_EXPO, TT_MOD))
+        return self.arith_op(self.term, (TT_PLUS, TT_MINUS, TT_INTDIV, TT_EXPO, TT_MOD))
 
-    def bin_op(self, func, ops):
+    def arith_op(self, func, ops):
         res = ParseResult()
         left = res.register(func())
         if res.error: return res
 
         while self.current_tok.type in ops:
-            op_tok = self.current_tok.type
+            op_tok = self.current_tok
             res.register(self.advance())
             right = res.register(func())
             if res.error: return res

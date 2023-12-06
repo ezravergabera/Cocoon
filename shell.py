@@ -1,6 +1,8 @@
 from Cocoon.lexer import Lexer
 from Cocoon.parser import Parser
+from Cocoon.interpreter import Interpreter
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
+from icecream import ic
 import sys
 
 def debug_lexer():
@@ -25,12 +27,23 @@ def debug_parser():
         if error: print(error.as_string())
         else: print(result)
 
+def debug_interpreter():
+    while True:
+        text = input("interpreter > ")
+
+        result, error = run("<stdin>", text)
+
+        if error: print(error.as_string())
+        else: print(result)
+
+
 def run(fn, text):
     # Lexer
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
 
     # return tokens, error
+    print(tokens)
 
     # Parser
     if error: return None, error
@@ -38,11 +51,21 @@ def run(fn, text):
     parser = Parser(tokens)
     ast = parser.parse()
 
-    return ast.node, ast.error
+    # return ast.node, ast.error
+    ic(ast.node)
+
+    # Interpreter
+    if ast.error: return None, ast.error
+
+    interpreter = Interpreter()
+    result = interpreter.visit(ast.node)
+
+    return result, None
 
 #* Function Calls
 # debug_lexer()
-debug_parser()
+# debug_parser()
+debug_interpreter()
 
 def run_file(filename):
     if(filename):
