@@ -1,6 +1,5 @@
 from .values import Number
 from .tokentypes import TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE
-from icecream import ic
 
 class Interpreter:
     def visit(self, node):
@@ -15,11 +14,11 @@ class Interpreter:
         return Number(node.tok.value).set_pos(node.pos_start, node.pos_end)
 
     def visit_ArithOpNode(self, node):
-        left = ic(self.visit(node.left_node))
+        left = self.visit(node.left_node)
         right = self.visit(node.right_node)
 
-        if ic(node.op_tok.type == TT_PLUS):
-            result = ic(left.added_to(right))
+        if node.op_tok.type == TT_PLUS:
+            result = left.added_to(right)
         elif node.op_tok.type == TT_MINUS:
             result = left.subbed_by(right)
         elif node.op_tok.type == TT_MUL:

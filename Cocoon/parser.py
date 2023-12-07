@@ -6,7 +6,6 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.token_idx = -1
-        self.current_tok = None
         self.advance()
 
     def advance(self):

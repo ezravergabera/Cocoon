@@ -2,7 +2,6 @@ from Cocoon.lexer import Lexer
 from Cocoon.parser import Parser
 from Cocoon.interpreter import Interpreter
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
-from icecream import ic
 import sys
 
 def debug_lexer():
@@ -43,7 +42,6 @@ def run(fn, text):
     tokens, error = lexer.make_tokens()
 
     # return tokens, error
-    print(tokens)
 
     # Parser
     if error: return None, error
@@ -52,7 +50,6 @@ def run(fn, text):
     ast = parser.parse()
 
     # return ast.node, ast.error
-    ic(ast.node)
 
     # Interpreter
     if ast.error: return None, ast.error
