@@ -1,4 +1,4 @@
-from .constants import ALPHABET, DIGITS, WHITESPACES, OPERATORS, UNARY, RELATIONAL, LOGICAL, PUNCTUATIONS, CONSTANTS, KEYWORDS, NOISEWORDS, RESERVEDWORDS, UNTRACKED, INVALID
+from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
@@ -38,22 +38,23 @@ class Lexer:
         tokens = []
 
         while self.current_char != None:
+            char = self.current_char
             check = self.check()
             
             # Skips through whitespaces
-            if self.current_char in WHITESPACES:
+            if isWhitespace(char):
                 self.advance()
 
             # Scans constants, keywords, reserved words, noise words, logical, and identifiers
-            elif self.current_char in ALPHABET + '_':
+            elif isAlphabet(char) or char == '_':
                 result = self.make_identifier()
-                if isinstance(result, Token):
+                if isinstance(result, Token): 
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
 
             # Scans arithmetic operators: +, -, *, /, ~, ^, % and unary operators: +, -, ++, --
-            elif self.current_char in OPERATORS:
+            elif isOperator(char):
                 result = self.make_operator()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -61,7 +62,7 @@ class Lexer:
                     return [], result
                 
             # Scans for single line comment and multiline comment
-            elif self.current_char == '.' and check == '.' and check not in WHITESPACES:
+            elif char == '.' and check == '.' and not isWhitespace(check):
                 result = self.make_comments()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -69,7 +70,7 @@ class Lexer:
                     return [], result
                 
             # Scans for number and decimal lexemes
-            elif self.current_char in DIGITS + '.':
+            elif isDigits(char) or char == '.':
                 result = self.make_number()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -77,11 +78,11 @@ class Lexer:
                     return [], result
                 
             # Scans for invalid relational symbols such as !, &, |, &&, and ||
-            elif (self.current_char in INVALID and check in WHITESPACES) or (self.current_char in INVALID and self.current_char == check):
+            elif (isInvalid(char) and isWhitespace(check)) or (isInvalid(char) and char == check):
                 return [], self.invalid_relational()
 
             # Scans for assignment operator and relational lexemes
-            elif self.current_char in RELATIONAL:
+            elif isRelational(char):
                 result = self.make_relational()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -89,7 +90,7 @@ class Lexer:
                     return [], result
                 
             # Scans for string literals enclosed with " or '
-            elif self.current_char == '"' or self.current_char == "'":
+            elif char == '"' or char == "'":
                 result = self.make_string()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -97,7 +98,7 @@ class Lexer:
                     return [], result
                 
             # Scans for puntuations such as ., ,, ;, [, ], (, and )
-            elif self.current_char in PUNCTUATIONS:
+            elif isPunctuation(char):
                 tokens.append(self.make_punctuation())
                 self.advance()
 
@@ -116,13 +117,13 @@ class Lexer:
     def make_identifier(self):
         id_str = ''
         pos_start = self.pos.copy()
-        isUntracked = False
+        isUntracked_ = False
 
-        while self.current_char != None and self.current_char in ALPHABET + DIGITS + WHITESPACES + '_' + UNTRACKED:
-            if self.current_char in WHITESPACES:
+        while self.current_char != None and (isAlphabet(self.current_char) or isDigits(self.current_char) or isWhitespace(self.current_char) or isUntracked(self.current_char) or self.current_char == '_'):
+            if isWhitespace(self.current_char):
                 break
-            elif self.current_char in UNTRACKED:
-                isUntracked = True
+            elif isUntracked(self.current_char):
+                isUntracked_ = True
                 id_str += self.current_char
             else:
                 id_str += self.current_char
@@ -133,22 +134,22 @@ class Lexer:
         elif id_str == 'exit':
             exit()
 
-        if id_str in CONSTANTS:
-            return Token(TT_DTYPE, id_str)
-        elif id_str in KEYWORDS:
-            return Token(TT_KWORD, id_str)
-        elif id_str == 'true' or id_str == 'false':
-            return Token(TT_BOOL, id_str)
-        elif id_str in RESERVEDWORDS:
-            return Token(TT_RWORD, id_str)
-        elif id_str in NOISEWORDS:
-            return Token(TT_NWORD, id_str)
-        elif id_str in LOGICAL:
-            return self.make_logical(id_str)
-        elif isUntracked == True:
-            return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
-        else:
-            return Token(TT_ID, id_str)
+        # if id_str in CONSTANTS:
+        #     return Token(TT_DTYPE, id_str)
+        # elif id_str in KEYWORDS:
+        #     return Token(TT_KWORD, id_str)
+        # elif id_str == 'true' or id_str == 'false':
+        #     return Token(TT_BOOL, id_str)
+        # elif id_str in RESERVEDWORDS:
+        #     return Token(TT_RWORD, id_str)
+        # elif id_str in NOISEWORDS:
+        #     return Token(TT_NWORD, id_str)
+        # elif id_str in LOGICAL:
+        #     return self.make_logical(id_str)
+        # elif isUntracked == True:
+        #     return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
+        # else:
+        return Token(TT_ID, id_str)
         
     def make_logical(self, log_str):
         if log_str == 'NOT' or log_str == 'not':
@@ -169,7 +170,7 @@ class Lexer:
         check = self.check()
         dot_count = 0
         
-        if self.current_char == '.' and check == '.' and check not in WHITESPACES:
+        if self.current_char == '.' and check == '.' and not isWhitespace(check):
             while dot_count != 3:
                 comment_str += self.current_char
                 if self.check() == '' and self.check() != None:
@@ -217,48 +218,48 @@ class Lexer:
         elif operator == '%':
             return Token(TT_MOD, operator)
 
-    def make_unary(self):
-        unary_str = ''
-        check = self.check()
-        backtrack = self.backtrack()
+    # def make_unary(self):
+    #     unary_str = ''
+    #     check = self.check()
+    #     backtrack = self.backtrack()
 
-        if self.current_char != None and self.current_char in UNARY:
+    #     if self.current_char != None and self.current_char in UNARY:
 
-            # For scanning increments and decrements. 2 characters
-            if self.current_char == '+' and self.current_char == check and backtrack in WHITESPACES:
-                unary_str += self.current_char
-                self.advance()
-                unary_str += self.current_char
-                self.advance()
-                return Token(TT_INCRE, unary_str)
-            elif self.current_char == '-' and self.current_char == check and backtrack in WHITESPACES:
-                unary_str += self.current_char
-                self.advance()
-                unary_str += self.current_char
-                self.advance()
-                return Token(TT_DECRE, unary_str)
-            elif self.current_char == '+' and self.current_char == check and backtrack in ALPHABET + DIGITS:
-                unary_str += self.current_char
-                self.advance()
-                unary_str += self.current_char
-                self.advance()
-                return Token(TT_INCRE, unary_str)
-            elif self.current_char == '-' and self.current_char == check and backtrack in ALPHABET + DIGITS:
-                unary_str += self.current_char
-                self.advance()
-                unary_str += self.current_char
-                self.advance()
-                return Token(TT_DECRE, unary_str)
+    #         # For scanning increments and decrements. 2 characters
+    #         if self.current_char == '+' and self.current_char == check and backtrack in WHITESPACES:
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             return Token(TT_INCRE, unary_str)
+    #         elif self.current_char == '-' and self.current_char == check and backtrack in WHITESPACES:
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             return Token(TT_DECRE, unary_str)
+    #         elif self.current_char == '+' and self.current_char == check and backtrack in ALPHABET + DIGITS:
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             return Token(TT_INCRE, unary_str)
+    #         elif self.current_char == '-' and self.current_char == check and backtrack in ALPHABET + DIGITS:
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             return Token(TT_DECRE, unary_str)
 
-            # For scanning positive and negative unary. 1 character
-            if self.current_char == '+' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
-                unary_str += self.current_char
-                self.advance()
-                return Token(TT_POSITIVE, unary_str)
-            elif self.current_char == '-' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
-                unary_str += self.current_char
-                self.advance()
-                return Token(TT_NEGATIVE, unary_str)
+    #         # For scanning positive and negative unary. 1 character
+    #         if self.current_char == '+' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             return Token(TT_POSITIVE, unary_str)
+    #         elif self.current_char == '-' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
+    #             unary_str += self.current_char
+    #             self.advance()
+    #             return Token(TT_NEGATIVE, unary_str)
 
     def make_number(self):
         num_str = ''
@@ -267,18 +268,18 @@ class Lexer:
         isIdentifier = False
         pos_start = self.pos.copy()
 
-        while self.current_char != None and self.current_char in DIGITS + ALPHABET + WHITESPACES + '.' + UNTRACKED + '_':
+        while self.current_char != None and (isAlphabet(self.current_char) or isDigits(self.current_char) or isWhitespace(self.current_char) or isUntracked(self.current_char) or self.current_char == '_' or self.current_char == '.'):
             check = self.check()
 
-            if self.current_char in WHITESPACES:
+            if isWhitespace(self.current_char):
                 break
             elif num_str and self.current_char == '_' and check == '_' or isValid == False:
                 isValid = False
                 num_str += self.current_char
-            elif self.current_char in ALPHABET + UNTRACKED:
+            elif isAlphabet(self.current_char) or isUntracked(self.current_char):
                 isValid = False
                 num_str += self.current_char
-            elif (not num_str and self.current_char in DIGITS) and check in ALPHABET and check not in WHITESPACES:
+            elif (not num_str and isDigits(self.current_char)) and isAlphabet(check) and not isWhitespace(check):
                 isIdentifier = True
                 num_str += self.current_char
             elif self.current_char == '.':
@@ -310,18 +311,18 @@ class Lexer:
     def invalid_relational(self):
         rel_str = ''
 
-        while self.current_char != None and self.current_char in INVALID:
+        while self.current_char != None and isInvalid(self.current_char):
             check = self.check()
             rel_str += self.current_char
             pos_start = self.pos.copy()
 
-            if rel_str == '!' and check in WHITESPACES:
+            if rel_str == '!' and isWhitespace(check):
                 self.advance()
                 return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "not" or "NOT" instead.')
-            elif rel_str == '&' and check in WHITESPACES:
+            elif rel_str == '&' and isWhitespace(check):
                 self.advance()
                 return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "and" or "AND" instead.')
-            elif rel_str == '|' and check in WHITESPACES:
+            elif rel_str == '|' and isWhitespace(check):
                 self.advance()
                 return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "or" or "OR" instead.')
             elif rel_str == '&' and check == '&':
@@ -398,7 +399,7 @@ class Lexer:
         return Token(TT_STR, text_str)
 
     def make_punctuation(self):
-        if self.current_char in PUNCTUATIONS:
+        if isPunctuation(self.current_char):
             char = self.current_char
             if char == '.':
                 return Token(TT_DOT, char)
