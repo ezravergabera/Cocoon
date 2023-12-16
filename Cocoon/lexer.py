@@ -115,52 +115,535 @@ class Lexer:
     
     # Scanner Methods
     def make_identifier(self):
-        id_str = ''
+        lexeme = ''
+        tokentype = TT_ID
         pos_start = self.pos.copy()
-        isUntracked_ = False
 
         while self.current_char != None and (isAlphabet(self.current_char) or isDigits(self.current_char) or isWhitespace(self.current_char) or isUntracked(self.current_char) or self.current_char == '_'):
+            # Whitespaces
             if isWhitespace(self.current_char):
                 break
-            elif isUntracked(self.current_char):
-                isUntracked_ = True
-                id_str += self.current_char
+
+            # AND
+            elif self.current_char == 'A' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'N':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'D':
+                        lexeme += self.current_char
+                        tokentype = TT_AND
+                        self.advance()
+
+            # and, askmore
+            elif self.current_char == 'a' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'n':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'd':
+                        lexeme += self.current_char
+                        tokentype = TT_AND
+                        self.advance()
+                # askmore
+                elif self.current_char == 's':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'k':
+                        lexeme += self.current_char
+                        tokentype = TT_RWORD
+                        self.advance()
+                        if self.current_char == 'm':
+                            lexeme += self.current_char
+                            tokentype = TT_ID
+                            self.advance()
+                            if self.current_char == 'o':
+                                lexeme += self.current_char
+                                self.advance()
+                                if self.current_char == 'r':
+                                    lexeme += self.current_char
+                                    self.advance()
+                                    if self.current_char == 'e':
+                                        lexeme += self.current_char
+                                        tokentype = TT_RWORD
+                                        self.advance()
+
+            # boolean, build
+            elif self.current_char == 'b' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                # bool
+                if self.current_char == 'o':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'o':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'l':
+                            lexeme += self.current_char
+                            tokentype = TT_DTYPE
+                            # boolean
+                            self.advance()
+                            if self.current_char == 'e':
+                                lexeme += self.current_char
+                                tokentype = TT_ID
+                                self.advance()
+                                if self.current_char == 'a':
+                                    lexeme += self.current_char
+                                    self.advance()
+                                    if self.current_char == 'n':
+                                        lexeme += self.current_char
+                                        tokentype = TT_DTYPE
+                                        self.advance()
+                # build
+                elif self.current_char == 'u':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'i':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'l':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'd':
+                                lexeme += self.current_char
+                                tokentype = TT_RWORD
+                                self.advance()
+
+            # character
+            elif self.current_char == 'c' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'h':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'a':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'r':
+                            lexeme += self.current_char
+                            tokentype = TT_DTYPE
+                            self.advance()
+                            if self.current_char == 'a':
+                                lexeme += self.current_char
+                                tokentype = TT_ID
+                                self.advance()
+                                if self.current_char == 'c':
+                                    lexeme += self.current_char
+                                    self.advance()
+                                    if self.current_char == 't':
+                                        lexeme += self.current_char
+                                        self.advance()
+                                        if self.current_char == 'e':
+                                            lexeme += self.current_char
+                                            self.advance()
+                                            if self.current_char == 'r':
+                                                lexeme += self.current_char
+                                                tokentype = TT_DTYPE
+                                                self.advance()
+
+            # done, decimal
+            elif self.current_char == 'd' and len(lexeme) == 0:
+                # do
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'o':
+                    lexeme += self.current_char
+                    tokentype = TT_NWORD
+                    self.advance()
+                    # done
+                    if self.current_char == 'n':
+                        lexeme += self.current_char
+                        tokentype = TT_ID
+                        self.advance()
+                        if self.current_char == 'e':
+                            lexeme += self.current_char
+                            tokentype = TT_RWORD
+                            self.advance()
+                # deci
+                elif self.current_char == 'e':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'c':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'i':
+                            lexeme += self.current_char
+                            tokentype = TT_DTYPE
+                            self.advance()
+                            # decimal
+                            if self.current_char == 'm':
+                                lexeme += self.current_char
+                                tokentype = TT_ID
+                                self.advance()
+                                if self.current_char == 'a':
+                                    lexeme += self.current_char
+                                    self.advance()
+                                    if self.current_char == 'l':
+                                        lexeme += self.current_char
+                                        tokentype = TT_DTYPE
+                                        self.advance()
+
+            # empty, exit, end, enough
+            elif self.current_char == 'e' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                # empty
+                if self.current_char == 'm':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'p':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 't':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'y':
+                                lexeme += self.current_char
+                                tokentype = TT_RWORD
+                                self.advance()
+                # exit and its function
+                elif self.current_char == 'x':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'i':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 't':
+                            lexeme += self.current_char
+                            tokentype = TT_RWORD
+                            self.advance()
+                            if (isWhitespace(self.check()) or self.check() == None) and self.fn != "<stdin>":
+                                return ReferenceError(pos_start, self.pos, 'Usage of a reserved word.')
+                            elif isWhitespace(self.check()) or self.check() == None:
+                                exit()
+                # end
+                elif self.current_char == 'n':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'd':
+                        lexeme += self.current_char
+                        tokentype = TT_NWORD
+                        self.advance()
+                    # enough
+                    elif self.current_char == 'o':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'u':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'g':
+                                lexeme += self.current_char
+                                self.advance()
+                                if self.current_char == 'h':
+                                    lexeme += self.current_char
+                                    tokentype = TT_RWORD
+                                    self.advance()
+
+            # false                                    
+            elif self.current_char == 'f' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'a':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'l':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 's':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'e':
+                                lexeme += self.current_char
+                                tokentype = TT_BOOL
+                                self.advance()
+
+            # get, give, group
+            elif self.current_char == 'g' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'e':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 't':
+                        lexeme += self.current_char
+                        tokentype = TT_KWORD
+                        self.advance()
+                # give
+                elif self.current_char == 'i':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'v':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'e':
+                            lexeme += self.current_char
+                            tokentype = TT_RWORD
+                            self.advance()
+                # group
+                elif self.current_char == 'r':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'o':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'u':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'p':
+                                lexeme += self.current_char
+                                tokentype = TT_RWORD
+                                self.advance()
+
+            # more
+            elif self.current_char == 'm' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'o':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'r':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'e':
+                            lexeme += self.current_char
+                            tokentype = TT_RWORD
+                            self.advance()
+
+            # NOT
+            elif self.current_char == 'N' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'O':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'T':
+                        lexeme += self.current_char
+                        tokentype = TT_NOT
+                        self.advance()
+
+            # next, not, number
+            elif self.current_char == 'n' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'e':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'x':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 't':
+                            lexeme += self.current_char
+                            tokentype = TT_RWORD
+                            self.advance()
+                # not
+                elif self.current_char == 'o':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 't':
+                        lexeme += self.current_char
+                        tokentype = TT_NOT
+                        self.advance()
+                # num
+                elif self.current_char == 'u':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'm':
+                        lexeme += self.current_char
+                        tokentype = TT_DTYPE
+                        self.advance()
+                        # number
+                        if self.current_char == 'b':
+                            lexeme += self.current_char
+                            tokentype = TT_ID
+                            self.advance()
+                            if self.current_char == 'e':
+                                lexeme += self.current_char
+                                self.advance()
+                                if self.current_char == 'r':
+                                    lexeme += self.current_char
+                                    tokentype = TT_DTYPE
+                                    self.advance()
+
+            # OR
+            elif self.current_char == 'O' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'R':
+                    lexeme += self.current_char
+                    tokentype = TT_OR
+                    self.advance()
+
+            # or
+            elif self.current_char == 'o' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'r':
+                    lexeme += self.current_char
+                    tokentype = TT_OR
+                    self.advance()
+
+            # repeat, raising, raise
+            elif self.current_char == 'r' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'e':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'p':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'e':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'a':
+                                lexeme += self.current_char
+                                self.advance()
+                                if self.current_char == 't':
+                                    lexeme += self.current_char
+                                    tokentype = TT_RWORD
+                                    self.advance()
+                # raising
+                elif self.current_char == 'a':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'i':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 's':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'i':
+                                lexeme += self.current_char
+                                self.advance()
+                                if self.current_char == 'n':
+                                    lexeme += self.current_char
+                                    self.advance()
+                                    if self.current_char == 'g':
+                                        lexeme += self.current_char
+                                        tokentype = TT_RWORD
+                                        self.advance()
+                            # raise
+                            elif self.current_char == 'e':
+                                lexeme += self.current_char
+                                tokentype = TT_RWORD
+                                self.advance()
+
+            # show, start
+            elif self.current_char == 's' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'h':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'o':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'w':
+                            lexeme += self.current_char
+                            tokentype = TT_KWORD
+                            self.advance()
+                # start
+                elif self.current_char == 't':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'a':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'r':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 't':
+                                lexeme += self.current_char
+                                tokentype = TT_NWORD
+                                self.advance()
+
+            # text, true
+            elif self.current_char == 't' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'e':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'x':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 't':
+                            lexeme += self.current_char
+                            tokentype = TT_DTYPE
+                            self.advance()
+                # true
+                elif self.current_char == 'r':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'u':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'e':
+                            lexeme += self.current_char
+                            tokentype = TT_BOOL
+                            self.advance()
+
+            # undef
+            elif self.current_char == 'u' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'n':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'd':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'e':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char == 'f':
+                                lexeme += self.current_char
+                                tokentype = TT_RWORD
+                                self.advance()
+                                # undefined
+                                if self.current_char == 'i':
+                                    lexeme += self.current_char
+                                    tokentype = TT_ID
+                                    self.advance()
+                                    if self.current_char == 'n':
+                                        lexeme += self.current_char
+                                        self.advance()
+                                        if self.current_char == 'e':
+                                            lexeme += self.current_char
+                                            self.advance()
+                                            if self.current_char == 'd':
+                                                lexeme += self.current_char
+                                                tokentype = TT_RWORD
+                                                self.advance()
+
+            # while
+            elif self.current_char == 'w' and len(lexeme) == 0:
+                lexeme += self.current_char
+                self.advance()
+                if self.current_char == 'h':
+                    lexeme += self.current_char
+                    self.advance()
+                    if self.current_char == 'i':
+                        lexeme += self.current_char
+                        self.advance()
+                        if self.current_char == 'l':
+                            lexeme += self.current_char
+                            self.advance()
+                            if self.current_char =='e':
+                                lexeme += self.current_char
+                                tokentype = TT_RWORD
+                                self.advance()
+
+            # other identifiers
             else:
-                id_str += self.current_char
-            self.advance()
+                lexeme += self.current_char
+                tokentype = TT_ID
+                self.advance()
 
-        if id_str == 'exit' and self.fn != "<stdin>":
-            return ReferenceError(pos_start, self.pos, 'Usage of a reserved word.')
-        elif id_str == 'exit':
-            exit()
-
-        # if id_str in CONSTANTS:
-        #     return Token(TT_DTYPE, id_str)
-        # elif id_str in KEYWORDS:
-        #     return Token(TT_KWORD, id_str)
-        # elif id_str == 'true' or id_str == 'false':
-        #     return Token(TT_BOOL, id_str)
-        # elif id_str in RESERVEDWORDS:
-        #     return Token(TT_RWORD, id_str)
-        # elif id_str in NOISEWORDS:
-        #     return Token(TT_NWORD, id_str)
-        # elif id_str in LOGICAL:
-        #     return self.make_logical(id_str)
-        # elif isUntracked == True:
-        #     return IllegalIdentifierError(pos_start, self.pos, f'{id_str}')
-        # else:
-        return Token(TT_ID, id_str)
-        
-    def make_logical(self, log_str):
-        if log_str == 'NOT' or log_str == 'not':
-            return Token(TT_NOT, log_str)
-        elif log_str == 'AND' or log_str == 'and':
-            return Token(TT_AND, log_str)
-        elif log_str == 'OR' or log_str == 'or':
-            return Token(TT_OR, log_str)
-        else:
-            # for future if magkaerror man in this part
-            print("HALA MAY ERROR SA MAKE_LOGICAL")
+        return Token(tokentype, lexeme)
 
     def make_comments(self):
         pos_start = self.pos.copy()
@@ -194,13 +677,7 @@ class Lexer:
         return Token(TT_COMMENT, comment_str)
     
     def make_operator(self):
-        operator = ''
-
-        result = self.make_unary()
-        if isinstance(result, Token):
-            return result
-        
-        operator += self.current_char
+        operator = self.current_char
         self.advance()
 
         if operator == '+':
@@ -217,49 +694,6 @@ class Lexer:
             return Token(TT_EXPO, operator)
         elif operator == '%':
             return Token(TT_MOD, operator)
-
-    # def make_unary(self):
-    #     unary_str = ''
-    #     check = self.check()
-    #     backtrack = self.backtrack()
-
-    #     if self.current_char != None and self.current_char in UNARY:
-
-    #         # For scanning increments and decrements. 2 characters
-    #         if self.current_char == '+' and self.current_char == check and backtrack in WHITESPACES:
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             return Token(TT_INCRE, unary_str)
-    #         elif self.current_char == '-' and self.current_char == check and backtrack in WHITESPACES:
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             return Token(TT_DECRE, unary_str)
-    #         elif self.current_char == '+' and self.current_char == check and backtrack in ALPHABET + DIGITS:
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             return Token(TT_INCRE, unary_str)
-    #         elif self.current_char == '-' and self.current_char == check and backtrack in ALPHABET + DIGITS:
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             return Token(TT_DECRE, unary_str)
-
-    #         # For scanning positive and negative unary. 1 character
-    #         if self.current_char == '+' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             return Token(TT_POSITIVE, unary_str)
-    #         elif self.current_char == '-' and check in ALPHABET + DIGITS and (backtrack not in ALPHABET + DIGITS + OPERATORS or backtrack in WHITESPACES):
-    #             unary_str += self.current_char
-    #             self.advance()
-    #             return Token(TT_NEGATIVE, unary_str)
 
     def make_number(self):
         num_str = ''
@@ -391,7 +825,7 @@ class Lexer:
             text_str += self.current_char
             self.advance()
         
-        if self.current_char == '"' or self.current_char == "'":
+        if self.current_char == stop:
             text_str += stop
             self.advance()
         else:
