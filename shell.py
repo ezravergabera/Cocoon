@@ -2,7 +2,10 @@ from Cocoon.lexer import Lexer
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
 import sys
 
+debugmode = False
+
 def debug():
+    debugmode = True
     while True:
         text = input("cocoon > ")
 
@@ -20,6 +23,9 @@ def run(fn, text):
     tokens, error = lexer.make_tokens()
 
     return tokens, error
+
+# Uncomment niyo lang yung debug sa baba nito tas dito niyo tong line na to
+# debug()
 
 def run_file(filename):
     if(filename):
@@ -48,7 +54,7 @@ def run_file(filename):
 OPTIONS = {'-f', '-file', '-c', 'cli'}
 lowercasedArgs = [arg.lower() for arg in sys.argv]
 
-if __name__ == '__main__':
+if __name__ == '__main__' and debugmode == False:
     if '-cli' in lowercasedArgs or '-c' in lowercasedArgs:
         while True:
             text = input("cocoon > ")
