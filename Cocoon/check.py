@@ -84,18 +84,17 @@ whitespacesDict = {
 operatorsDict = {
     "+":foundChar,
     "-":foundChar,
-    "/":foundChar,
     "*":foundChar,
+    "/":foundChar,
+    "~":foundChar,
     "^":foundChar,
     "%":foundChar,
-    "~":foundChar
-}
-
-relationalDict = {
     "=":foundChar,
-    "!":foundChar,
     ">":foundChar,
-    "<":foundChar
+    "<":foundChar,
+    "!":foundChar,
+    "&":foundChar,
+    "|":foundChar
 }
 
 punctuationDict = {
@@ -120,12 +119,6 @@ untrackedDict = {
     ":":foundChar
 }
 
-invalidDict = {
-    "!":foundChar,
-    "&":foundChar,
-    "|":foundChar
-}
-
 def isAlphabet(char):
     func = alphaDict.get(char, notFound)
     return func()
@@ -142,18 +135,10 @@ def isOperator(char):
     func = operatorsDict.get(char, notFound)
     return func()
 
-def isRelational(char):
-    func = relationalDict.get(char, notFound)
-    return func()
-
 def isPunctuation(char):
     func = punctuationDict.get(char, notFound)
     return func()
 
 def isUntracked(char):
     func = untrackedDict.get(char, notFound)
-    return func()
-
-def isInvalid(char):
-    func = invalidDict.get(char, notFound)
     return func()

@@ -24,8 +24,7 @@ def run(fn, text):
 
     return tokens, error
 
-# Uncomment niyo lang yung debug sa baba nito tas dito niyo tong line na to
-# debug()
+debug()
 
 def run_file(filename):
     if(filename):

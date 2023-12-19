@@ -53,7 +53,7 @@ class Lexer:
                 elif isinstance(result, Error):
                     return [], result
 
-            # Scans arithmetic operators: +, -, *, /, ~, ^, % and unary operators: +, -, ++, --
+            # Scans arithmetic operators: +, -, *, /, ~, ^, %, invalid relational symbols such as !, &, |, &&, and ||, and assignment operator and relational lexemes
             elif isOperator(char):
                 result = self.make_operator()
                 if isinstance(result, Token):
@@ -72,18 +72,6 @@ class Lexer:
             # Scans for number and decimal lexemes
             elif isDigits(char) or char == '.':
                 result = self.make_number()
-                if isinstance(result, Token):
-                    tokens.append(result)
-                elif isinstance(result, Error):
-                    return [], result
-                
-            # Scans for invalid relational symbols such as !, &, |, &&, and ||
-            elif (isInvalid(char) and isWhitespace(check)) or (isInvalid(char) and char == check):
-                return [], self.invalid_relational()
-
-            # Scans for assignment operator and relational lexemes
-            elif isRelational(char):
-                result = self.make_relational()
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
@@ -677,23 +665,114 @@ class Lexer:
         return Token(TT_COMMENT, comment_str)
     
     def make_operator(self):
-        operator = self.current_char
-        self.advance()
+        tokentype = ''
+        lexeme = ''
+        details = ''
+        isTok = False
+        isErr = False
+        pos_start = self.pos.copy()
 
-        if operator == '+':
-            return Token(TT_PLUS, operator)
-        elif operator == '-':
-            return Token(TT_MINUS, operator)
-        elif operator == '*':
-            return Token(TT_MUL, operator)
-        elif operator == '/':
-            return Token(TT_DIV, operator)
-        elif operator == '~':
-            return Token(TT_INTDIV, operator)
-        elif operator == '^':
-            return Token(TT_EXPO, operator)
-        elif operator == '%':
-            return Token(TT_MOD, operator)
+        if self.current_char == '+':
+            tokentype = TT_PLUS
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '-':
+            tokentype = TT_MINUS
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '*':
+            tokentype = TT_MUL
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '/':
+            tokentype = TT_DIV
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '~':
+            tokentype = TT_INTDIV
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '^':
+            tokentype = TT_EXPO
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '%':
+            tokentype = TT_MOD
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+        elif self.current_char == '=':
+            tokentype = TT_ASSIGN
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+            if self.current_char == '=':
+                tokentype = TT_EQUALTO
+                lexeme += self.current_char
+                isTok = True
+                self.advance()
+        elif self.current_char == '>':
+            tokentype = TT_GREATER
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+            if self.current_char == '=':
+                tokentype = TT_GREATEREQUAL
+                lexeme += self.current_char
+                isTok = True
+                self.advance()
+        elif self.current_char == '<':
+            tokentype = TT_LESS
+            lexeme += self.current_char
+            isTok = True
+            self.advance()
+            if self.current_char == '=':
+                tokentype = TT_LESSEQUAL
+                lexeme += self.current_char
+                isTok = True
+                self.advance()
+        elif self.current_char == '!':
+            lexeme += self.current_char
+            details = f'"{lexeme}", Consider using "not" or "NOT" instead.'
+            isErr = True
+            self.advance()
+            if self.current_char == '=':
+                tokentype = TT_NOTEQUAL
+                lexeme += self.current_char
+                isTok = True
+                isErr = False
+                self.advance()
+        elif self.current_char == '&':
+            lexeme += self.current_char
+            details = f'"{lexeme}", Consider using "and" or "AND" instead.'
+            isErr = True
+            self.advance()
+            if self.current_char == '&':
+                lexeme += self.current_char
+                details = f'"{lexeme}", Consider using "and" or "AND" instead.'
+                isErr = True
+                self.advance()
+        elif self.current_char == '|':
+            lexeme += self.current_char
+            details = f'"{lexeme}", Consider using "or" or "OR" instead.'
+            isErr = True
+            self.advance()
+            if self.current_char == '|':
+                lexeme += self.current_char
+                details = f'"{lexeme}", Consider using "or" or "OR" instead.'
+                isErr = True
+                self.advance()
+
+        if isTok:
+            return Token(tokentype, lexeme)
+        elif isErr:
+            return InvalidRelationalSymbol(pos_start, self.pos, details)
 
     def make_number(self):
         num_str = ''
@@ -741,78 +820,6 @@ class Lexer:
                 return Token(TT_FLOAT, float(num_str))
             except ValueError:
                 return InvalidDecimalError(pos_start, self.pos, "Invalid Decimal")
-
-    def invalid_relational(self):
-        rel_str = ''
-
-        while self.current_char != None and isInvalid(self.current_char):
-            check = self.check()
-            rel_str += self.current_char
-            pos_start = self.pos.copy()
-
-            if rel_str == '!' and isWhitespace(check):
-                self.advance()
-                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "not" or "NOT" instead.')
-            elif rel_str == '&' and isWhitespace(check):
-                self.advance()
-                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "and" or "AND" instead.')
-            elif rel_str == '|' and isWhitespace(check):
-                self.advance()
-                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "or" or "OR" instead.')
-            elif rel_str == '&' and check == '&':
-                self.advance()
-                rel_str += self.current_char
-                self.advance()
-                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "and" or "AND" instead.')
-            elif rel_str == '|' and check == '|':
-                self.advance()
-                rel_str += self.current_char
-                self.advance()
-                return InvalidRelationalSymbol(pos_start, self.pos, f'"{rel_str}", Consider using "or" or "OR" instead.')
-            else:
-                self.advance()
-                return IllegalCharError(pos_start, self.pos, f"'{self.current_char}'")
-
-    def make_relational(self):
-        rel_str = ''
-        check = self.check()
-
-        if self.current_char == '=' and check != '=':
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_ASSIGN, rel_str)
-        elif self.current_char == '>' and check == '=':
-            rel_str += self.current_char
-            self.advance()
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_GREATEREQUAL, rel_str)
-        elif self.current_char == '<' and check == '=':
-            rel_str += self.current_char
-            self.advance()
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_LESSEQUAL, rel_str)
-        elif self.current_char == '=' and check == '=':
-            rel_str += self.current_char
-            self.advance()
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_EQUALTO, rel_str)
-        elif self.current_char == '!' and check == '=':
-            rel_str += self.current_char
-            self.advance()
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_NOTEQUAL, rel_str)
-        elif self.current_char == '>':
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_GREATER, rel_str)
-        elif self.current_char == '<':
-            rel_str += self.current_char
-            self.advance()
-            return Token(TT_LESS, rel_str)
 
     def make_string(self):
         text_str = ''
