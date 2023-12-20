@@ -24,7 +24,7 @@ def run(fn, text):
 
     return tokens, error
 
-debug()
+# debug()
 
 def run_file(filename):
     if(filename):

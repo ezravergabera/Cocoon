@@ -652,7 +652,7 @@ class Lexer:
                 else:
                     dot_count = 0
 
-                if self.check() == None:
+                if self.check() == '' or self.check() == None:
                     return LexicalError(pos_start, self.pos, 'Closing symbol not found.')
                 
                 comment_str += self.current_char
