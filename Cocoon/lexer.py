@@ -641,16 +641,21 @@ class Lexer:
         check = self.check()
         dot_count = 0
         
-        if self.current_char == '.' and check == '.' and not isWhitespace(check):
+        if self.current_char == '.' and check == '.':
+            comment_str += self.current_char
+            self.advance()
+            comment_str += self.current_char
+            self.advance()
             while dot_count != 3:
-                comment_str += self.current_char
-                if self.check() == '' and self.check() != None:
-                    return LexicalError(pos_start, self.pos, 'Closing symbol not found.')
-                
                 if self.current_char == '.':
                     dot_count += 1
                 else:
                     dot_count = 0
+
+                if self.check() == None:
+                    return LexicalError(pos_start, self.pos, 'Closing symbol not found.')
+                
+                comment_str += self.current_char
                 self.advance()
         else:
             comment_str += self.current_char
@@ -659,8 +664,8 @@ class Lexer:
                 comment_str += self.current_char
                 self.advance()
                 
-        if self.current_char == '\n':
-            self.advance()
+            if self.current_char == '\n':
+                self.advance()
 
         return Token(TT_COMMENT, comment_str)
     
