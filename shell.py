@@ -4,7 +4,10 @@ from Cocoon.interpreter import Interpreter
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
 import sys
 
+debugmode = False
+
 def debug_lexer():
+    debugmode = True
     while True:
         text = input("lexer > ")
 
@@ -64,6 +67,8 @@ def run(fn, text):
 # debug_parser()
 debug_interpreter()
 
+# debug()
+
 def run_file(filename):
     if(filename):
         if(filename.lower().endswith('.kkun')):
@@ -91,7 +96,7 @@ def run_file(filename):
 OPTIONS = {'-f', '-file', '-c', 'cli'}
 lowercasedArgs = [arg.lower() for arg in sys.argv]
 
-if __name__ == '__main__':
+if __name__ == '__main__' and debugmode == False:
     if '-cli' in lowercasedArgs or '-c' in lowercasedArgs:
         while True:
             text = input("cocoon > ")
