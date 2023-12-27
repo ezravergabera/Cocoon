@@ -1,0 +1,12 @@
+expr is the root. The root has the least priority.
+expr    : term ((PLUS | MINUS) term)*
+
+term    : factor ((MUL | DIV | INTDIV | MOD) factor)*
+
+factor  : (PLUS|MINUS) factor
+        : power
+
+power   : atom (EXPO factor)*
+
+atom    : INT | FLOAT 
+        : LPAREN expr RPAREN
