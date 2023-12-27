@@ -21,6 +21,7 @@ def debug_lexer():
             print(result)
 
 def debug_parser():
+    debugmode = True
     while True:
         text = input("parser > ")
 
@@ -30,6 +31,7 @@ def debug_parser():
         else: print(result)
 
 def debug_interpreter():
+    debugmode = True
     while True:
         text = input("interpreter > ")
 
