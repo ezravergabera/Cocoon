@@ -9,11 +9,14 @@ class Token:
             self.pos_end.advance()
 
         if pos_end:
-            self.pos_end = pos_end
+            self.pos_end = pos_end.copy()
 
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
+    
+    def matches(self, type_, value):
+        return self.type == type_ and self.value == value
 
 
 def tok_to_str(tokens):

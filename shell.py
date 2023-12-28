@@ -1,10 +1,17 @@
 from Cocoon.lexer import Lexer
 from Cocoon.parser import Parser
 from Cocoon.interpreter import Interpreter
+from Cocoon.context import Context
+from Cocoon.symbolTable import SymbolTable
+from Cocoon.values import Number
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
 import sys
 
 debugmode = False
+
+# Global Symbol Table
+global_symbol_table = SymbolTable()
+global_symbol_table.set('null', Number(0))
 
 def debug_lexer():
     debugmode = True
@@ -60,9 +67,12 @@ def run(fn, text):
     if ast.error: return None, ast.error
 
     interpreter = Interpreter()
-    result = interpreter.visit(ast.node)
+    # Context Initial route
+    context = Context('<program>')
+    context.symbol_table = global_symbol_table
+    result = interpreter.visit(ast.node, context)
 
-    return result, None
+    return result.value, result.error
 
 #* Function Calls
 # debug_lexer()

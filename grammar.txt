@@ -1,5 +1,6 @@
 expr is the root. The root has the least priority.
-expr    : term ((PLUS | MINUS) term)*
+expr    : DTYPE:(num | number) ID ASSIGN expr
+        : term ((PLUS | MINUS) term)*
 
 term    : factor ((MUL | DIV | INTDIV | MOD) factor)*
 
@@ -8,5 +9,5 @@ factor  : (PLUS|MINUS) factor
 
 power   : atom (EXPO factor)*
 
-atom    : INT | FLOAT 
+atom    : INT | FLOAT | ID
         : LPAREN expr RPAREN
