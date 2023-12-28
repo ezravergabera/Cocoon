@@ -98,7 +98,7 @@ class Lexer:
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
         
         # End of File
-        tokens.append(Token('TT_EOF', TT_EOF))
+        tokens.append(Token('TT_EOF', TT_EOF, pos_start=self.pos))
         return tokens, None
     
     # Scanner Methods
@@ -631,7 +631,7 @@ class Lexer:
                 tokentype = TT_ID
                 self.advance()
 
-        return Token(tokentype, lexeme)
+        return Token(tokentype, lexeme, pos_start)
 
     def make_comments(self):
         pos_start = self.pos.copy()
@@ -667,7 +667,7 @@ class Lexer:
             if self.current_char == '\n':
                 self.advance()
 
-        return Token(TT_COMMENT, comment_str)
+        return Token(TT_COMMENT, comment_str, pos_start)
     
     def make_operator(self):
         tokentype = ''
@@ -775,7 +775,7 @@ class Lexer:
                 self.advance()
 
         if isTok:
-            return Token(tokentype, lexeme)
+            return Token(tokentype, lexeme, pos_start)
         elif isErr:
             return InvalidRelationalSymbol(pos_start, self.pos, details)
 
@@ -819,7 +819,7 @@ class Lexer:
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         elif num_str == '.':
-            return Token(TT_DOT, num_str)
+            return Token(TT_DOT, num_str, pos_start)
         else:
             try:
                 return Token(TT_FLOAT, float(num_str), pos_start)
@@ -848,7 +848,7 @@ class Lexer:
         if isPunctuation(self.current_char):
             char = self.current_char
             if char == '.':
-                return Token(TT_DOT, char)
+                return Token(TT_DOT, char, self.pos)
             if char == ',':
                 return Token(TT_COMMA, char, self.pos)
             elif char == ';':
