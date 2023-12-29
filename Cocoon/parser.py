@@ -28,24 +28,28 @@ class Parser:
         tok = self.current_tok
 
         if tok.type == TT_LPAREN:
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             expr = res.register(self.expr())
             if res.error: return res
             if self.current_tok.type == TT_RPAREN:
-                res.register(self.advance())
+                res.register_advancement()
+                self.advance()
                 return res.success(expr)
             else:
                 return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected a closing symbol ')'"))
             
         elif tok.type in (TT_INT, TT_FLOAT):
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             return res.success(NumberNode(tok))
         
         elif tok.type == TT_ID:
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             return res.success(IntAccessNode(tok))
         
-        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, '+', '-' or '('"))
+        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, '+', '-' or '('"))
             
     def power(self):
         return self.arith_op(self.atom, (TT_EXPO, ), self.factor)
@@ -55,7 +59,8 @@ class Parser:
         tok = self.current_tok
 
         if tok.type in (TT_POSITIVE, TT_NEGATIVE):
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             factor = res.register(self.factor())
             if res.error: return res
             return res.success(UnaryOpNode(tok, factor))
@@ -69,7 +74,8 @@ class Parser:
         res = ParseResult()
 
         if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
 
             if self.current_tok.type != TT_ID:
                 res.failure(InvalidSyntaxError(
@@ -78,7 +84,8 @@ class Parser:
                 ))
 
             var_name = self.current_tok
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
 
             if self.current_tok.type != TT_ASSIGN:
                 res.failure(InvalidSyntaxError(
@@ -86,7 +93,8 @@ class Parser:
                     "Expected '='"
                 ))
 
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             expr = res.register(self.expr())
             if res.error: return res
             return res.success(IntAssignNode(var_name, expr))
@@ -96,7 +104,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected a data type keyword, int, float, identifier, '+', '-', or '(')"))
+                               "Expected a data type keyword, int, float, identifier, '+', '-', or '('"))
         
         return res.success(node)
 
@@ -110,7 +118,8 @@ class Parser:
 
         while self.current_tok.type in ops:
             op_tok = self.current_tok
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             right = res.register(func_b())
             if res.error: return res
             left = ArithOpNode(left, op_tok, right)
@@ -123,19 +132,21 @@ class ParseResult:
     def __init__(self):
         self.error = None
         self.node = None
+        self.advance_count = 0
+
+    def register_advancement(self):
+        self.advance_count += 1
 
     def register(self, res):
-        if isinstance(res, ParseResult):
-            if res.error: 
-                self.error = res.error
-            return res.node
-        
-        return res
+        self.advance_count += res.advance_count
+        if res.error: self.error = res.error
+        return res.node
 
     def success(self, node):
         self.node = node
         return self
 
     def failure(self, error):
-        self.error = error
+        if not self.error or self.advance_count == 0:
+            self.error = error
         return self
