@@ -1,6 +1,5 @@
 from .values import Number
 from .tokentypes import TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE
-from .symbolTable import SymbolTable
 
 class Interpreter:
     def visit(self, node, context):
