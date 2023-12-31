@@ -1,3 +1,5 @@
+from .arrows import arrows
+
 # Base Error
 class Error:
     def __init__(self, pos_start, pos_end, error_name, details):
@@ -9,6 +11,7 @@ class Error:
     def as_string(self):
         result = f'{self.error_name}: {self.details}'
         result += f'\nFile {self.pos_start.fn}, line {self.pos_start.ln + 1}'
+        result += '\n\n' + arrows(self.pos_start.ftext, self.pos_start, self.pos_end)
         return result
     
 # Lexical Errors
@@ -53,6 +56,7 @@ class RuntimeError(Error):
     def as_string(self):
         result = self.generate_traceback()
         result += f'{self.error_name}: {self.details}\n'
+        result += '\n' + arrows(self.pos_start.ftext, self.pos_start, self.pos_end)
         return result
     
     def generate_traceback(self):
