@@ -13,7 +13,10 @@ class Interpreter:
     def visit_NumberNode(self, node, context):
         return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
     
-    def visit_IntAccessNode(self, node, context):
+    def visit_BoolNode(self, node, context):
+        return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+    
+    def visit_IdAccessNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = context.symbol_table.get(var_name)
@@ -29,6 +32,15 @@ class Interpreter:
         return res.success(value)
     
     def visit_IntAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
+    
+    def visit_BoolAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
