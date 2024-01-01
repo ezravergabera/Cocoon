@@ -2,4 +2,6 @@
 __*
 testing.*
 *.txt
+!requirements.txt
+!grammar.txt
 *.kkun

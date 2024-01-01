@@ -7,6 +7,16 @@
 
 ## How to use
 
+1. Open your preferred command-line interface and change directory to the folder where the cloned repo would be downloaded to by entering `cd <path-to-the-folder>` to your terminal
+
+2. Clone the repo to the folder by entering `git clone https://github.com/ezravergabera/Cocoon` in your command-line interface
+
+3. Change directory by inputting `cd Cocoon` to the terminal
+
+4. Install the required modules by entering `pip install -r requirements.txt`
+
+5. Follow the next instructions in using the lexical analyzer
+
 There are two ways on how to use the lexical analyzer:
 
 1. By running the [GUI](/gui.py)

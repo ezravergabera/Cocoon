@@ -1,10 +1,22 @@
 from Cocoon.lexer import Lexer
+from Cocoon.parser import Parser
+from Cocoon.interpreter import Interpreter
+from Cocoon.context import Context
+from Cocoon.symbolTable import SymbolTable
+from Cocoon.values import Number
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
 import sys
 
-def debug():
+debugmode = False
+
+# Global Symbol Table
+global_symbol_table = SymbolTable()
+global_symbol_table.set('null', Number(0))
+
+def debug_lexer():
+    debugmode = True
     while True:
-        text = input("cocoon > ")
+        text = input("lexer > ")
 
         result, error = run("<stdin>", text)
 
@@ -15,11 +27,59 @@ def debug():
             result.pop()
             print(result)
 
+def debug_parser():
+    debugmode = True
+    while True:
+        text = input("parser > ")
+
+        result, error = run("<stdin>", text)
+
+        if error: print(error.as_string())
+        else: print(result)
+
+def debug_interpreter():
+    debugmode = True
+    while True:
+        text = input("interpreter > ")
+
+        result, error = run("<stdin>", text)
+
+        if error: print(error.as_string())
+        else: print(result)
+
+
 def run(fn, text):
+    # Lexer
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
 
-    return tokens, error
+    # return tokens, error
+
+    # Parser
+    if error: return None, error
+
+    parser = Parser(tokens)
+    ast = parser.parse()
+
+    # return ast.node, ast.error
+
+    # Interpreter
+    if ast.error: return None, ast.error
+
+    interpreter = Interpreter()
+    # Context Initial route
+    context = Context('<program>')
+    context.symbol_table = global_symbol_table
+    result = interpreter.visit(ast.node, context)
+
+    return result.value, result.error
+
+#* Function Calls
+# debug_lexer()
+# debug_parser()
+debug_interpreter()
+
+# debug()
 
 def run_file(filename):
     if(filename):
@@ -48,7 +108,7 @@ def run_file(filename):
 OPTIONS = {'-f', '-file', '-c', 'cli'}
 lowercasedArgs = [arg.lower() for arg in sys.argv]
 
-if __name__ == '__main__':
+if __name__ == '__main__' and debugmode == False:
     if '-cli' in lowercasedArgs or '-c' in lowercasedArgs:
         while True:
             text = input("cocoon > ")
