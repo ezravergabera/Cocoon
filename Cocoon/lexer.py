@@ -631,7 +631,7 @@ class Lexer:
                 tokentype = TT_ID
                 self.advance()
 
-        return Token(tokentype, lexeme, pos_start)
+        return Token(tokentype, lexeme, pos_start, self.pos)
 
     def make_comments(self):
         pos_start = self.pos.copy()
@@ -667,7 +667,7 @@ class Lexer:
             if self.current_char == '\n':
                 self.advance()
 
-        return Token(TT_COMMENT, comment_str, pos_start)
+        return Token(TT_COMMENT, comment_str, pos_start, self.pos)
     
     def make_operator(self):
         tokentype = ''
@@ -775,7 +775,7 @@ class Lexer:
                 self.advance()
 
         if isTok:
-            return Token(tokentype, lexeme, pos_start)
+            return Token(tokentype, lexeme, pos_start, self.pos)
         elif isErr:
             return InvalidRelationalSymbol(pos_start, self.pos, details)
 
@@ -811,7 +811,7 @@ class Lexer:
             self.advance()
 
         if dot_count == 0 and isValid == True and isIdentifier == False:
-            return Token(TT_INT, int(num_str), pos_start)
+            return Token(TT_INT, int(num_str), pos_start, self.pos)
         elif dot_count == 2 and isValid == True:
             return LexicalError(pos_start, self.pos, f'{num_str}')
         elif isIdentifier:
@@ -819,10 +819,10 @@ class Lexer:
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         elif num_str == '.':
-            return Token(TT_DOT, num_str, pos_start)
+            return Token(TT_DOT, num_str, pos_start, self.pos)
         else:
             try:
-                return Token(TT_FLOAT, float(num_str), pos_start)
+                return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
             except ValueError:
                 return InvalidDecimalError(pos_start, self.pos, "Invalid Decimal")
 
@@ -842,7 +842,7 @@ class Lexer:
             self.advance()
         else:
             return LexicalError(pos_start, self.pos, "Must be enclosed by \" or \'.")
-        return Token(TT_STR, text_str, pos_start)
+        return Token(TT_STR, text_str, pos_start, self.pos)
 
     def make_punctuation(self):
         if isPunctuation(self.current_char):
