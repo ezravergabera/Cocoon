@@ -78,7 +78,7 @@ class Lexer:
                     return [], result
                 
             # Scans for string literals enclosed with " or '
-            elif char == '"' or char == "'":
+            elif char == '"':
                 result = self.make_string()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -828,7 +828,7 @@ class Lexer:
         pos_start = self.pos.copy()
         self.advance()
 
-        while self.current_char != None and self.current_char != stop:
+        while self.current_char != None and self.current_char != stop and isinCharSet(self.current_char):
             text_str += self.current_char
             self.advance()
         
@@ -836,6 +836,8 @@ class Lexer:
             text_str += stop
             self.advance()
         else:
+            if not(isinCharSet(self.current_char)):
+                return LexicalError(pos_start, self.pos, f"'{self.current_char}' not in character_set")   
             return LexicalError(pos_start, self.pos, "Must be enclosed by \" or \'.")
         return Token(TT_STR, text_str)
 
