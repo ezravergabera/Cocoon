@@ -1,5 +1,6 @@
 expr is the root. The root has the least priority.
 expr    : DTYPE:(num | number) ID ASSIGN expr
+        : DTYPE:(deci | decimal) ID ASSIGN expr
         : DTYPE:(bool | boolean) ID ASSIGN BOOL:(true | false) {| RelLogExpr // note: hindi ko pa alam kung tama to. }
         : term ((PLUS | MINUS) term)*
 
