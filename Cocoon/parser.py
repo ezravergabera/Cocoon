@@ -1,4 +1,4 @@
-from .nodes import NumberNode, BoolNode, IdAccessNode, IntAssignNode, BoolAssignNode, ArithOpNode, UnaryOpNode
+from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IntAssignNode, FloatAssignNode, BoolAssignNode, ArithOpNode, UnaryOpNode
 from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_BOOL, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE, TT_DTYPE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
@@ -39,11 +39,16 @@ class Parser:
             else:
                 return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected a closing symbol ')'"))
             
-        elif tok.type in (TT_INT, TT_FLOAT):
+        elif tok.type == TT_INT:
             res.register_advancement()
             self.advance()
             return res.success(NumberNode(tok))
         
+        elif tok.type == TT_FLOAT:
+            res.register_advancement()
+            self.advance()
+            return res.success(DecimalNode(tok))
+
         elif tok.type == TT_ID:
             res.register_advancement()
             self.advance()
@@ -101,9 +106,59 @@ class Parser:
 
             res.register_advancement()
             self.advance()
+
+            #? Kung i automatic parse ba kapag float tok nakuha or hindi nalang tatanggapin as in?
+
+            if self.current_tok.type != TT_INT:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected int"
+                ))
             expr = res.register(self.expr())
+            res.register_advancement()
+            self.advance()
             if res.error: return res
             return res.success(IntAssignNode(var_name, expr))
+        
+        # decimal identifier = 1.9
+        if self.current_tok.matches(TT_DTYPE, 'deci') or self.current_tok.matches(TT_DTYPE, 'decimal'):
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ID:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected an identifier"
+                ))
+
+            var_name = self.current_tok
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ASSIGN:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+   
+            res.register_advancement()
+            self.advance()
+
+            # parsing int to float
+            if self.current_tok.type == TT_INT:
+                self.current_tok.type = TT_FLOAT
+                self.current_tok.value = float(self.current_tok.value)
+
+            if self.current_tok.type != TT_FLOAT:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected int or float"
+                ))
+            expr = res.register(self.expr())
+            res.register_advancement()
+            self.advance()
+            if res.error: return res
+            return res.success(FloatAssignNode(var_name, expr))
         
         # boolean identifier = bool
         if self.current_tok.matches(TT_DTYPE, 'bool') or self.current_tok.matches(TT_DTYPE, 'boolean'):
@@ -146,7 +201,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected a data type keyword, int, float, identifier, '+', '-', or '('"))
+                               "Expected a data type keyword, int, float, identifier, 'true', 'false', '+', '-' or '('"))
         
         return res.success(node)
 

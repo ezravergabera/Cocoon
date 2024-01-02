@@ -8,9 +8,14 @@ class NumberNode:
     def __repr__(self):
         return f'{self.tok}'
     
+class DecimalNode(NumberNode):
+    def __init__(self, tok):
+        super().__init__(tok)
+    
 class BoolNode(NumberNode):
     def __init__(self, tok):
         super().__init__(tok)
+
 class IdAccessNode:
     def __init__(self, var_name_tok):
         self.var_name_tok = var_name_tok
@@ -25,14 +30,13 @@ class IntAssignNode:
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.value_node.pos_end
-        
-class BoolAssignNode:
+class FloatAssignNode(IntAssignNode):
     def __init__(self, var_name_tok, value_node):
-        self.var_name_tok = var_name_tok
-        self.value_node = value_node
-
-        self.pos_start = self.var_name_tok.pos_start
-        self.pos_end = self.var_name_tok.pos_end
+        super().__init__(var_name_tok, value_node)
+        
+class BoolAssignNode(IntAssignNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
     
 class ArithOpNode:
     def __init__(self, left_node, op_tok, right_node):

@@ -1,4 +1,5 @@
 from .values import Number
+from .errors import RuntimeError
 from .tokentypes import TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE
 
 class Interpreter:
@@ -11,6 +12,9 @@ class Interpreter:
         raise Exception(f'No visit_{type(node).__name__} method defined')
     
     def visit_NumberNode(self, node, context):
+        return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+    
+    def visit_DecimalNode(self, node, context):
         return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_BoolNode(self, node, context):
@@ -40,6 +44,15 @@ class Interpreter:
         context.symbol_table.set(var_name, value)
         return res.success(value)
     
+    def visit_FloatAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
+
     def visit_BoolAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
