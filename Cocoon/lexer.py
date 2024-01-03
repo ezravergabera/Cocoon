@@ -2,7 +2,7 @@ from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_INCRE, TT_DECRE, TT_POSITIVE, TT_NEGATIVE, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -98,7 +98,7 @@ class Lexer:
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
         
         # End of File
-        tokens.append(Token('TT_EOF', TT_EOF))
+        tokens.append(Token('TT_EOF', TT_EOF, pos_start=self.pos))
         return tokens, None
     
     # Scanner Methods
@@ -631,7 +631,7 @@ class Lexer:
                 tokentype = TT_ID
                 self.advance()
 
-        return Token(tokentype, lexeme)
+        return Token(tokentype, lexeme, pos_start, self.pos)
 
     def make_comments(self):
         pos_start = self.pos.copy()
@@ -667,7 +667,7 @@ class Lexer:
             if self.current_char == '\n':
                 self.advance()
 
-        return Token(TT_COMMENT, comment_str)
+        return Token(TT_COMMENT, comment_str, pos_start, self.pos)
     
     def make_operator(self):
         tokentype = ''
@@ -775,16 +775,16 @@ class Lexer:
                 self.advance()
 
         if isTok:
-            return Token(tokentype, lexeme)
+            return Token(tokentype, lexeme, pos_start, self.pos)
         elif isErr:
             return InvalidRelationalSymbol(pos_start, self.pos, details)
 
     def make_number(self):
+        pos_start = self.pos.copy()
         num_str = ''
         dot_count = 0
         isValid = True
         isIdentifier = False
-        pos_start = self.pos.copy()
 
         while self.current_char != None and (isAlphabet(self.current_char) or isDigits(self.current_char) or isWhitespace(self.current_char) or isUntracked(self.current_char) or self.current_char == '_' or self.current_char == '.'):
             check = self.check()
@@ -811,7 +811,7 @@ class Lexer:
             self.advance()
 
         if dot_count == 0 and isValid == True and isIdentifier == False:
-            return Token(TT_INT, int(num_str))
+            return Token(TT_INT, int(num_str), pos_start, self.pos)
         elif dot_count == 2 and isValid == True:
             return LexicalError(pos_start, self.pos, f'{num_str}')
         elif isIdentifier:
@@ -819,18 +819,18 @@ class Lexer:
         elif isValid == False:
             return IllegalNumberError(pos_start, self.pos, f'{num_str}')
         elif num_str == '.':
-            return Token(TT_DOT, num_str)
+            return Token(TT_DOT, num_str, pos_start, self.pos)
         else:
             try:
-                return Token(TT_FLOAT, float(num_str))
+                return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
             except ValueError:
                 return InvalidDecimalError(pos_start, self.pos, "Invalid Decimal")
 
     def make_string(self):
+        pos_start = self.pos.copy()
         text_str = ''
         stop = self.current_char
         text_str += stop
-        pos_start = self.pos.copy()
         self.advance()
 
         while self.current_char != None and self.current_char != stop and isinCharSet(self.current_char):
@@ -844,22 +844,22 @@ class Lexer:
             if not(isinCharSet(self.current_char)):
                 return LexicalError(pos_start, self.pos, f"'{self.current_char}' not in character_set")   
             return LexicalError(pos_start, self.pos, "Must be enclosed by \".")
-        return Token(TT_STR, text_str)
+        return Token(TT_STR, text_str, pos_start, self.pos)
 
     def make_punctuation(self):
         if isPunctuation(self.current_char):
             char = self.current_char
             if char == '.':
-                return Token(TT_DOT, char)
+                return Token(TT_DOT, char, self.pos)
             if char == ',':
-                return Token(TT_COMMA, char)
+                return Token(TT_COMMA, char, self.pos)
             elif char == ';':
-                return Token(TT_SEMICOLON, char)
+                return Token(TT_SEMICOLON, char, self.pos)
             elif char == '[':
-                return Token(TT_LSQUARE, char)
+                return Token(TT_LSQUARE, char, self.pos)
             elif char == ']':
-                return Token(TT_RSQUARE, char)
+                return Token(TT_RSQUARE, char, self.pos)
             elif char == '(':
-                return Token(TT_LPAREN, char)
+                return Token(TT_LPAREN, char, self.pos)
             elif char == ')':
-                return Token(TT_RPAREN, char)
+                return Token(TT_RPAREN, char, self.pos)

@@ -1,12 +1,20 @@
 expr is the root. The root has the least priority.
-expr    : term ((PLUS | MINUS) term)*
+expr            : DTYPE:(num | number) ID ASSIGN expr
+                : DTYPE:(deci | decimal) ID ASSIGN expr
+                : DTYPE:(bool | boolean) ID ASSIGN BOOL:(true | false) {| RelLogExpr // note: hindi ko pa alam kung tama to. }
+                : rel-expr ((AND | OR) rel-expr)*
+                
+rel-expr        : NOT rel-expr
+                : arith-expr ((GREATER | LESS | GREATEREQUAL | LESSEQUAL | EQUALTO | NOTEQUAL) arith-expr)*
 
-term    : factor ((MUL | DIV | INTDIV | MOD) factor)*
+arith-expr      : term ((PLUS | MINUS) term)*
 
-factor  : (PLUS|MINUS) factor
-        : power
+term            : factor ((MUL | DIV | INTDIV | MOD) factor)*
 
-power   : atom (EXPO factor)*
+factor          : (PLUS|MINUS) factor
+                : power
 
-atom    : INT | FLOAT 
-        : LPAREN expr RPAREN
+power           : atom (EXPO factor)*
+
+atom            : INT | FLOAT | ID | BOOL
+                : LPAREN expr RPAREN
