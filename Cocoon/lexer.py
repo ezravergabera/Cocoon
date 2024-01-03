@@ -77,8 +77,8 @@ class Lexer:
                 elif isinstance(result, Error):
                     return [], result
                 
-            # Scans for string literals enclosed with " or '
-            elif char == '"' or char == "'":
+            # Scans for string literals enclosed with "
+            elif char == '"':
                 result = self.make_string()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -833,7 +833,7 @@ class Lexer:
         text_str += stop
         self.advance()
 
-        while self.current_char != None and self.current_char != stop:
+        while self.current_char != None and self.current_char != stop and isinCharSet(self.current_char):
             text_str += self.current_char
             self.advance()
         
@@ -841,7 +841,9 @@ class Lexer:
             text_str += stop
             self.advance()
         else:
-            return LexicalError(pos_start, self.pos, "Must be enclosed by \" or \'.")
+            if not(isinCharSet(self.current_char)):
+                return LexicalError(pos_start, self.pos, f"'{self.current_char}' not in character_set")   
+            return LexicalError(pos_start, self.pos, "Must be enclosed by \".")
         return Token(TT_STR, text_str, pos_start, self.pos)
 
     def make_punctuation(self):

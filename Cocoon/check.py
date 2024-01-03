@@ -142,3 +142,23 @@ def isPunctuation(char):
 def isUntracked(char):
     func = untrackedDict.get(char, notFound)
     return func()
+
+def isinCharSet(char):
+    func1 = alphaDict.get(char, notFound)
+    func2 = digitsDict.get(char, notFound)
+    func3 = whitespacesDict.get(char, notFound)
+    func4 = operatorsDict.get(char, notFound)
+    func5 = punctuationDict.get(char, notFound)
+    
+    if func1():
+        return func1()
+    elif func2():
+        return func2()
+    elif func3():
+        return func3()
+    elif func4():
+        return func4()
+    elif func5():
+        return func5()
+    else:
+        return False
