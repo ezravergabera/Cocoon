@@ -49,6 +49,41 @@ class Number:
         if isinstance(other, Number):
             return Number(self.value % other.value).set_context(self.context), None
         
+    def get_comp_greater(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value > other.value)).set_context(self.context), None
+        
+    def get_comp_less(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value < other.value)).set_context(self.context), None
+        
+    def get_comp_greaterequal(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value >= other.value)).set_context(self.context), None
+        
+    def get_comp_lessequal(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value <= other.value)).set_context(self.context), None
+        
+    def get_comp_equalto(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value == other.value)).set_context(self.context), None
+        
+    def get_comp_notequal(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value != other.value)).set_context(self.context), None
+        
+    def get_comp_not(self):
+        return Number(1 if self.value == 0 else 0).set_context(self.context), None
+        
+    def get_comp_and(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value and other.value)).set_context(self.context), None
+        
+    def get_comp_or(self, other):
+        if isinstance(other, Number):
+            return Number(int(self.value or other.value)).set_context(self.context), None
+        
     def copy(self):
         copy = Number(self.value)
         copy.set_pos(self.pos_start, self.pos_end)

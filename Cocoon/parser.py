@@ -1,5 +1,5 @@
 from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IntAssignNode, FloatAssignNode, BoolAssignNode, ArithOpNode, UnaryOpNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_BOOL, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE, TT_DTYPE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_BOOL, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -68,7 +68,7 @@ class Parser:
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type in (TT_POSITIVE, TT_NEGATIVE):
+        if tok.type in (TT_PLUS, TT_MINUS):
             res.register_advancement()
             self.advance()
             factor = res.register(self.factor())
@@ -79,6 +79,30 @@ class Parser:
 
     def term(self):
         return self.arith_op(self.factor, (TT_MUL, TT_DIV))
+
+    def arith_expr(self):
+        return self.arith_op(self.term, (TT_PLUS, TT_MINUS))
+
+    def rel_expr(self):
+        res = ParseResult()
+
+        if self.current_tok.type == TT_NOT:
+            op_tok = self.current_tok
+            res.register_advancement()
+            self.advance()
+
+            node = res.register(self.rel_expr())
+            if res.error: return res
+            return res.success(UnaryOpNode(op_tok, node))
+        
+        node = res.register(self.arith_op(self.arith_expr, (TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL)))
+
+        if res.error:
+            return res.failure(InvalidSyntaxError(
+                               self.current_tok.pos_start, self.current_tok.pos_end,
+                               "Expected int, float, identifier, '+', '-', '(', 'not', or 'NOT'"))
+        
+        return res.success(node)
 
     def expr(self):
         res = ParseResult()
@@ -196,12 +220,12 @@ class Parser:
             if res.error: return res
             return res.success(BoolAssignNode(var_name, expr))
         
-        node = res.register(self.arith_op(self.term, (TT_PLUS, TT_MINUS, TT_INTDIV, TT_MOD)))
+        node = res.register(self.arith_op(self.rel_expr, (TT_AND, TT_OR)))
 
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected a data type keyword, int, float, identifier, 'true', 'false', '+', '-' or '('"))
+                               "Expected a data type keyword, int, float, identifier, '+', '-', '(', 'not', or 'NOT'"))
         
         return res.success(node)
 

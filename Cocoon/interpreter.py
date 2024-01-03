@@ -1,6 +1,6 @@
 from .values import Number
 from .errors import RuntimeError
-from .tokentypes import TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_POSITIVE, TT_NEGATIVE
+from .tokentypes import TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR
 
 class Interpreter:
     def visit(self, node, context):
@@ -83,6 +83,22 @@ class Interpreter:
             result, error = left.raised_to(right)
         elif node.op_tok.type == TT_MOD:
             result, error = left.mod(right)
+        elif node.op_tok.type == TT_GREATER:
+            result, error = left.get_comp_greater(right)
+        elif node.op_tok.type == TT_LESS:
+            result, error = left.get_comp_less(right)
+        elif node.op_tok.type == TT_GREATEREQUAL:
+            result, error = left.get_comp_greaterequal(right)
+        elif node.op_tok.type == TT_LESSEQUAL:
+            result, error = left.get_comp_lessequal(right)
+        elif node.op_tok.type == TT_EQUALTO:
+            result, error = left.get_comp_equalto(right)
+        elif node.op_tok.type == TT_NOTEQUAL:
+            result, error = left.get_comp_notequal(right)
+        elif node.op_tok.type == TT_AND:
+            result, error = left.get_comp_and(right)
+        elif node.op_tok.type == TT_OR:
+            result, error = left.get_comp_or(right)
 
         if error:
             return res.failure(error)
@@ -96,10 +112,12 @@ class Interpreter:
 
         error = None
 
-        if node.op_tok.value == TT_POSITIVE:
+        if node.op_tok.type == TT_PLUS:
             number, error = number.multiplied_by(Number(1))
-        elif node.op_tok.value == TT_NEGATIVE:
+        elif node.op_tok.type == TT_MINUS:
             number, error = number.multiplied_by(Number(-1))
+        elif node.op_tok.type == TT_NOT:
+            number, error = number.get_comp_not()
 
         if error:
             return res.failure(error)
