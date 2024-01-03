@@ -840,7 +840,6 @@ class Lexer:
         pos_start = self.pos.copy()
         text_str = ''
         stop = self.current_char
-        text_str += stop
         self.advance()
 
         while self.current_char != None and self.current_char != stop and isinCharSet(self.current_char):
@@ -848,26 +847,42 @@ class Lexer:
             self.advance()
         
         if self.current_char == stop:
-            text_str += stop
             self.advance()
         else:
-            if not(isinCharSet(self.current_char)):
-                return LexicalError(pos_start, self.pos, f"'{self.current_char}' not in character_set")   
-            return LexicalError(pos_start, self.pos, "Must be enclosed by \".")
+            if self.current_char != None and not(isinCharSet(self.current_char)):
+                char_pos_start = self.pos.copy()
+                char = self.current_char
+                self.advance()
+                return LexicalError(char_pos_start, self.pos, f"'{char}' not in character_set")   
+            return LexicalError(pos_start, self.pos, "Must be enclosed by \"")
         return Token(TT_STR, text_str, pos_start, self.pos)
     
     def make_char(self):
         pos_start = self.pos.copy()
+        stop = self.current_char
         self.advance()
+
         if isAlphabet(self.current_char):
             char_value = self.current_char
             self.advance()
-            if self.current_char == "'":
+
+            if self.current_char == stop:
                 return Token(TT_CHAR, char_value, self.pos)
+            elif self.current_char == None:
+                return LexicalError(pos_start, self.pos, "Must be enclosed by \'")
             else:
-                return LexicalError(pos_start, self.pos, "Must be enclosed by \'. ")
+                while self.current_char != None and isinCharSet(self.current_char):
+                    self.advance()
+                if self.current_char != None and not(isinCharSet(self.current_char)) and self.current_char != stop:
+                        char_pos_start = self.pos.copy()
+                        char = self.current_char
+                        self.advance()
+                        return LexicalError(char_pos_start, self.pos, f"'{char}' not in character_set")
+                return LexicalError(pos_start, self.pos, "Character literal can only contain one character")
         else:
-            return LexicalError(pos_start, self.pos, "Must be an Alphabet")
+            char_pos_start = self.pos.copy()
+            self.advance()
+            return LexicalError(char_pos_start , self.pos, "Must be an Alphabet")
 
     def make_punctuation(self):
         if isPunctuation(self.current_char):
