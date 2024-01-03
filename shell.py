@@ -24,7 +24,11 @@ def run(fn, text):
 
     return tokens, error
 
+<<<<<<< HEAD
 
+=======
+# debug()
+>>>>>>> 6cda66585a251f3c00a43a5fe0673ae570dd897f
 
 def run_file(filename):
     if(filename):
