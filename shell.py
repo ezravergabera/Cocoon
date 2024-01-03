@@ -53,7 +53,7 @@ def run(fn, text):
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
 
-    # return tokens, error
+    return tokens, error
 
     # Parser
     if error: return None, error
@@ -75,11 +75,11 @@ def run(fn, text):
     return result.value, result.error
 
 #* Function Calls
-# debug_lexer()
-# debug_parser()
-debug_interpreter()
+debug_lexer()
+#debug_parser()
+#debug_interpreter()
 
-# debug()
+#debug()
 
 def run_file(filename):
     if(filename):
