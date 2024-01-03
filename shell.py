@@ -76,10 +76,8 @@ def run(fn, text):
 
 #* Function Calls
 # debug_lexer()
-# debug_parser()
+#debug_parser()
 debug_interpreter()
-
-# debug()
 
 def run_file(filename):
     if(filename):

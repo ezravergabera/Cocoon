@@ -2,7 +2,7 @@ from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -84,6 +84,16 @@ class Lexer:
                     tokens.append(result)
                 elif isinstance(result, Error):
                     return [], result
+
+            #Scans for character lexemes    
+            elif char == "'":
+               result = self.make_char()
+               if isinstance(result, Token):
+                   tokens.append(result)
+                   self.advance()
+               elif isinstance(result, Error):
+                   return[], result
+            
                 
             # Scans for puntuations such as ., ,, ;, [, ], (, and )
             elif isPunctuation(char):
@@ -845,6 +855,19 @@ class Lexer:
                 return LexicalError(pos_start, self.pos, f"'{self.current_char}' not in character_set")   
             return LexicalError(pos_start, self.pos, "Must be enclosed by \".")
         return Token(TT_STR, text_str, pos_start, self.pos)
+    
+    def make_char(self):
+        pos_start = self.pos.copy()
+        self.advance()
+        if isAlphabet(self.current_char):
+            char_value = self.current_char
+            self.advance()
+            if self.current_char == "'":
+                return Token(TT_CHAR, char_value, self.pos)
+            else:
+                return LexicalError(pos_start, self.pos, "Must be enclosed by \'. ")
+        else:
+            return LexicalError(pos_start, self.pos, "Must be an Alphabet")
 
     def make_punctuation(self):
         if isPunctuation(self.current_char):

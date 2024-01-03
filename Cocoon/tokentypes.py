@@ -29,6 +29,7 @@ TT_INT = 'Number'
 TT_FLOAT = 'Decimal'
 TT_STR = 'Text'
 TT_BOOL = 'Bool'
+TT_CHAR = 'Char'
 
 # DATA TYPES
 TT_DTYPE = 'Data_Type'
