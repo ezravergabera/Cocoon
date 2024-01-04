@@ -1,5 +1,5 @@
-from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IntAssignNode, FloatAssignNode, BoolAssignNode, ArithOpNode, UnaryOpNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_BOOL, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, AskNode
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -187,7 +187,7 @@ class Parser:
         return self.power()
 
     def term(self):
-        return self.arith_op(self.factor, (TT_MUL, TT_DIV))
+        return self.arith_op(self.factor, (TT_MUL, TT_DIV, TT_INTDIV, TT_MOD))
 
     def arith_expr(self):
         return self.arith_op(self.term, (TT_PLUS, TT_MINUS))
@@ -329,6 +329,76 @@ class Parser:
             if res.error: return res
             return res.success(BoolAssignNode(var_name, expr))
         
+        # character identifier = char
+        if self.current_tok.matches(TT_DTYPE, 'char') or self.current_tok.matches(TT_DTYPE, 'character'):
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ID:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    'Expected an identifier'
+                ))
+
+            var_name = self.current_tok
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ASSIGN:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_CHAR:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    'Expected char literal'
+                ))
+            
+            char_value = self.current_tok
+            res.register_advancement()
+            self.advance()
+            return res.success(CharAssignNode(var_name, char_value))
+            
+        # text identifier = str
+        if self.current_tok.matches(TT_DTYPE, 'text'):
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ID:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    'Expected an identifier'
+                ))
+
+            var_name = self.current_tok
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ASSIGN:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_STR:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    'Expected string literal'
+                ))
+
+            string_value = self.current_tok
+            res.register_advancement()
+            self.advance()
+            return res.success(StringAssignNode(var_name, string_value))
+
         node = res.register(self.arith_op(self.rel_expr, (TT_AND, TT_OR)))
 
         if res.error:

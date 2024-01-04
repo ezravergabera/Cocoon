@@ -37,6 +37,14 @@ class FloatAssignNode(IntAssignNode):
 class BoolAssignNode(IntAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
+
+class CharAssignNode(IntAssignNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
+class StringAssignNode(IntAssignNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
     
 class ArithOpNode:
     def __init__(self, left_node, op_tok, right_node):
