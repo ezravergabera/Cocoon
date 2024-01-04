@@ -36,6 +36,7 @@ class Lexer:
     # Tokenization Method
     def make_tokens(self):
         tokens = []
+        errors = []
 
         while self.current_char != None:
             char = self.current_char
@@ -51,7 +52,7 @@ class Lexer:
                 if isinstance(result, Token): 
                     tokens.append(result)
                 elif isinstance(result, Error):
-                    return [], result
+                    errors.append(result)
 
             # Scans arithmetic operators: +, -, *, /, ~, ^, %, invalid relational symbols such as !, &, |, &&, and ||, and assignment operator and relational lexemes
             elif isOperator(char):
@@ -59,7 +60,7 @@ class Lexer:
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
-                    return [], result
+                    errors.append(result)
                 
             # Scans for single line comment and multiline comment
             elif char == '.' and check == '.' and not isWhitespace(check):
@@ -67,7 +68,7 @@ class Lexer:
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
-                    return [], result
+                    errors.append(result)
                 
             # Scans for number and decimal lexemes
             elif isDigits(char) or char == '.':
@@ -75,7 +76,7 @@ class Lexer:
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
-                    return [], result
+                    errors.append(result)
                 
             # Scans for string literals enclosed with "
             elif char == '"':
@@ -83,7 +84,7 @@ class Lexer:
                 if isinstance(result, Token):
                     tokens.append(result)
                 elif isinstance(result, Error):
-                    return [], result
+                    errors.append(result)
 
             #Scans for character lexemes    
             elif char == "'":
@@ -92,7 +93,7 @@ class Lexer:
                    tokens.append(result)
                    self.advance()
                elif isinstance(result, Error):
-                   return[], result
+                   errors.append(result)
             
                 
             # Scans for puntuations such as ., ,, ;, [, ], (, and )
@@ -105,11 +106,14 @@ class Lexer:
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
+                errors.append(IllegalCharError(pos_start, self.pos, f"'{char}'"))
         
         # End of File
         tokens.append(Token('TT_EOF', TT_EOF, pos_start=self.pos))
-        return tokens, None
+        if errors:
+            return [], errors
+        else:
+            return tokens, None
     
     # Scanner Methods
     def make_identifier(self):
