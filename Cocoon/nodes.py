@@ -60,3 +60,15 @@ class UnaryOpNode:
 
     def __repr__(self):
         return f'({self.op_tok.type}, {self.node})'
+    
+class AskNode:
+    def __init__(self, cases, more_case):
+        self.cases = cases
+        self.more_case = more_case
+
+        self.pos_start = self.cases[0][0].pos_start
+
+        if self.more_case:
+            self.pos_end = self.more_case[-1:][0].pos_end
+        else:
+            self.pos_end = self.cases[-1:][0].pos_end
