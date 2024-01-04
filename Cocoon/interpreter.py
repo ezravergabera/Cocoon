@@ -32,7 +32,8 @@ class Interpreter:
                 context
             ))
         
-        value = value.copy().set_pos(node.pos_start, node.pos_end)
+        if isinstance(value, Number):
+            value = value.copy().set_pos(node.pos_start, node.pos_end)
         return res.success(value)
     
     def visit_IntAssignNode(self, node, context):
@@ -57,6 +58,24 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
+    
+    def visit_CharAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = node.value_node.value
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
+    
+    def visit_StringAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = node.value_node.value
         if res.error: return res
 
         context.symbol_table.set(var_name, value)
@@ -123,6 +142,22 @@ class Interpreter:
             return res.failure(error)
         else:
             return res.success(number.set_pos(node.pos_start, node.pos_end))
+        
+    def visit_AskNode(self, node, context):
+        res = RTResult()
+
+        for condition, expr in node.cases:
+            condition_value = res.register(self.visit(condition, context))
+            if res.error: return res
+
+            if condition_value.is_true():
+                expr_value = res.register(self.visit(expr, context))
+                if res.error: return res
+                return res.success(expr_value)
+            
+        if node.more_case:
+            more_value = res.register(self.visit(node.more_case, context))
+
     
 # Runtime Result
 
