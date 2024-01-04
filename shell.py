@@ -18,10 +18,14 @@ def debug_lexer():
     while True:
         text = input("lexer > ")
 
-        result, error = run("<stdin>", text)
+        result, error = run_lexer("<stdin>", text)
 
         if error:
-            print(error.as_string())
+            try:
+                for err in error:
+                    print(err.as_string())
+            except(TypeError):
+                print(error.as_string())
         else:
             output_to_symbolTable(result)
             result.pop()
@@ -32,9 +36,14 @@ def debug_parser():
     while True:
         text = input("parser > ")
 
-        result, error = run("<stdin>", text)
+        result, error = run_parser("<stdin>", text)
 
-        if error: print(error.as_string())
+        if error: 
+            try:
+                for err in error:
+                    print(err.as_string())
+            except(TypeError):
+                print(error.as_string())
         else: print(result)
 
 def debug_interpreter():
@@ -42,11 +51,57 @@ def debug_interpreter():
     while True:
         text = input("interpreter > ")
 
-        result, error = run("<stdin>", text)
+        result, error = run_interpreter("<stdin>", text)
 
-        if error: print(error.as_string())
+        if error: 
+            try:
+                for err in error:
+                    print(err.as_string())
+            except(TypeError):
+                print(error.as_string())
         else: print(result)
 
+def run_lexer(fn, text):
+    # Lexer
+    lexer = Lexer(fn, text)
+    tokens, error = lexer.make_tokens()
+
+    return tokens, error
+
+def run_parser(fn, text):
+    # Lexer
+    lexer = Lexer(fn, text)
+    tokens, error = lexer.make_tokens()
+
+    # Parser
+    if error: return None, error
+
+    parser = Parser(tokens)
+    ast = parser.parse()
+
+    return ast.node, ast.error
+
+def run_interpreter(fn, text):
+    # Lexer
+    lexer = Lexer(fn, text)
+    tokens, error = lexer.make_tokens()
+
+    # Parser
+    if error: return None, error
+
+    parser = Parser(tokens)
+    ast = parser.parse()
+
+    # Interpreter
+    if ast.error: return None, ast.error
+
+    interpreter = Interpreter()
+    # Context Initial route
+    context = Context('<program>')
+    context.symbol_table = global_symbol_table
+    result = interpreter.visit(ast.node, context)
+
+    return result.value, result.error
 
 def run(fn, text):
     # Lexer
@@ -75,9 +130,9 @@ def run(fn, text):
     return result.value, result.error
 
 #* Function Calls
-# debug_lexer()
-#debug_parser()
-debug_interpreter()
+debug_lexer()
+# debug_parser()
+# debug_interpreter()
 
 def run_file(filename):
     if(filename):
@@ -86,7 +141,7 @@ def run_file(filename):
                 with open(filename, 'r') as f:
                     text = f.read()
                 
-                result, error = run(filename, text)
+                result, error = run_lexer(filename, text)
 
                 if error:
                     print(error.as_string())
@@ -111,7 +166,7 @@ if __name__ == '__main__' and debugmode == False:
         while True:
             text = input("cocoon > ")
 
-            result, error = run("<stdin>", text)
+            result, error = run_lexer("<stdin>", text)
 
             if error:
                 print(error.as_string())
