@@ -1,5 +1,5 @@
 from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IntAssignNode, FloatAssignNode, BoolAssignNode, ArithOpNode, UnaryOpNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_BOOL, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_BOOL, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -23,11 +23,120 @@ class Parser:
         return res
 
     # Production Rules
+    def ask_expr(self):
+        res = ParseResult()
+        cases = []
+        more_case = None
+
+        if not self.current_tok.matches(TT_RWORD, 'ask'):
+            res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected 'ask'"
+            ))
+
+        res.register_advancement()
+        self.advance()
+
+        condition = res.register(self.expr())
+        if res.error: return res
+
+        if self.current_tok.matches(TT_NWORD, 'do'):
+            res.register_advancement()
+            self.advance()
+
+        if self.current_tok.type != TT_LSQUARE:
+            res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected 'do' or '['"
+            ))
+
+        res.register_advancement()
+        self.advance()
+
+        expr = res.register(self.expr())
+        if res.error: return res
+
+        if self.current_tok.type != TT_RSQUARE:
+            res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected ']'"
+            ))
+
+        res.register_advancement()
+        self.advance()
+
+        cases.append((condition, expr))
+
+        while self.current_tok.matches(TT_RWORD, 'askmore'):
+            condition = res.register(self.expr())
+            if res.error: return res
+
+            if self.current_tok.matches(TT_NWORD, 'do'):
+                res.register_advancement()
+                self.advance()
+
+            if self.current_tok.type != TT_LSQUARE:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected 'do' or '['"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            expr = res.register(self.expr())
+            if res.error: return res
+
+            if self.current_tok.type != TT_RSQUARE:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            cases.append((condition, expr))
+
+        if self.current_tok.matches(TT_RWORD, 'more'):
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_LSQUARE:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '['"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            expr = res.register(self.expr())
+            if res.error: return res
+
+            if self.current_tok.type != TT_RSQUARE:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            more_case = expr
+
+        return res.success(AskNode(cases, more_case))
+
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
 
-        if tok.type == TT_LPAREN:
+        if tok.matches(TT_RWORD, "ask"):
+            ask_expr = res.register(self.ask_expr())
+            if res.error: return res
+            return res.success(ask_expr)
+
+        elif tok.type == TT_LPAREN:
             res.register_advancement()
             self.advance()
             expr = res.register(self.expr())
