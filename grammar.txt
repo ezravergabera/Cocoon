@@ -18,3 +18,8 @@ power           : atom (EXPO factor)*
 
 atom            : INT | FLOAT | ID | BOOL
                 : LPAREN expr RPAREN
+                : ask-expr
+
+ask-expr         : RWORD:ask expr (NWORD:do)? LSQUARE expr RSQUARE
+                  (RWORD:askmore expr (NWORD:do)? LSQUARE expr RSQUARE)*
+                  (RWORD:more LSQUARE expr RSQUARE)?
