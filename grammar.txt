@@ -1,7 +1,7 @@
-expr is the root. The root has the least priority.
+expr is the root. The root has the least priority. bottom has the highest priority.
 expr            : DTYPE:(num | number) ID ASSIGN expr
                 : DTYPE:(deci | decimal) ID ASSIGN expr
-                : DTYPE:(bool | boolean) ID ASSIGN BOOL:(true | false) {| RelLogExpr // note: hindi ko pa alam kung tama to. }
+                : DTYPE:(bool | boolean) ID ASSIGN BOOL:(true | false)
                 : DTYPE:(char | character) ID ASSIGN CHAR
                 : DTYPE:text ID ASSIGN TEXT
                 : rel-expr ((AND | OR) rel-expr)*
