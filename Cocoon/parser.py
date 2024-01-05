@@ -19,7 +19,7 @@ class Parser:
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Error")) # TODO: figure out what error message should be here
+                "Expected '+', '-', '*', '/', '~', '^', '>', '>', '>=', '<=', '==', '!=', 'AND', 'and', 'OR', or 'or'"))
         return res
 
     # Production Rules
@@ -125,6 +125,7 @@ class Parser:
 
             more_case = expr
 
+        if res.error: return res
         return res.success(AskNode(cases, more_case))
 
     def atom(self):
@@ -163,12 +164,19 @@ class Parser:
             self.advance()
             return res.success(IdAccessNode(tok))
         
-        elif tok.type == TT_BOOL:
+        elif tok.matches(TT_BOOL, 'true'):
+            tok.value = 1
             res.register_advancement
             self.advance()
             return res.success(BoolNode(tok))
         
-        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, '+', '-' or '('"))
+        elif tok.matches(TT_BOOL, 'false'):
+            tok.value = 0
+            res.register_advancement
+            self.advance()
+            return res.success(BoolNode(tok))
+        
+        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, 'true', 'false', 'ask', '+', '-', or '('"))
             
     def power(self):
         return self.arith_op(self.atom, (TT_EXPO, ), self.factor)
@@ -248,8 +256,6 @@ class Parser:
                     "Expected int"
                 ))
             expr = res.register(self.expr())
-            res.register_advancement()
-            self.advance()
             if res.error: return res
             return res.success(IntAssignNode(var_name, expr))
         
@@ -288,8 +294,6 @@ class Parser:
                     "Expected int or float"
                 ))
             expr = res.register(self.expr())
-            res.register_advancement()
-            self.advance()
             if res.error: return res
             return res.success(FloatAssignNode(var_name, expr))
         
@@ -320,12 +324,10 @@ class Parser:
             if self.current_tok.type != TT_BOOL:
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected true, or false"
+                    "Expected 'true', or 'false'"
                 ))
 
             expr = res.register(self.expr())
-            res.register_advancement()
-            self.advance()
             if res.error: return res
             return res.success(BoolAssignNode(var_name, expr))
         
@@ -404,7 +406,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected a data type keyword, int, float, identifier, '+', '-', '(', 'not', or 'NOT'"))
+                               "Expected a data type keyword, int, float, identifier, 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"))
         
         return res.success(node)
 
