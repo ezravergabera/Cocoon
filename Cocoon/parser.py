@@ -1,5 +1,5 @@
 from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, AskNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -15,11 +15,11 @@ class Parser:
         return self.current_tok
 
     def parse(self):
-        res = self.expr()
+        res = self.root()
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected '+', '-', '*', '/', '~', '^', '>', '>', '>=', '<=', '==', '!=', 'AND', 'and', 'OR', or 'or'"))
+                "Parse Error"))
         return res
 
     # Production Rules
@@ -68,6 +68,8 @@ class Parser:
         cases.append((condition, expr))
 
         while self.current_tok.matches(TT_RWORD, 'askmore'):
+            res.register_advancement()
+            self.advance()
             condition = res.register(self.expr())
             if res.error: return res
 
@@ -408,6 +410,22 @@ class Parser:
                                self.current_tok.pos_start, self.current_tok.pos_end,
                                "Expected a data type keyword, int, float, identifier, 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"))
         
+        return res.success(node)
+    
+    def root(self):
+        res = ParseResult()
+
+        node = res.register(self.expr())
+
+        if self.current_tok.type != TT_SEMICOLON:
+            res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected '+', '-', '*', '/', '~', '^', '>', '>', '>=', '<=', '==', '!=', 'AND', 'and', 'OR', 'or', or ';'"
+            ))
+        
+        res.register_advancement()
+        self.advance()
+        if res.error: return res
         return res.success(node)
 
     def arith_op(self, func_a, ops, func_b=None):
