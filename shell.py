@@ -26,7 +26,7 @@ def debug_lexer():
                     print(err.as_string())
             except(TypeError):
                 print(error.as_string())
-        else:
+        elif result:
             output_to_symbolTable(result)
             result.pop()
             print(result)
@@ -44,7 +44,7 @@ def debug_parser():
                     print(err.as_string())
             except(TypeError):
                 print(error.as_string())
-        else: print(result)
+        elif result: print(result)
 
 def debug_interpreter():
     debugmode = True
@@ -59,7 +59,7 @@ def debug_interpreter():
                     print(err.as_string())
             except(TypeError):
                 print(error.as_string())
-        else: print(result)
+        elif result: print(result)
 
 def run_lexer(fn, text):
     # Lexer
@@ -130,9 +130,9 @@ def run(fn, text):
     return result.value, result.error
 
 #* Function Calls
-debug_lexer()
+# debug_lexer()
 # debug_parser()
-# debug_interpreter()
+debug_interpreter()
 
 def run_file(filename):
     if(filename):
@@ -145,7 +145,7 @@ def run_file(filename):
 
                 if error:
                     print(error.as_string())
-                else:
+                elif result:
                     print(format("File name:", ">20") + "      " + filename)
                     print(format('TOKENS', '>20') + '      ' + 'LEXEMES')
                     print('-----------------------------------------------')
@@ -170,7 +170,7 @@ if __name__ == '__main__' and debugmode == False:
 
             if error:
                 print(error.as_string())
-            else:
+            elif result:
                 output_to_symbolTable(result)
                 result.pop()
                 print(result)
