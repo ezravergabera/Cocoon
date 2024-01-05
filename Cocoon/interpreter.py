@@ -157,6 +157,10 @@ class Interpreter:
             
         if node.more_case:
             more_value = res.register(self.visit(node.more_case, context))
+            if res.error: return res
+            return res.success(more_value)
+        
+        return res.success(None)
 
     
 # Runtime Result
