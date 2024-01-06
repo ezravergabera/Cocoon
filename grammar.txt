@@ -1,10 +1,14 @@
-expr is the root. The root has the least priority. bottom has the highest priority.
-expr            : DTYPE:(num | number) ID ASSIGN expr
+The root has the least priority. bottom has the highest priority.
+root            : expr() SEMICOLON
+
+expr            : num-assign
                 : DTYPE:(deci | decimal) ID ASSIGN expr
                 : DTYPE:(bool | boolean) ID ASSIGN BOOL:(true | false)
                 : DTYPE:(char | character) ID ASSIGN CHAR
                 : DTYPE:text ID ASSIGN TEXT
                 : rel-expr ((AND | OR) rel-expr)*
+
+num-assign      : DTYPE:(num | number) ID ASSIGN expr
                 
 rel-expr        : NOT rel-expr
                 : arith-expr ((GREATER | LESS | GREATEREQUAL | LESSEQUAL | EQUALTO | NOTEQUAL) arith-expr)*
@@ -21,7 +25,19 @@ power           : atom (EXPO factor)*
 atom            : INT | FLOAT | ID | BOOL
                 : LPAREN expr RPAREN
                 : ask-expr
+                : repeat-expr
+                : while-expr
 
-ask-expr        : RWORD:ask expr (NWORD:do)? LSQUARE expr RSQUARE
-                  (RWORD:askmore expr (NWORD:do)? LSQUARE expr RSQUARE)*
+ID              : ID (incre-expr)? (assign-expr)?
+
+ask-expr        : RWORD:ask LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE
+                  (RWORD:askmore LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE)*
                   (RWORD:more LSQUARE expr RSQUARE)?
+
+repeat-expr     : RWORD:repeat LPAREN num-assign; var_name; expr RPAREN LSQUARE expr RSQUARE
+
+while-expr      : RWORD:while LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE
+
+incre-expr      : ID PLUS PLUS | ID MINUS MINUS
+
+assign-expr     : ID ASSIGN expr
