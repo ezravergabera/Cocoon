@@ -22,27 +22,32 @@ class IdAccessNode:
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
-    
-class IntAssignNode:
+
+class IdAssignNode:
     def __init__(self, var_name_tok, value_node):
         self.var_name_tok = var_name_tok
         self.value_node = value_node
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.value_node.pos_end
-class FloatAssignNode(IntAssignNode):
+    
+class IntAssignNode(IdAssignNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
+class FloatAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
         
-class BoolAssignNode(IntAssignNode):
+class BoolAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-class CharAssignNode(IntAssignNode):
+class CharAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-class StringAssignNode(IntAssignNode):
+class StringAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
     
@@ -69,6 +74,15 @@ class UnaryOpNode:
     def __repr__(self):
         return f'({self.op_tok.type}, {self.node})'
     
+class IncrementNode:
+    def __init__(self, var_name_tok, op_tok1, op_tok2):
+        self.var_name_tok = var_name_tok
+        self.op_tok1 = op_tok1
+        self.op_tok2 = op_tok2
+
+        self.pos_start = var_name_tok.pos_start
+        self.pos_end = op_tok2.pos_end
+    
 class AskNode:
     def __init__(self, cases, more_case):
         self.cases = cases
@@ -80,3 +94,22 @@ class AskNode:
             self.pos_end = self.more_case.pos_end
         else:
             self.pos_end = self.cases[len(self.cases) - 1][0].pos_end
+
+class RepeatNode:
+    def __init__(self, var_name_tok, value_node, cond_node, iter_node, body_node):
+        self.var_name_tok = var_name_tok
+        self.value_node = value_node
+        self.cond_node = cond_node
+        self.iter_node = iter_node
+        self.body_node = body_node
+
+        self.pos_start = self.var_name_tok.pos_start
+        self.pos_end = self.body_node.pos_end
+
+class WhileNode:
+    def __init__(self, cond_node, body_node):
+        self.cond_node = cond_node
+        self.body_node = body_node
+
+        self.pos_start = self.cond_node.pos_start
+        self.pos_end = self.body_node.pos_end
