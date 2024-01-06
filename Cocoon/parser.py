@@ -137,7 +137,7 @@ class Parser:
 
         body_node = res.register(self.expr())
 
-        if self.current_tok.type != TT_RPAREN:
+        if self.current_tok.type != TT_RSQUARE:
             res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected ']'"
@@ -195,7 +195,7 @@ class Parser:
 
             value_node = res.register(self.expr())
             if res.error: return res
-       
+
         if self.current_tok.type != TT_SEMICOLON:
             res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
@@ -474,11 +474,22 @@ class Parser:
         elif tok.type == TT_ID:
             res.register_advancement()
             self.advance()
+            pass_ = False
 
             if self.current_tok.type in (TT_PLUS, TT_MINUS):
-                res.register_backtrack()
-                self.backtrack()
-                return self.incre_expr()
+                res.register_advancement()
+                self.advance()
+                if not self.current_tok.type in (TT_PLUS, TT_MINUS):
+                    res.register_backtrack()
+                    self.backtrack()
+                    pass_ = True
+                else:
+                    res.register_backtrack()
+                    self.backtrack()
+                    res.register_backtrack()
+                    self.backtrack()
+                if not pass_:
+                    return self.incre_expr()
             
             if self.current_tok.type == TT_ASSIGN:
                 res.register_backtrack()
