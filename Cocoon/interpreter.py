@@ -36,6 +36,15 @@ class Interpreter:
             value = value.copy().set_pos(node.pos_start, node.pos_end)
         return res.success(value)
     
+    def visit_IdAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
+
     def visit_IntAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
@@ -143,6 +152,34 @@ class Interpreter:
         else:
             return res.success(number.set_pos(node.pos_start, node.pos_end))
         
+    def visit_IncrementNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = context.symbol_table.get(var_name)
+
+        if not value:
+            return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"'{var_name}' is not defined",
+                context
+            ))
+        
+        if isinstance(value, Number):
+            value = value.copy().set_pos(node.pos_start, node.pos_end)
+
+        error = None
+
+        if node.op_tok1.type == TT_PLUS and node.op_tok2.type == TT_PLUS:
+            value, error = value.added_to(Number(1))
+        elif node.op_tok2.type == TT_MINUS and node.op_tok2.type == TT_MINUS:
+            value, error = value.subbed_by(Number(1))
+
+        if error:
+            return res.failure(error)
+        else:
+            context.symbol_table.set(var_name, value)
+            return res.success(value.set_pos(node.pos_start, node.pos_end))
+        
     def visit_AskNode(self, node, context):
         res = RTResult()
 
@@ -160,6 +197,50 @@ class Interpreter:
             if res.error: return res
             return res.success(more_value)
         
+        return res.success(None)
+    
+    def visit_RepeatNode(self, node, context):
+        res = RTResult()
+
+        var_name = node.var_name_tok.value
+        try:
+            context.symbol_table.remove(var_name)
+        except(KeyError):
+            pass
+        value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        
+        cond = res.register(self.visit(node.cond_node, context))
+        if res.error: return res
+
+        while cond.is_true():
+            res.register(self.visit(node.body_node, context))
+            if res.error: return res
+
+            value = res.register(self.visit(node.iter_node, context))
+            if res.error: return res
+
+            cond = res.register(self.visit(node.cond_node, context))
+            if res.error: return res
+
+            context.symbol_table.set(var_name, value)
+
+        return res.success(None)
+    
+    def visit_WhileNode(self, node, context):
+        res = RTResult()
+
+        while True:
+            condition = res.register(self.visit(node.cond_node, context))
+            if res.error: return res
+
+            if not condition.is_true(): break
+
+            res.register(self.visit(node.body_node, context))
+            if res.error: return res
+
         return res.success(None)
 
     
