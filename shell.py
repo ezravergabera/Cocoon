@@ -11,7 +11,7 @@ debugmode = False
 
 # Global Symbol Table
 global_symbol_table = SymbolTable()
-global_symbol_table.set('null', Number(0))
+global_symbol_table.set('empty', Number(0))
 
 def debug_lexer():
     debugmode = True
