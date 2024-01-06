@@ -106,10 +106,10 @@ class Lexer:
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                errors.append(IllegalCharError(pos_start, self.pos, f"'{char}'"))
+                errors.append(IllegalCharError(pos_start, self.pos.copy(), f"'{char}'"))
         
         # End of File
-        tokens.append(Token('TT_EOF', TT_EOF, pos_start=self.pos))
+        tokens.append(Token('TT_EOF', TT_EOF, pos_start=self.pos.copy()))
         if errors:
             return [], errors
         else:
@@ -318,7 +318,7 @@ class Lexer:
                             tokentype = TT_RWORD
                             self.advance()
                             if (isWhitespace(self.check()) or self.check() == None) and self.fn != "<stdin>":
-                                return ReferenceError(pos_start, self.pos, 'Usage of a reserved word.')
+                                return ReferenceError(pos_start, self.pos.copy(), 'Usage of a reserved word.')
                             elif isWhitespace(self.check()) or self.check() == None:
                                 exit()
                 # end
@@ -645,7 +645,7 @@ class Lexer:
                 tokentype = TT_ID
                 self.advance()
 
-        return Token(tokentype, lexeme, pos_start, self.pos)
+        return Token(tokentype, lexeme, pos_start, self.pos.copy())
 
     def make_comments(self):
         pos_start = self.pos.copy()
@@ -667,7 +667,7 @@ class Lexer:
                     dot_count = 0
 
                 if self.check() == '' or self.check() == None:
-                    return LexicalError(pos_start, self.pos, 'Closing symbol not found.')
+                    return LexicalError(pos_start, self.pos.copy(), 'Closing symbol not found.')
                 
                 comment_str += self.current_char
                 self.advance()
@@ -681,7 +681,7 @@ class Lexer:
             if self.current_char == '\n':
                 self.advance()
 
-        return Token(TT_COMMENT, comment_str, pos_start, self.pos)
+        return Token(TT_COMMENT, comment_str, pos_start, self.pos.copy())
     
     def make_operator(self):
         tokentype = ''
@@ -789,9 +789,9 @@ class Lexer:
                 self.advance()
 
         if isTok:
-            return Token(tokentype, lexeme, pos_start, self.pos)
+            return Token(tokentype, lexeme, pos_start, self.pos.copy())
         elif isErr:
-            return InvalidRelationalSymbol(pos_start, self.pos, details)
+            return InvalidRelationalSymbol(pos_start, self.pos.copy(), details)
 
     def make_number(self):
         pos_start = self.pos.copy()
@@ -825,20 +825,20 @@ class Lexer:
             self.advance()
 
         if dot_count == 0 and isValid == True and isIdentifier == False:
-            return Token(TT_INT, int(num_str), pos_start, self.pos)
+            return Token(TT_INT, int(num_str), pos_start, self.pos.copy())
         elif dot_count == 2 and isValid == True:
-            return LexicalError(pos_start, self.pos, f'{num_str}')
+            return LexicalError(pos_start, self.pos.copy(), f'{num_str}')
         elif isIdentifier:
-            return IllegalIdentifierError(pos_start, self.pos, f'{num_str}')
+            return IllegalIdentifierError(pos_start, self.pos.copy(), f'{num_str}')
         elif isValid == False:
-            return IllegalNumberError(pos_start, self.pos, f'{num_str}')
+            return IllegalNumberError(pos_start, self.pos.copy(), f'{num_str}')
         elif num_str == '.':
-            return Token(TT_DOT, num_str, pos_start, self.pos)
+            return Token(TT_DOT, num_str, pos_start, self.pos.copy())
         else:
             try:
-                return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
+                return Token(TT_FLOAT, float(num_str), pos_start, self.pos.copy())
             except ValueError:
-                return InvalidDecimalError(pos_start, self.pos, "Invalid Decimal")
+                return InvalidDecimalError(pos_start, self.pos.copy(), "Invalid Decimal")
 
     def make_string(self):
         pos_start = self.pos.copy()
@@ -857,9 +857,9 @@ class Lexer:
                 char_pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                return LexicalError(char_pos_start, self.pos, f"'{char}' not in character_set")   
-            return LexicalError(pos_start, self.pos, "Must be enclosed by \"")
-        return Token(TT_STR, text_str, pos_start, self.pos)
+                return LexicalError(char_pos_start, self.pos.copy(), f"'{char}' not in character_set")   
+            return LexicalError(pos_start, self.pos.copy(), "Must be enclosed by \"")
+        return Token(TT_STR, text_str, pos_start, self.pos.copy())
     
     def make_char(self):
         pos_start = self.pos.copy()
@@ -871,9 +871,9 @@ class Lexer:
             self.advance()
 
             if self.current_char == stop:
-                return Token(TT_CHAR, char_value, self.pos)
+                return Token(TT_CHAR, char_value, self.pos.copy())
             elif self.current_char == None:
-                return LexicalError(pos_start, self.pos, "Must be enclosed by \'")
+                return LexicalError(pos_start, self.pos.copy(), "Must be enclosed by \'")
             else:
                 while self.current_char != None and isinCharSet(self.current_char):
                     self.advance()
@@ -881,27 +881,27 @@ class Lexer:
                         char_pos_start = self.pos.copy()
                         char = self.current_char
                         self.advance()
-                        return LexicalError(char_pos_start, self.pos, f"'{char}' not in character_set")
-                return LexicalError(pos_start, self.pos, "Character literal can only contain one character")
+                        return LexicalError(char_pos_start, self.pos.copy(), f"'{char}' not in character_set")
+                return LexicalError(pos_start, self.pos.copy(), "Character literal can only contain one character")
         else:
             char_pos_start = self.pos.copy()
             self.advance()
-            return LexicalError(char_pos_start , self.pos, "Must be an Alphabet")
+            return LexicalError(char_pos_start , self.pos.copy(), "Must be an Alphabet")
 
     def make_punctuation(self):
         if isPunctuation(self.current_char):
             char = self.current_char
             if char == '.':
-                return Token(TT_DOT, char, self.pos)
+                return Token(TT_DOT, char, self.pos.copy())
             if char == ',':
-                return Token(TT_COMMA, char, self.pos)
+                return Token(TT_COMMA, char, self.pos.copy())
             elif char == ';':
-                return Token(TT_SEMICOLON, char, self.pos)
+                return Token(TT_SEMICOLON, char, self.pos.copy())
             elif char == '[':
-                return Token(TT_LSQUARE, char, self.pos)
+                return Token(TT_LSQUARE, char, self.pos.copy())
             elif char == ']':
-                return Token(TT_RSQUARE, char, self.pos)
+                return Token(TT_RSQUARE, char, self.pos.copy())
             elif char == '(':
-                return Token(TT_LPAREN, char, self.pos)
+                return Token(TT_LPAREN, char, self.pos.copy())
             elif char == ')':
-                return Token(TT_RPAREN, char, self.pos)
+                return Token(TT_RPAREN, char, self.pos.copy())
