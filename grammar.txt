@@ -20,7 +20,9 @@ term            : factor ((MUL | DIV | INTDIV | MOD) factor)*
 factor          : (PLUS|MINUS) factor
                 : power
 
-power           : atom (EXPO factor)*
+power           : call (EXPO factor)*
+
+call            : atom (LPAREN (expr (COMMA expr)*)? RPAREN)?
 
 atom            : INT | FLOAT | ID | BOOL
                 : LPAREN expr RPAREN
@@ -41,3 +43,7 @@ while-expr      : RWORD:while LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUAR
 incre-expr      : ID PLUS PLUS | ID MINUS MINUS
 
 assign-expr     : ID ASSIGN expr
+
+build-def       : RWORD:build ID?
+                  LPAREN (ID (COMMA ID)*)? RPAREN
+                  LSQUARE expr RSQUARE
