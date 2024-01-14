@@ -29,6 +29,7 @@ atom            : INT | FLOAT | ID | BOOL
                 : ask-expr
                 : repeat-expr
                 : while-expr
+                : build-def
 
 ID              : ID (incre-expr)? (assign-expr)?
 
