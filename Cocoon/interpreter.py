@@ -20,6 +20,12 @@ class Interpreter:
     
     def visit_BoolNode(self, node, context):
         return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+
+    def visit_StringNode(self, node, context):
+        return RTResult().success(String(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+
+    def visit_CharNode(self, node, context):
+        return RTResult().success(Character(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_IdAccessNode(self, node, context):
         res = RTResult()
@@ -76,7 +82,7 @@ class Interpreter:
     def visit_CharAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
-        value = node.value_node.value
+        value = res.register(self.visit(node.value_node, context))
         if res.error: return res
 
         context.symbol_table.set(var_name, value)
@@ -85,7 +91,7 @@ class Interpreter:
     def visit_StringAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
-        value = node.value_node.value
+        value = res.register(self.visit(node.value_node, context))
         if res.error: return res
 
         context.symbol_table.set(var_name, value)
@@ -490,6 +496,39 @@ class Number(Value):
         
     def __repr__(self):
         return str(self.value)
+    
+class String(Value):
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+
+    def added_to(self, other):
+        if isinstance(other, String):
+            return String(self.value + other.value).set_context(self.context), None
+        else:
+            return None, Value.illegal_operation(self, other)
+        
+    def multiplied_by(self, other):
+        if isinstance(other, Number):
+            return String(self.value * other.value).set_context(self.context), None
+        else:
+            return None, Value.illegal_operation(self, other)
+        
+    def is_true(self):
+        return len(self.value) > 0
+    
+    def copy(self):
+        copy = String(self.value)
+        copy.set_ppos(self.pos_start, self.pos_end)
+        copy.set_context(self.context)
+        return copy
+    
+    def __repr__(self):
+        return f'"{self.value}"'
+    
+class Character(String):
+    def __repr__(self):
+        return f"'{self.value}'"
     
 class Function(Value):
     def __init__(self, name, body_node, arg_names):
