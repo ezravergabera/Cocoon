@@ -601,7 +601,7 @@ class Parser:
             self.advance()
             return res.success(BoolNode(tok))
         
-        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, 'true', 'false', 'ask', '+', '-', or '('"))
+        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', or '('"))
             
     def call(self):
         res = ParseResult()
@@ -878,7 +878,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected a data type keyword, int, float, identifier, 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"))
+                               "Expected a data type keyword, int, float, identifier, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"))
         
         return res.success(node)
     
