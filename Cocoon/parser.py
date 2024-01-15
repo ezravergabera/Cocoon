@@ -45,14 +45,14 @@ class Parser:
             var_name_tok = self.current_tok
             res.register_advancement()
             self.advance()
-            if self.current_tok != TT_LPAREN:
+            if self.current_tok.type != TT_LPAREN:
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected '('"
                 ))
         else:
             var_name_tok = None
-            if self.current_tok != TT_LPAREN:
+            if self.current_tok.type != TT_LPAREN:
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected '('"
@@ -86,10 +86,11 @@ class Parser:
                     "Expected ')' or ','"
                 ))
         else:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected an identifier or ')'"
-            ))
+            if self.current_tok.type != TT_RPAREN:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected an identifier or ')'"
+                ))
 
         res.register_advancement()
         self.advance()
@@ -99,9 +100,9 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected '['"
             ))
-
-        res.register_advancement()
-        self.advance()
+        else:
+            res.register_advancement()
+            self.advance()
 
         node_to_return = res.register(self.expr())
         if res.error: return res
@@ -111,6 +112,9 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected ']'"
             ))
+        else:
+            res.register_advancement()
+            self.advance()
 
         if res.error: return res
         return res.success(BuildDefNode(var_name_tok, arg_name_toks, node_to_return))
@@ -609,12 +613,12 @@ class Parser:
         atom = res.register(self.atom())
         if res.error: return res
 
-        if self.current_tok == TT_LPAREN:
+        if self.current_tok.type == TT_LPAREN:
             res.register_advancement()
             self.advance()
             arg_nodes = []
 
-            if self.current_tok == TT_RPAREN:
+            if self.current_tok.type == TT_RPAREN:
                 res.register_advancement()
                 self.advance()
             else:
@@ -645,7 +649,7 @@ class Parser:
         return res.success(atom)
 
     def power(self):
-        return self.arith_op(self.atom, (TT_EXPO, ), self.factor)
+        return self.arith_op(self.call, (TT_EXPO, ), self.factor)
 
     def factor(self):
         res = ParseResult()
