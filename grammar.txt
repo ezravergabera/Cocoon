@@ -24,7 +24,7 @@ power           : call (EXPO factor)*
 
 call            : atom (LPAREN (expr (COMMA expr)*)? RPAREN)?
 
-atom            : INT | FLOAT | ID | BOOL
+atom            : INT | FLOAT | ID | BOOL | STR | CHAR
                 : LPAREN expr RPAREN
                 : ask-expr
                 : repeat-expr
