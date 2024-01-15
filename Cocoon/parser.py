@@ -1,4 +1,4 @@
-from .nodes import NumberNode, DecimalNode, BoolNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
+from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
 from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
@@ -605,6 +605,16 @@ class Parser:
             self.advance()
             return res.success(BoolNode(tok))
         
+        elif tok.type == TT_STR:
+            res.register_advancement()
+            self.advance()
+            return res.success(StringNode(tok))
+        
+        elif tok.type == TT_CHAR:
+            res.register_advancement()
+            self.advance()
+            return res.success(CharNode(tok))
+        
         return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', or '('"))
             
     def call(self):
@@ -837,9 +847,8 @@ class Parser:
                     'Expected char literal'
                 ))
             
-            char_value = self.current_tok
-            res.register_advancement()
-            self.advance()
+            char_value = res.register(self.expr())
+            if res.error: return res
             return res.success(CharAssignNode(var_name, char_value))
             
         # text identifier = str
@@ -872,9 +881,8 @@ class Parser:
                     'Expected string literal'
                 ))
 
-            string_value = self.current_tok
-            res.register_advancement()
-            self.advance()
+            string_value = res.register(self.expr())
+            if res.error: return res
             return res.success(StringAssignNode(var_name, string_value))
 
         node = res.register(self.arith_op(self.rel_expr, (TT_AND, TT_OR)))

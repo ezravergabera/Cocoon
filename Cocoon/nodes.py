@@ -16,6 +16,14 @@ class BoolNode(NumberNode):
     def __init__(self, tok):
         super().__init__(tok)
 
+class StringNode(NumberNode):
+    def __init__(self, tok):
+        super().__init__(tok)
+
+class CharNode(NumberNode):
+    def __init__(self, tok):
+        super().__init__(tok)
+
 class IdAccessNode:
     def __init__(self, var_name_tok):
         self.var_name_tok = var_name_tok
