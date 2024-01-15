@@ -54,6 +54,7 @@ TT_LSQUARE = 'Left_Square'
 TT_RSQUARE = 'Right_Square'
 TT_LPAREN = 'Left_Paren'
 TT_RPAREN = 'Right_Paren'
+TT_BSLASH = 'Back_Slash'
 
 # END OF FILE
 TT_EOF = 'TT_EOF'
