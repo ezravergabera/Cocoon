@@ -97,14 +97,18 @@ operatorsDict = {
     "|":foundChar
 }
 
-punctuationDict = {
+specialSymbolDict = {
     ".":foundChar,
     ",":foundChar,
     ";":foundChar,
     "(":foundChar,
     ")":foundChar,
     "[":foundChar,
-    "]":foundChar
+    "]":foundChar,
+    "\\":foundChar,
+    '"':foundChar,
+    "'":foundChar,
+    "_":foundChar
 }
 
 untrackedDict = {
@@ -115,8 +119,14 @@ untrackedDict = {
     "?":foundChar,
     "}":foundChar,
     "{":foundChar,
-    "\\":foundChar,
     ":":foundChar
+}
+
+escapeCharsDict = {
+    "n": "\n",
+    "t": "\t",
+    '"': '"',
+    "\\": "\\"
 }
 
 def isAlphabet(char):
@@ -135,8 +145,8 @@ def isOperator(char):
     func = operatorsDict.get(char, notFound)
     return func()
 
-def isPunctuation(char):
-    func = punctuationDict.get(char, notFound)
+def isSpecialSymbol(char):
+    func = specialSymbolDict.get(char, notFound)
     return func()
 
 def isUntracked(char):
@@ -148,7 +158,7 @@ def isinCharSet(char):
     func2 = digitsDict.get(char, notFound)
     func3 = whitespacesDict.get(char, notFound)
     func4 = operatorsDict.get(char, notFound)
-    func5 = punctuationDict.get(char, notFound)
+    func5 = specialSymbolDict.get(char, notFound)
     
     if func1():
         return func1()

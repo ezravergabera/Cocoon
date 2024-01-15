@@ -2,7 +2,7 @@ from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_BSLASH, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -79,7 +79,7 @@ class Lexer:
                     errors.append(result)
                 
             # Scans for string literals enclosed with "
-            elif char == '"':
+            elif char == '"' or char == "_":
                 result = self.make_string()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -94,10 +94,9 @@ class Lexer:
                    self.advance()
                elif isinstance(result, Error):
                    errors.append(result)
-            
                 
             # Scans for puntuations such as ., ,, ;, [, ], (, and )
-            elif isPunctuation(char):
+            elif isSpecialSymbol(char):
                 tokens.append(self.make_punctuation())
                 self.advance()
 
@@ -844,10 +843,18 @@ class Lexer:
         pos_start = self.pos.copy()
         text_str = ''
         stop = self.current_char
+        escape_char = False
         self.advance()
 
-        while self.current_char != None and self.current_char != stop and isinCharSet(self.current_char):
-            text_str += self.current_char
+        while self.current_char != None and (self.current_char != stop or escape_char) and isinCharSet(self.current_char):
+            if escape_char:
+                text_str += escapeCharsDict.get(self.current_char, self.current_char)
+                escape_char = False
+            else:
+                if self.current_char == "\\":
+                    escape_char = True
+                else:
+                    text_str += self.current_char
             self.advance()
         
         if self.current_char == stop:
@@ -889,7 +896,7 @@ class Lexer:
             return LexicalError(char_pos_start , self.pos.copy(), "Must be an Alphabet")
 
     def make_punctuation(self):
-        if isPunctuation(self.current_char):
+        if isSpecialSymbol(self.current_char):
             char = self.current_char
             if char == '.':
                 return Token(TT_DOT, char, self.pos.copy())
