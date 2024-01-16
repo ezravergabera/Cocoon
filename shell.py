@@ -1,6 +1,6 @@
 from Cocoon.lexer import Lexer
 from Cocoon.parser import Parser
-from Cocoon.interpreter import Interpreter, Number
+from Cocoon.interpreter import *
 from Cocoon.context import Context
 from Cocoon.symbolTable import SymbolTable
 from Cocoon.tokens import tok_to_str, output_to_symbolTable
@@ -10,7 +10,9 @@ debugmode = False
 
 # Global Symbol Table
 global_symbol_table = SymbolTable()
-global_symbol_table.set('empty', Number(0))
+global_symbol_table.set('empty', Number.empty)
+global_symbol_table.set('show', BuiltInFunction.show)
+global_symbol_table.set('get', BuiltInFunction.get)
 
 def debug_lexer():
     debugmode = True
@@ -28,7 +30,7 @@ def debug_lexer():
         elif result:
             output_to_symbolTable(result)
             result.pop()
-            print(result)
+            print(repr(result))
 
 def debug_parser():
     debugmode = True
@@ -43,7 +45,7 @@ def debug_parser():
                     print(err.as_string())
             except(TypeError):
                 print(error.as_string())
-        elif result: print(result)
+        elif result: print(repr(result))
 
 def debug_interpreter():
     debugmode = True
@@ -58,7 +60,7 @@ def debug_interpreter():
                     print(err.as_string())
             except(TypeError):
                 print(error.as_string())
-        elif result: print(result)
+        elif result: print(repr(result))
 
 def run_lexer(fn, text):
     # Lexer
@@ -150,8 +152,6 @@ def run_file(filename):
                     print('-----------------------------------------------')
                     print(tok_to_str(result))
                     output_to_symbolTable(result)
-                    # result.pop()      # diko alam kung mas okay ba to or yung ginayang formatting lang sa symbol table
-                    # print(result)
             except FileNotFoundError:
                 print("File does not exist!")
         else:
