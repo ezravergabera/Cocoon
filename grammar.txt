@@ -2,13 +2,13 @@ The root has the least priority. bottom has the highest priority.
 root            : expr() SEMICOLON
 
 expr            : num-assign
-                : DTYPE:(deci | decimal) ID ASSIGN expr
-                : DTYPE:(bool | boolean) ID ASSIGN BOOL:(true | false)
-                : DTYPE:(char | character) ID ASSIGN CHAR
-                : DTYPE:text ID ASSIGN TEXT
+                : DTYPE:(deci | decimal) ID ASSIGN (expr | KWORD:get)
+                : DTYPE:(bool | boolean) ID ASSIGN (BOOL:(true | false) | KWORD:get)
+                : DTYPE:(char | character) ID ASSIGN (CHAR | KWORD:get)
+                : DTYPE:text ID ASSIGN (STR | KWORD:get)
                 : rel-expr ((AND | OR) rel-expr)*
 
-num-assign      : DTYPE:(num | number) ID ASSIGN expr
+num-assign      : DTYPE:(num | number) ID ASSIGN (expr | KWORD:get)
                 
 rel-expr        : NOT rel-expr
                 : arith-expr ((GREATER | LESS | GREATEREQUAL | LESSEQUAL | EQUALTO | NOTEQUAL) arith-expr)*
