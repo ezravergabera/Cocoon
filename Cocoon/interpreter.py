@@ -26,6 +26,16 @@ class Interpreter:
 
     def visit_CharNode(self, node, context):
         return RTResult().success(Character(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+
+    def visit_ListNode(self, node, context):
+        res = RTResult()
+        elements = []
+
+        for element_node in node.element_nodes:
+            elements.append(res.register(self.visit(element_node, context)))
+            if res.error: return res
+
+        return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_IdAccessNode(self, node, context):
         res = RTResult()
@@ -46,9 +56,17 @@ class Interpreter:
     def visit_IdAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
+        in_symbolTable = context.symbol_table.hasValue(var_name)
         value = res.register(self.visit(node.value_node, context))
         if res.error: return res
 
+        if not in_symbolTable and not isinstance(value, List):
+            return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"{var_name} is not defined",
+                context
+            ))
+        
         context.symbol_table.set(var_name, value)
         return res.success(value)
 
@@ -208,6 +226,7 @@ class Interpreter:
     
     def visit_RepeatNode(self, node, context):
         res = RTResult()
+        elements = []
 
         var_name = node.var_name_tok.value
         try:
@@ -223,7 +242,7 @@ class Interpreter:
         if res.error: return res
 
         while cond.is_true():
-            res.register(self.visit(node.body_node, context))
+            elements.append(res.register(self.visit(node.body_node, context)))
             if res.error: return res
 
             value = res.register(self.visit(node.iter_node, context))
@@ -234,10 +253,11 @@ class Interpreter:
 
             context.symbol_table.set(var_name, value)
 
-        return res.success(None)
+        return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_WhileNode(self, node, context):
         res = RTResult()
+        elements = []
 
         while True:
             condition = res.register(self.visit(node.cond_node, context))
@@ -245,10 +265,10 @@ class Interpreter:
 
             if not condition.is_true(): break
 
-            res.register(self.visit(node.body_node, context))
+            elements.append(res.register(self.visit(node.body_node, context)))
             if res.error: return res
 
-        return res.success(None)
+        return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_BuildDefNode(self, node, context):
         res = RTResult()
@@ -529,6 +549,28 @@ class String(Value):
 class Character(String):
     def __repr__(self):
         return f"'{self.value}'"
+    
+class List(Value):
+    def __init__(self, elements):
+        super().__init__()
+        self.elements = elements
+    
+    def added_to(self, other):
+        if isinstance(other, List):
+            new_list = self.copy()
+            new_list.elements.extend(other.elements)
+            return new_list, None
+        else:
+            return None, Value.illegal_operation(self, other)
+        
+    def copy(self):
+        copy = List(self.elements[:])
+        copy.set_pos(self.pos_start, self.pos_end)
+        copy.set_context(self.context)
+        return copy
+    
+    def __repr__(self):
+        return f'[{", ".join(str(x) for x in self.elements)}]'
     
 class Function(Value):
     def __init__(self, name, body_node, arg_names):

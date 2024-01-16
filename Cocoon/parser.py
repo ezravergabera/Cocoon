@@ -1,4 +1,4 @@
-from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
+from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
 from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
@@ -519,6 +519,50 @@ class Parser:
 
         if res.error: return res
         return res.success(AskNode(cases, more_case))
+    
+    def list_expr(self):
+        res = ParseResult()
+        element_nodes = []
+        pos_start = self.current_tok.pos_start.copy()
+
+        if self.current_tok.type != TT_LSQUARE:
+            res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected '['"
+            ))
+
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_RSQUARE:
+            res.register_advancement()
+            self.advance()
+        else:
+            element_nodes.append(res.register(self.expr()))
+            if res.error:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']', data type keyword, int, float, identifier, 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"
+                ))
+            
+            while self.current_tok.type == TT_COMMA:
+                res.register_advancement()
+                self.advance()
+
+                element_nodes.append(res.register(self.expr()))
+                if res.error: return res
+
+            if self.current_tok.type != TT_RSQUARE:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+        if res.error: return res
+        return res.success(ListNode(element_nodes, pos_start, self.current_tok.pos_end.copy()))
 
     def atom(self):
         res = ParseResult()
@@ -543,6 +587,11 @@ class Parser:
             ask_expr = res.register(self.ask_expr())
             if res.error: return res
             return res.success(ask_expr)
+        
+        elif tok.type == TT_LSQUARE:
+            list_expr = res.register(self.list_expr())
+            if res.error: return res
+            return res.success(list_expr)
 
         elif tok.type == TT_LPAREN:
             res.register_advancement()
@@ -615,7 +664,7 @@ class Parser:
             self.advance()
             return res.success(CharNode(tok))
         
-        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', or '('"))
+        return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, str, char, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', '(', or ,'['"))
             
     def call(self):
         res = ParseResult()
@@ -636,7 +685,7 @@ class Parser:
                 if res.error:
                     return res.failure(InvalidSyntaxError(
                         self.current_tok.pos_start, self.current_tok.pos_end,
-                        "Expected ')', data type keyword, int, float, identifier, 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"
+                        "Expected ')', data type keyword, int, float, identifier, str, char, 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"
                     ))
                 
                 while self.current_tok.type == TT_COMMA:
@@ -697,7 +746,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected int, float, identifier, '+', '-', '(', 'not', or 'NOT'"))
+                               "Expected int, float, identifier, '+', '-', '(', '[', 'not', or 'NOT'"))
         
         return res.success(node)
 
@@ -890,7 +939,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                                self.current_tok.pos_start, self.current_tok.pos_end,
-                               "Expected a data type keyword, int, float, identifier, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', '(', 'not', or 'NOT'"))
+                               "Expected a data type keyword, int, float, identifier, str, char, 'build', 'while', 'repeat', 'ask', 'true', 'false', '+', '-', '(', '[', 'not', or 'NOT'"))
         
         return res.success(node)
     

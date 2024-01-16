@@ -26,12 +26,15 @@ call            : atom (LPAREN (expr (COMMA expr)*)? RPAREN)?
 
 atom            : INT | FLOAT | ID | BOOL | STR | CHAR
                 : LPAREN expr RPAREN
+                : list-expr
                 : ask-expr
                 : repeat-expr
                 : while-expr
                 : build-def
 
 ID              : ID (incre-expr)? (assign-expr)?
+
+list-expr       : LSQUARE (expr (COMMA expr)*)? RSQUARE
 
 ask-expr        : RWORD:ask LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE
                   (RWORD:askmore LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE)*

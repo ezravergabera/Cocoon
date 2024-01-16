@@ -14,3 +14,6 @@ class SymbolTable:
 
     def remove(self, name):
         del self.symbols[name]
+
+    def hasValue(self, name):
+        return 1 if self.symbols.get(name) else 0
