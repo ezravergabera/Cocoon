@@ -1,5 +1,5 @@
 from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -615,7 +615,7 @@ class Parser:
             self.advance()
             return res.success(DecimalNode(tok))
 
-        elif tok.type == TT_ID:
+        elif tok.type == TT_ID or tok.matches(TT_RWORD, "empty") or tok.matches(TT_KWORD, "show") or tok.matches(TT_KWORD, "get"):
             res.register_advancement()
             self.advance()
             pass_ = False
@@ -779,10 +779,10 @@ class Parser:
 
             #? Kung i automatic parse ba kapag float tok nakuha or hindi nalang tatanggapin as in?
 
-            if self.current_tok.type != TT_INT:
+            if self.current_tok.type != TT_INT and not self.current_tok.matches(TT_KWORD, 'get'):
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected int"
+                    "Expected int or 'get'"
                 ))
             expr = res.register(self.expr())
             if res.error: return res
@@ -823,10 +823,10 @@ class Parser:
                 self.current_tok.type = TT_FLOAT
                 self.current_tok.value = float(self.current_tok.value)
 
-            if self.current_tok.type != TT_FLOAT:
+            if self.current_tok.type != TT_FLOAT and not self.current_tok.matches(TT_KWORD, 'get'):
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected int or float"
+                    "Expected int, float, or 'get'"
                 ))
             expr = res.register(self.expr())
             if res.error: return res
@@ -856,10 +856,10 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            if self.current_tok.type != TT_BOOL:
+            if self.current_tok.type != TT_BOOL and not self.current_tok.matches(TT_KWORD, 'get'):
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected 'true', or 'false'"
+                    "Expected 'true', 'false', or 'get'"
                 ))
 
             expr = res.register(self.expr())
@@ -890,10 +890,10 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            if self.current_tok.type != TT_CHAR:
+            if self.current_tok.type != TT_CHAR and not self.current_tok.matches(TT_KWORD, 'get'):
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    'Expected char literal'
+                    "Expected char literal, or 'get'"
                 ))
             
             char_value = res.register(self.expr())
@@ -924,10 +924,10 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            if self.current_tok.type != TT_STR:
+            if self.current_tok.type != TT_STR and not self.current_tok.matches(TT_KWORD, 'get'):
                 res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    'Expected string literal'
+                    "Expected string literal, or 'get'"
                 ))
 
             string_value = res.register(self.expr())
