@@ -2,7 +2,7 @@ from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_BSLASH, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -95,9 +95,9 @@ class Lexer:
                elif isinstance(result, Error):
                    errors.append(result)
                 
-            # Scans for puntuations such as ., ,, ;, [, ], (, and )
+            # Scans for special symbols such as ., ,, ;, [, ], (, ), and newline character
             elif isSpecialSymbol(char):
-                tokens.append(self.make_punctuation())
+                tokens.append(self.make_specialSymbol())
                 self.advance()
 
             # Returns an error when an invalid character is scanned
@@ -895,7 +895,7 @@ class Lexer:
             self.advance()
             return LexicalError(char_pos_start , self.pos.copy(), "Must be an Alphabet")
 
-    def make_punctuation(self):
+    def make_specialSymbol(self):
         if isSpecialSymbol(self.current_char):
             char = self.current_char
             if char == '.':
@@ -912,3 +912,5 @@ class Lexer:
                 return Token(TT_LPAREN, char, self.pos.copy())
             elif char == ')':
                 return Token(TT_RPAREN, char, self.pos.copy())
+            elif char == '\n':
+                return Token(TT_NEWLINE, char, self.pos.copy())

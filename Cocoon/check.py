@@ -108,7 +108,8 @@ specialSymbolDict = {
     "\\":foundChar,
     '"':foundChar,
     "'":foundChar,
-    "_":foundChar
+    "_":foundChar,
+    "\n":foundChar
 }
 
 untrackedDict = {

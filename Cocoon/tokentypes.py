@@ -46,7 +46,7 @@ TT_NWORD = 'Noise_Word'
 # COMMENTS
 TT_COMMENT = 'Comment'
 
-# PUNTUATIONS
+# SPECIAL SYMBOLS
 TT_DOT = 'Dot'
 TT_COMMA = 'Comma'
 TT_SEMICOLON = 'Semicolon'
@@ -55,6 +55,7 @@ TT_RSQUARE = 'Right_Square'
 TT_LPAREN = 'Left_Paren'
 TT_RPAREN = 'Right_Paren'
 TT_BSLASH = 'Back_Slash'
+TT_NEWLINE = 'Newline'
 
 # END OF FILE
 TT_EOF = 'TT_EOF'
