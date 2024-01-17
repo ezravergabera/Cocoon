@@ -18,7 +18,7 @@ def debug_lexer():
     debugmode = True
     while True:
         text = input("lexer > ")
-
+        if text.strip() == "": continue
         result, error = run_lexer("<stdin>", text)
 
         if error:
@@ -36,7 +36,7 @@ def debug_parser():
     debugmode = True
     while True:
         text = input("parser > ")
-
+        if text.strip() == "": continue
         result, error = run_parser("<stdin>", text)
 
         if error: 
@@ -51,7 +51,7 @@ def debug_interpreter():
     debugmode = True
     while True:
         text = input("interpreter > ")
-
+        if text.strip() == "": continue
         result, error = run_interpreter("<stdin>", text)
 
         if error: 
@@ -60,7 +60,11 @@ def debug_interpreter():
                     print(err.as_string())
             except(TypeError):
                 print(error.as_string())
-        elif result: print(repr(result))
+        elif result:
+            if len(result.elements) == 1:
+                print(repr(result.elements[0]))
+            else:
+                print(repr(result))
 
 def run_lexer(fn, text):
     # Lexer
