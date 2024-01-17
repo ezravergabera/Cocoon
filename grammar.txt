@@ -1,5 +1,7 @@
 The root has the least priority. bottom has the highest priority.
-root            : expr() SEMICOLON
+root            : statements
+
+statements      : NEWLINE* expr  NEWLINE* SEMICOLON ( NEWLINE* expr NEWLINE* SEMICOLON)*
 
 expr            : num-assign
                 : DTYPE:(deci | decimal) ID ASSIGN (expr | KWORD:get)
@@ -24,7 +26,7 @@ power           : call (EXPO factor)*
 
 call            : atom (LPAREN (expr (COMMA expr)*)? RPAREN)?
 
-atom            : INT | FLOAT | ID | BOOL | STR | CHAR
+atom            : INT | FLOAT | (ID | RWORD: empty | KWORD: show | KWORD: get) | BOOL | STR | CHAR
                 : LPAREN expr RPAREN
                 : list-expr
                 : ask-expr
@@ -32,22 +34,35 @@ atom            : INT | FLOAT | ID | BOOL | STR | CHAR
                 : while-expr
                 : build-def
 
-ID              : ID (incre-expr)? (assign-expr)?
+ID              : ID (incre-expr|assign-expr)?
 
 list-expr       : LSQUARE (expr (COMMA expr)*)? RSQUARE
 
-ask-expr        : RWORD:ask LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE
-                  (RWORD:askmore LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE)*
-                  (RWORD:more LSQUARE expr RSQUARE)?
+ask-expr        : RWORD:ask LPAREN expr RPAREN (NWORD:do)? LSQUARE
+                  (expr SEMICOLON (RSQUARE | statements RSQUARE) askmore-expr|more-expr|SEMICOLON)
+                | NEWLINE statements RSQUARE (askmore-expr|more-expr|SEMICOLON)
 
-repeat-expr     : RWORD:repeat LPAREN num-assign; var_name; expr RPAREN LSQUARE expr RSQUARE
+askmore-expr    : RWORD:askmore LPAREN expr RPAREN (NWORD:do)? LSQUARE
+                  (expr SEMICOLON (RSQUARE | statements RSQUARE) askmore-expr|more-expr|SEMICOLON)
+                | NEWLINE statements RSQUARE (askmore-expr|more-expr|SEMICOLON)
 
-while-expr      : RWORD:while LPAREN expr RPAREN (NWORD:do)? LSQUARE expr RSQUARE
+more-expr       : RWORD:more LSQUARE 
+                  expr SEMICOLON (RSQUARE | statements RSQUARE)
+                | NEWLINE statements RSQUARE
+
+repeat-expr     : RWORD:repeat LPAREN num-assign; var_name; expr RPAREN LSQUARE
+                  expr SEMICOLON (RSQUARE | statements RSQUARE)
+                | (NEWLINE statements RSQUARE)
+
+while-expr      : RWORD:while LPAREN expr RPAREN (NWORD:do)? LSQUARE
+                  expr SEMICOLON (RSQUARE | statements RSQUARE)
+                | (NEWLINE statements RSQUARE)
 
 incre-expr      : ID PLUS PLUS | ID MINUS MINUS
 
-assign-expr     : ID ASSIGN expr
+assign-expr     : ID ASSIGN (expr | ask-expr)
 
 build-def       : RWORD:build ID?
                   LPAREN (ID (COMMA ID)*)? RPAREN
-                  LSQUARE expr RSQUARE
+                  (LSQUARE expr)
+                | (NEWLINE statements RSQUARE)
