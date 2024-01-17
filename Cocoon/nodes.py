@@ -11,7 +11,7 @@ class NumberNode:
 class DecimalNode(NumberNode):
     def __init__(self, tok):
         super().__init__(tok)
-    
+
 class BoolNode(NumberNode):
     def __init__(self, tok):
         super().__init__(tok)
@@ -99,34 +99,37 @@ class AskNode:
         self.pos_start = self.cases[0][0].pos_start
 
         if self.more_case:
-            self.pos_end = self.more_case.pos_end
+            self.pos_end = self.more_case[0].pos_end
         else:
-            self.pos_end = self.cases[len(self.cases) - 1][0].pos_end
+            self.pos_end = (self.cases[len(self.cases) - 1])[0].pos_end
 
 class RepeatNode:
-    def __init__(self, var_name_tok, value_node, cond_node, iter_node, body_node):
+    def __init__(self, var_name_tok, value_node, cond_node, iter_node, body_node, should_return_empty):
         self.var_name_tok = var_name_tok
         self.value_node = value_node
         self.cond_node = cond_node
         self.iter_node = iter_node
         self.body_node = body_node
+        self.should_return_empty = should_return_empty
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.body_node.pos_end
 
 class WhileNode:
-    def __init__(self, cond_node, body_node):
+    def __init__(self, cond_node, body_node, should_return_empty):
         self.cond_node = cond_node
         self.body_node = body_node
+        self.should_return_empty = should_return_empty
 
         self.pos_start = self.cond_node.pos_start
         self.pos_end = self.body_node.pos_end
 
 class BuildDefNode:
-    def __init__(self, var_name_tok, arg_name_toks, body_node):
+    def __init__(self, var_name_tok, arg_name_toks, body_node, should_return_empty):
         self.var_name_tok = var_name_tok
         self.arg_name_toks = arg_name_toks
         self.body_node = body_node
+        self.should_return_empty = should_return_empty
 
         if self.var_name_tok:
             self.pos_start = self.var_name_tok.pos_start

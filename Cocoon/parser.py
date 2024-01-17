@@ -1,5 +1,5 @@
 from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -10,15 +10,22 @@ class Parser:
 
     def advance(self):
         self.token_idx += 1
-        if self.token_idx < len(self.tokens):
-            self.current_tok = self.tokens[self.token_idx]
+        self.update_current_tok()
         return self.current_tok
     
     def backtrack(self):
         self.token_idx -= 1
+        self.update_current_tok()
+        return self.current_tok
+    
+    def reverse(self, amount=1):
+        self.token_idx -= amount
+        self.update_current_tok()
+        return self.current_tok
+
+    def update_current_tok(self):
         if self.token_idx < len(self.tokens):
             self.current_tok = self.tokens[self.token_idx]
-        return self.current_tok
 
     def parse(self):
         res = self.root()
@@ -95,29 +102,42 @@ class Parser:
         res.register_advancement()
         self.advance()
 
-        if self.current_tok.type != TT_LSQUARE:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected '['"
-            ))
-        else:
+        if self.current_tok.type == TT_LSQUARE:
             res.register_advancement()
             self.advance()
 
-        node_to_return = res.register(self.expr())
-        if res.error: return res
+            node_to_return = res.register(self.expr())
+            if res.error: return res
 
-        if self.current_tok.type != TT_RSQUARE:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected ']'"
-            ))
-        else:
+            if self.current_tok.type != TT_RSQUARE:
+                res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+            else:
+                res.register_advancement()
+                self.advance()
+
+            if res.error: return res
+            return res.success(BuildDefNode(var_name_tok, arg_name_toks, node_to_return, False))
+        
+        if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
-        if res.error: return res
-        return res.success(BuildDefNode(var_name_tok, arg_name_toks, node_to_return))
+            note_to_return = res.register(self.statements())
+            if res.error: return res
+
+            if self.current_tok.type != TT_RSQUARE:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+            
+            res.register_advancement()
+            self.advance()
+
+            return res.success(BuildDefNode(var_name_tok, arg_name_toks, note_to_return, True))
 
     def assign_expr(self):
         res = ParseResult()
@@ -135,6 +155,11 @@ class Parser:
 
             res.register_advancement()
             self.advance()
+
+            if self.current_tok.matches(TT_RWORD, 'ask'):
+                ask_expr = res.register(self.ask_expr())
+                if res.error: return res
+                return res.success(IdAssignNode(var_name, ask_expr))
 
             expr = res.register(self.expr())
             if res.error: return res
@@ -225,19 +250,51 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-        body_node = res.register(self.expr())
+        if self.current_tok.type == TT_NEWLINE:
+            body_node = res.register(self.statements())
+            if res.error: return res
 
-        if self.current_tok.type != TT_RSQUARE:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected ']'"
-            ))
-        else:
+            if self.current_tok.type != TT_RSQUARE:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+            
             res.register_advancement()
             self.advance()
-            
+
+            return res.success(WhileNode(cond_node, body_node, True))
+
+        body_node = res.register(self.expr())
         if res.error: return res
-        return res.success(WhileNode(cond_node, body_node))
+
+        if self.current_tok.type != TT_SEMICOLON:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected ';'"
+            ))
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_RSQUARE:
+            res.register_advancement()
+            self.advance()
+        else:
+            body_node = res.register(self.statements())
+            if res.error: return res
+
+            if self.current_tok.type != TT_RSQUARE:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+            res.register_advancement()
+            self.advance()
+
+            return res.success(WhileNode(cond_node, body_node, True))
+
+        if res.error: return res
+        return res.success(WhileNode(cond_node, body_node, False))
 
     def repeat_expr(self):
         res = ParseResult()
@@ -332,7 +389,7 @@ class Parser:
             self.advance()
 
         if self.current_tok.type != TT_LSQUARE:
-            res.failure(InvalidSyntaxError(
+            return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected '['"
             ))
@@ -340,30 +397,63 @@ class Parser:
         res.register_advancement()
         self.advance()
 
-        body_node = res.register(self.expr())
-        if res.error: return res
-
-        if self.current_tok.type != TT_RSQUARE:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected ']'"
-            ))
-        else:
+        if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
-        if res.error: return res
-        return res.success(RepeatNode(var_name, value_node, cond_node, iter_node, body_node))
+            body_node = res.register(self.statements())
+            if res.error: return res
 
-    def ask_expr(self):
+            if self.current_tok.type != TT_RSQUARE:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+            res.register_advancement()
+            self.advance()
+
+            return res.success(RepeatNode(var_name, value_node, cond_node, iter_node, body_node, True))
+        
+        body_node = res.register(self.expr())
+        if res.error: return res
+
+        if self.current_tok.type != TT_SEMICOLON:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected ';'"
+            ))
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_RSQUARE:
+            res.register_advancement()
+            self.advance()
+        else:
+            body_node = res.register(self.statements())
+            if res.error: return res
+
+            if self.current_tok.type != TT_RSQUARE:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ']'"
+                ))
+            res.register_advancement()
+            self.advance()
+
+            return res.success(RepeatNode(var_name, value_node, cond_node, iter_node, body_node, True))
+
+        if res.error: return res
+        return res.success(RepeatNode(var_name, value_node, cond_node, iter_node, body_node, False))
+    
+    def ask_expr_cases(self, case_keyword):
         res = ParseResult()
         cases = []
         more_case = None
 
-        if not self.current_tok.matches(TT_RWORD, 'ask'):
+        if not self.current_tok.matches(TT_RWORD, case_keyword):
             res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected 'ask'"
+                f"Expected '{case_keyword}'"
             ))
 
         res.register_advancement()
@@ -403,96 +493,107 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-        expr = res.register(self.expr())
-        if res.error: return res
-
-        if self.current_tok.type != TT_RSQUARE:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected ']'"
-            ))
-        else:
+        if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
-        if self.current_tok.type != TT_SEMICOLON:
-            res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected ';'"
-            ))
-        else:
-            res.register_advancement()
-            self.advance()
-
-        cases.append((condition, expr))
-
-        while self.current_tok.matches(TT_RWORD, 'askmore'):
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_LPAREN:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected '('"
-                ))
-            else:
-                res.register_advancement()
-                self.advance()
-
-            condition = res.register(self.expr())
+            statements = res.register(self.statements())
             if res.error: return res
-
-            if self.current_tok.type != TT_RPAREN:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected ')'"
-                ))
-            else:
-                res.register_advancement()
-                self.advance()
-
-            if self.current_tok.matches(TT_NWORD, 'do'):
-                res.register_advancement()
-                self.advance()
-
-            if self.current_tok.type != TT_LSQUARE:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected 'do' or '['"
-                ))
-            else:
-                res.register_advancement()
-                self.advance()
-
-            expr = res.register(self.expr())
-            if res.error: return res
+            cases.append((condition, statements, True))
 
             if self.current_tok.type != TT_RSQUARE:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected ']'"
                 ))
             else:
                 res.register_advancement()
                 self.advance()
+            
+            if self.current_tok.type == TT_SEMICOLON:
+                res.register_advancement()
+                self.advance()
+            else:
+                all_cases = res.register(self.askmore_or_more_expr())
+                if res.error: return res
+                new_cases, more_case = all_cases
+                cases.extend(new_cases)
+        else:
+            expr = res.register(self.expr())
+            if res.error: return res
+            cases.append((condition, expr, False))
 
             if self.current_tok.type != TT_SEMICOLON:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end, 
                     "Expected ';'"
                 ))
             else:
                 res.register_advancement()
                 self.advance()
 
-            cases.append((condition, expr))
+            if self.current_tok.type == TT_RSQUARE:
+                res.register_advancement()
+                self.advance()
+            else:
+                statements = res.register(self.statements())
+                if res.error: return res
+                cases.append((condition, statements, True))
+
+                if self.current_tok.type != TT_RSQUARE:
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        "Expected ']'"
+                    ))
+                else:
+                    res.register_advancement()
+                    self.advance()
+
+            if self.current_tok.type == TT_SEMICOLON:
+                pass
+            else:
+                all_cases = res.register(self.askmore_or_more_expr())
+                if res.error: return res
+                new_cases, more_case = all_cases
+                cases.extend(new_cases)
+
+        if res.error: return res
+        return res.success((cases, more_case))
+    
+    def askmore_or_more_expr(self):
+        res = ParseResult()
+        cases, more_case = [], None
+
+        if self.current_tok.matches(TT_RWORD, 'askmore'):
+            all_cases = res.register(self.askmore_expr())
+            if res.error: return res
+            cases, more_case = all_cases
+        else:
+            more_case = res.register(self.more_expr())
+            if res.error: return res
+
+        return res.success((cases, more_case))
+
+    def ask_expr(self):
+        res = ParseResult()
+        all_cases = res.register(self.ask_expr_cases('ask'))
+        if res.error: return res
+        cases, more_case = all_cases
+        return res.success(AskNode(cases, more_case))
+    
+    def askmore_expr(self):
+        return self.ask_expr_cases('askmore')
+    
+    def more_expr(self):
+        res = ParseResult()
+        more_case = None
 
         if self.current_tok.matches(TT_RWORD, 'more'):
             res.register_advancement()
             self.advance()
 
             if self.current_tok.type != TT_LSQUARE:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected '['"
                 ))
@@ -500,25 +601,59 @@ class Parser:
                 res.register_advancement()
                 self.advance()
 
-            expr = res.register(self.expr())
-            if res.error: return res
-
-            if self.current_tok.type != TT_RSQUARE:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected ']'"
-                ))
-            else:
+            if self.current_tok.type == TT_NEWLINE:
                 res.register_advancement()
                 self.advance()
 
-            more_case = expr
-        else:
-            res.register_backtrack()
-            self.backtrack()
+                statements = res.register(self.statements())
+                if res.error: return res
 
+                if self.current_tok.type != TT_RSQUARE:
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        "Expected ']'"
+                    ))
+                else:
+                    res.register_advancement()
+                    self.advance()
+
+                more_case = (statements, True)
+            else:
+                expr = res.register(self.expr())
+                if res.error: return res
+
+                if self.current_tok.type != TT_SEMICOLON:
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        "Expected ';'"
+                    ))
+                else:
+                    res.register_advancement()
+                    self.advance()
+
+                if self.current_tok.type == TT_RSQUARE:
+                    res.register_advancement()
+                    self.advance()
+                else:
+                    statements = res.register(self.statements())
+                    if res.error: return res
+
+                    if self.current_tok != TT_RSQUARE:
+                        return res.failure(InvalidSyntaxError(
+                            self.current_tok.pos_start, self.current_tok.pos_end,
+                            "Expected ']'"
+                        ))
+                    else:
+                        res.register_advancement()
+                        self.advance()
+
+                    more_case = (statements, True)
+                    if res.error: return res
+                    return res.success(more_case)
+
+                more_case = (expr, False)
         if res.error: return res
-        return res.success(AskNode(cases, more_case))
+        return res.success(more_case)
     
     def list_expr(self):
         res = ParseResult()
@@ -943,19 +1078,96 @@ class Parser:
         
         return res.success(node)
     
-    def root(self):
+    def statements(self):
         res = ParseResult()
+        statements = []
+        pos_start = self.current_tok.pos_start.copy()
 
-        node = res.register(self.expr())
+        while self.current_tok.type == TT_NEWLINE:
+            res.register_advancement()
+            self.advance()
+
+        statement = res.register(self.expr())
+        if res.error: return res
+        statements.append(statement)
+
+        while self.current_tok.type == TT_NEWLINE:
+            res.register_advancement()
+            self.advance()
 
         if self.current_tok.type != TT_SEMICOLON:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected ';'"
+            ))
+        else:
+            res.register_advancement()
+            self.advance()
+
+        more_statements = True
+
+        while True:
+            res.advance_count = 0
+            newline_count = 1
+            while self.current_tok.type == TT_NEWLINE:
+                res.register_advancement()
+                self.advance()
+                newline_count += 1
+            if newline_count == 0:
+                more_statements = False
+
+            if not more_statements: break
+            statement = res.try_register(self.expr())
+            if not statement:
+                self.reverse(res.to_reverse_count)
+                more_statements = False
+                continue
+            statements.append(statement)
+
+            while self.current_tok.type == TT_NEWLINE:
+                res.register_advancement()
+                self.advance()
+                newline_count += 1
+
+            if self.current_tok.type != TT_SEMICOLON:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ';'"
+                ))
+            else:
+                res.register_advancement()
+                self.advance()
+                newline_count += 1
+
+        if res.error: return res
+        return res.success(ListNode(
+            statements,
+            pos_start,
+            self.current_tok.pos_end.copy()
+        ))
+
+    def root(self):
+        res = ParseResult()
+        node = res.register(self.statements())
+
+        # for checking if the statement ends with semicolon
+        while self.current_tok.type != TT_EOF:
+            res.register_advancement()
+            self.advance()
+
+        res.register_backtrack()
+        self.backtrack()
+
+        if self.current_tok.type != TT_SEMICOLON:
+            res.register_advancement()
+            self.advance()
             res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected '+', '-', '*', '/', '~', '^', '>', '>', '>=', '<=', '==', '!=', 'AND', 'and', 'OR', 'or', or ';'"
+                "Expected ';'"
             ))
-        
-        res.register_advancement()
-        self.advance()
+        else:
+            res.register_advancement()
+            self.advance()
         if res.error: return res
         return res.success(node)
 
@@ -984,6 +1196,7 @@ class ParseResult:
         self.error = None
         self.node = None
         self.advance_count = 0
+        self.to_reverse_count = 0
 
     def register_advancement(self):
         self.advance_count += 1
@@ -995,6 +1208,12 @@ class ParseResult:
         self.advance_count += res.advance_count
         if res.error: self.error = res.error
         return res.node
+    
+    def try_register(self, res):
+        if res.error:
+            self.to_reverse_count = self.advance_count
+            return None
+        return self.register(res)
 
     def success(self, node):
         self.node = node
