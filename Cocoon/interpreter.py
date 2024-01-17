@@ -2,6 +2,7 @@ from .errors import RuntimeError
 from .tokentypes import TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR
 from .context import Context
 from .symbolTable import SymbolTable
+from .nodes import AskNode
 
 class Interpreter:
     def visit(self, node, context):
@@ -16,7 +17,7 @@ class Interpreter:
         return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_DecimalNode(self, node, context):
-        return RTResult().success(Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+        return RTResult().success(Float(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_BoolNode(self, node, context):
         return RTResult().success(Bool(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
@@ -60,10 +61,20 @@ class Interpreter:
         value = res.register(self.visit(node.value_node, context))
         if res.error: return res
 
-        if not in_symbolTable and not isinstance(value, List):
+        if not in_symbolTable and not isinstance(value, List) and not isinstance(node.value_node, AskNode):
             return res.failure(RuntimeError(
                 node.pos_start, node.pos_end,
                 f"{var_name} is undefined",
+                context
+            ))
+        
+        if in_symbolTable:
+            past_value = context.symbol_table.get(var_name)
+
+            if not (type(value) == type(past_value)):
+                return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"Data type mismatch",
                 context
             ))
         
@@ -208,21 +219,22 @@ class Interpreter:
     def visit_AskNode(self, node, context):
         res = RTResult()
 
-        for condition, expr in node.cases:
+        for condition, expr, should_return_empty in node.cases:
             condition_value = res.register(self.visit(condition, context))
             if res.error: return res
 
             if condition_value.is_true():
                 expr_value = res.register(self.visit(expr, context))
                 if res.error: return res
-                return res.success(expr_value)
+                return res.success(Number.empty if should_return_empty else expr_value)
             
         if node.more_case:
-            more_value = res.register(self.visit(node.more_case, context))
+            expr, should_return_empty = node.more_case
+            more_value = res.register(self.visit(expr, context))
             if res.error: return res
-            return res.success(more_value)
+            return res.success(Number.empty if should_return_empty else more_value)
         
-        return res.success(None)
+        return res.success(Number.empty)
     
     def visit_RepeatNode(self, node, context):
         res = RTResult()
@@ -253,7 +265,9 @@ class Interpreter:
 
             context.symbol_table.set(var_name, value)
 
-        return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
+        return res.success(
+            Number.empty if node.should_return_empty else 
+            List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_WhileNode(self, node, context):
         res = RTResult()
@@ -268,7 +282,9 @@ class Interpreter:
             elements.append(res.register(self.visit(node.body_node, context)))
             if res.error: return res
 
-        return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
+        return res.success(
+            Number.empty if node.should_return_empty else 
+            List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
     def visit_BuildDefNode(self, node, context):
         res = RTResult()
@@ -276,7 +292,7 @@ class Interpreter:
         func_name = node.var_name_tok.value if node.var_name_tok else None
         body_node = node.body_node
         arg_names = [arg_name.value for arg_name in node.arg_name_toks]
-        func_value = Function(func_name, body_node, arg_names).set_context(context).set_pos(node.pos_start, node.pos_end)
+        func_value = Function(func_name, body_node, arg_names, node.should_return_empty).set_context(context).set_pos(node.pos_start, node.pos_end)
 
         if node.var_name_tok:
             context.symbol_table.set(func_name, func_value)
@@ -520,10 +536,13 @@ class Number(Value):
     
 Number.empty = Number(0)
 
+class Float(Number):
+    def __init__(self, value):
+        super().__init__(value)
+
 class Bool(Number):
     def __init__(self, value):
         super().__init__(value)
-        self.value = value
 
     def __repr__(self):
         if self.value == 1:
@@ -545,6 +564,12 @@ class String(Value):
     def multiplied_by(self, other):
         if isinstance(other, Number):
             return String(self.value * other.value).set_context(self.context), None
+        else:
+            return None, Value.illegal_operation(self, other)
+        
+    def get_comp_equalto(self, other):
+        if isinstance(other, String):
+            return Bool(self.value == other.value).set_context(self.context), None
         else:
             return None, Value.illegal_operation(self, other)
         
@@ -637,10 +662,11 @@ class BaseFunction(Value):
         return res.success(None)
 
 class Function(BaseFunction):
-    def __init__(self, name, body_node, arg_names):
+    def __init__(self, name, body_node, arg_names, should_return_empty):
         super().__init__(name)
         self.body_node = body_node
         self.arg_names = arg_names
+        self.should_return_empty = should_return_empty
 
     def execute(self, args):
         res = RTResult()
@@ -652,10 +678,10 @@ class Function(BaseFunction):
 
         value = res.register(interpreter.visit(self.body_node, exec_ctx))
         if res.error: return res
-        return res.success(value)
+        return res.success(Number.empty if self.should_return_empty else value)
     
     def copy(self):
-        copy = Function(self.name, self.body_node, self.arg_names)
+        copy = Function(self.name, self.body_node, self.arg_names, self.should_return_empty)
         copy.set_context(self.context)
         copy.set_pos(self.pos_start, self.pos_end)
         return copy
