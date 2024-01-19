@@ -28,6 +28,9 @@ class Interpreter:
     def visit_CharNode(self, node, context):
         return RTResult().success(Character(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
 
+    def visit_UndefinedNode(self, node, context):
+        return RTResult().success(Undefined(node.tok).set_context(context).set_pos(node.pos_start, node.pos_end))
+
     def visit_ListNode(self, node, context):
         res = RTResult()
         elements = []
@@ -38,15 +41,140 @@ class Interpreter:
 
         return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
+    def visit_numDeclareNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        in_symbolTable = context.symbol_table.hasValue(var_name)
+        value = res.register(self.visit(node.value_node, context))
+
+        if in_symbolTable:
+            past_value = context.symbol_table.get(var_name)
+            if not (type(value) == type(past_value)):
+                return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"Data type mismatch",
+                context
+            ))
+            else:
+                return res.failure(RuntimeError(
+                    node.pos_start, node.pos_end,
+                    f"'{var_name}' is already defined",
+                    context
+                ))
+
+        context.symbol_table.set(var_name, value)
+
+        return res.success(None)
+
+    def visit_deciDeclareNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        in_symbolTable = context.symbol_table.hasValue(var_name)
+        value = res.register(self.visit(node.value_node, context))
+
+        if in_symbolTable:
+            past_value = context.symbol_table.get(var_name)
+            if not (type(value) == type(past_value)):
+                return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"Data type mismatch",
+                context
+            ))
+            else:
+                return res.failure(RuntimeError(
+                    node.pos_start, node.pos_end,
+                    f"'{var_name}' is already defined",
+                    context
+                ))
+
+        context.symbol_table.set(var_name, value)
+
+        return res.success(None)
+
+    def visit_boolDeclareNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        in_symbolTable = context.symbol_table.hasValue(var_name)
+        value = res.register(self.visit(node.value_node, context))
+
+        if in_symbolTable:
+            past_value = context.symbol_table.get(var_name)
+            if not (type(value) == type(past_value)):
+                return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"Data type mismatch",
+                context
+            ))
+            else:
+                return res.failure(RuntimeError(
+                    node.pos_start, node.pos_end,
+                    f"'{var_name}' is already defined",
+                    context
+                ))
+
+        context.symbol_table.set(var_name, value)
+
+        return res.success(None)
+
+    def visit_charDeclareNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        in_symbolTable = context.symbol_table.hasValue(var_name)
+        value = res.register(self.visit(node.value_node, context))
+
+        if in_symbolTable:
+            past_value = context.symbol_table.get(var_name)
+            if not (type(value) == type(past_value)):
+                return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"Data type mismatch",
+                context
+            ))
+            else:
+                return res.failure(RuntimeError(
+                    node.pos_start, node.pos_end,
+                    f"'{var_name}' is already defined",
+                    context
+                ))
+
+        context.symbol_table.set(var_name, value)
+
+        return res.success(None)
+
+    def visit_textDeclareNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        in_symbolTable = context.symbol_table.hasValue(var_name)
+        value = res.register(self.visit(node.value_node, context))
+
+        if in_symbolTable:
+            past_value = context.symbol_table.get(var_name)
+            if not (type(value) == type(past_value)):
+                return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                f"Data type mismatch",
+                context
+            ))
+            else:
+                return res.failure(RuntimeError(
+                    node.pos_start, node.pos_end,
+                    f"'{var_name}' is already defined",
+                    context
+                ))
+
+        context.symbol_table.set(var_name, value)
+
+        return res.success(None)
+
     def visit_IdAccessNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = context.symbol_table.get(var_name)
 
-        if not value:
+        if (type(value) == Undefined) or not value:
             return res.failure(RuntimeError(
                 node.pos_start, node.pos_end,
-                f"'{var_name}' is undefined",
+                f"'{var_name}' is undefined\nDid you forgot to add a data type?",
                 context
             ))
         
@@ -70,8 +198,9 @@ class Interpreter:
         
         if in_symbolTable:
             past_value = context.symbol_table.get(var_name)
-
-            if not (type(value) == type(past_value)):
+            if type(past_value) == Undefined:
+                pass
+            elif not (type(value) == type(past_value)):
                 return res.failure(RuntimeError(
                 node.pos_start, node.pos_end,
                 f"Data type mismatch",
@@ -418,6 +547,20 @@ class Value:
             self.context
         )
 
+class Undefined(Value):
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+
+    def copy(self):
+        raise Exception("No value defined")
+    
+    def __str__(self):
+        return 'Undefined'
+
+    def __repr__(self):
+        return 'Undefined'
+
 class Number(Value):
     def __init__(self, value):
         super().__init__()
@@ -549,7 +692,7 @@ class Bool(Number):
             return 'true'
         elif self.value == 0:
             return 'false'
-    
+
 class String(Value):
     def __init__(self, value):
         super().__init__()
