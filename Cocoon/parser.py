@@ -1,5 +1,5 @@
-from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
-from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
+from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, UndefinedNode, numDeclareNode, deciDeclareNode, boolDeclareNode, charDeclareNode, textDeclareNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
+from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
 from .errors import InvalidSyntaxError
 
 class Parser:
@@ -702,7 +702,7 @@ class Parser:
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
-
+            
         if tok.matches(TT_RWORD, "build"):
             build_def = res.register(self.build_def())
             if res.error: return res
@@ -884,17 +884,95 @@ class Parser:
                                "Expected int, float, identifier, '+', '-', '(', '[', 'not', or 'NOT'"))
         
         return res.success(node)
-
-    def num_assign(self):
+    
+    def text_assign(self):
         res = ParseResult()
 
-        # num identifier = expr
-        if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
+        # text identifier = str
+        if self.current_tok.matches(TT_DTYPE, 'text'):
             res.register_advancement()
             self.advance()
 
             if self.current_tok.type != TT_ID:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    'Expected an identifier'
+                ))
+
+            var_name = self.current_tok
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ASSIGN:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_STR and not self.current_tok.matches(TT_KWORD, 'get'):
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected string literal, or 'get'"
+                ))
+
+            string_value = res.register(self.expr())
+            if res.error: return res
+            return res.success(StringAssignNode(var_name, string_value))
+        
+        return None
+    
+    def char_assign(self):
+        res = ParseResult()
+
+        # character identifier = char
+        if self.current_tok.matches(TT_DTYPE, 'char') or self.current_tok.matches(TT_DTYPE, 'character'):
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ID:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    'Expected an identifier'
+                ))
+
+            var_name = self.current_tok
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ASSIGN:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected '='"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_CHAR and not self.current_tok.matches(TT_KWORD, 'get'):
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected char literal, or 'get'"
+                ))
+            
+            char_value = res.register(self.expr())
+            if res.error: return res
+            return res.success(CharAssignNode(var_name, char_value))
+        
+        return None
+    
+    def bool_assign(self):
+        res = ParseResult()
+
+        # boolean identifier = bool
+        if self.current_tok.matches(TT_DTYPE, 'bool') or self.current_tok.matches(TT_DTYPE, 'boolean'):
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_ID:
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected an identifier"
                 ))
@@ -904,7 +982,7 @@ class Parser:
             self.advance()
 
             if self.current_tok.type != TT_ASSIGN:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected '='"
                 ))
@@ -912,30 +990,28 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            #? Kung i automatic parse ba kapag float tok nakuha or hindi nalang tatanggapin as in?
-
-            if self.current_tok.type != TT_INT and not self.current_tok.matches(TT_KWORD, 'get'):
-                res.failure(InvalidSyntaxError(
+            if self.current_tok.type != TT_BOOL and not self.current_tok.matches(TT_KWORD, 'get'):
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected int or 'get'"
+                    "Expected 'true', 'false', or 'get'"
                 ))
+
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(IntAssignNode(var_name, expr))
-
-    def expr(self):
+            return res.success(BoolAssignNode(var_name, expr))
+        
+        return None
+    
+    def  deci_assign(self):
         res = ParseResult()
 
-        if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
-            return self.num_assign()
-        
         # decimal identifier = 1.9
         if self.current_tok.matches(TT_DTYPE, 'deci') or self.current_tok.matches(TT_DTYPE, 'decimal'):
             res.register_advancement()
             self.advance()
 
             if self.current_tok.type != TT_ID:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected an identifier"
                 ))
@@ -959,7 +1035,7 @@ class Parser:
                 self.current_tok.value = float(self.current_tok.value)
 
             if self.current_tok.type != TT_FLOAT and not self.current_tok.matches(TT_KWORD, 'get'):
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected int, float, or 'get'"
                 ))
@@ -967,13 +1043,18 @@ class Parser:
             if res.error: return res
             return res.success(FloatAssignNode(var_name, expr))
         
-        # boolean identifier = bool
-        if self.current_tok.matches(TT_DTYPE, 'bool') or self.current_tok.matches(TT_DTYPE, 'boolean'):
+        return None
+
+    def num_assign(self):
+        res = ParseResult()
+
+        # num identifier = expr
+        if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
             res.register_advancement()
             self.advance()
 
             if self.current_tok.type != TT_ID:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected an identifier"
                 ))
@@ -983,7 +1064,7 @@ class Parser:
             self.advance()
 
             if self.current_tok.type != TT_ASSIGN:
-                res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected '='"
                 ))
@@ -991,83 +1072,153 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            if self.current_tok.type != TT_BOOL and not self.current_tok.matches(TT_KWORD, 'get'):
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected 'true', 'false', or 'get'"
-                ))
+            #? Kung i automatic parse ba kapag float tok nakuha or hindi nalang tatanggapin as in?
 
+            if self.current_tok.type != TT_INT and not self.current_tok.matches(TT_KWORD, 'get'):
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected int or 'get'"
+                ))
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(BoolAssignNode(var_name, expr))
+            return res.success(IntAssignNode(var_name, expr))
         
-        # character identifier = char
-        if self.current_tok.matches(TT_DTYPE, 'char') or self.current_tok.matches(TT_DTYPE, 'character'):
-            res.register_advancement()
-            self.advance()
+        return None
+        
+    def var_assigns(self):
+        if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
+            return self.num_assign()
+        
+        elif self.current_tok.matches(TT_DTYPE, 'deci') or self.current_tok.matches(TT_DTYPE, 'decimal'):
+            return self.deci_assign()
+        
+        elif self.current_tok.matches(TT_DTYPE, 'bool') or self.current_tok.matches(TT_DTYPE, 'boolean'):
+            return self.bool_assign()
+        
+        elif self.current_tok.matches(TT_DTYPE, 'char') or self.current_tok.matches(TT_DTYPE, 'character'):
+            return self.char_assign()
+        
+        else:
+            return self.text_assign()
 
-            if self.current_tok.type != TT_ID:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    'Expected an identifier'
-                ))
+    def text_declare(self):
+        res = ParseResult()
 
+        node = res.register(self.base_declare())
+        if res.error: return res
+        return res.success(node)
+
+    def char_declare(self):
+        res = ParseResult()
+
+        node = res.register(self.base_declare())
+        if res.error: return res
+        return res.success(node)
+
+    def bool_declare(self):
+        res = ParseResult()
+
+        node = res.register(self.base_declare())
+        if res.error: return res
+        return res.success(node)
+
+    def deci_declare(self):
+        res = ParseResult()
+
+        node = res.register(self.base_declare())
+        if res.error: return res
+        return res.success(node)
+
+    def num_declare(self):
+        res = ParseResult()
+
+        node = res.register(self.base_declare())
+        if res.error: return res
+        return res.success(node)
+    
+    def base_declare(self):
+        res = ParseResult()
+
+        node = self.current_tok.value
+
+        if node == "num" or node == "number":
+            func_name = "num"
+        elif node == "deci" or node == "decimal":
+            func_name = "deci"
+        elif node == "bool" or node == "boolean":
+            func_name = "bool"
+        elif node == "char" or node == "character":
+            func_name = "char"
+        elif node == "text":
+            func_name = node
+
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type != TT_ID:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected an identifier"
+            ))
+        else:
             var_name = self.current_tok
             res.register_advancement()
             self.advance()
 
-            if self.current_tok.type != TT_ASSIGN:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected '='"
-                ))
+        if self.current_tok.type == TT_SEMICOLON:
+            value = UndefinedNode()
+            node_name = f'{func_name}DeclareNode'
+            node_class = globals().get(node_name)
+            return res.success(node_class(var_name, value))
+        else:
+            res.register_backtrack()
+            self.backtrack()
+            res.register_backtrack()
+            self.backtrack()
 
+        return res.success(None)
+    
+    def var_declares(self):
+        res = ParseResult()
+
+        if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
+            node = res.register(self.num_declare())
+            if self.current_tok.type == TT_SEMICOLON:
+                return res.success(node)
+        
+        elif self.current_tok.matches(TT_DTYPE, 'deci') or self.current_tok.matches(TT_DTYPE, 'decimal'):
+            node = res.register(self.deci_declare())
+            if self.current_tok.type == TT_SEMICOLON:
+                return res.success(node)
+        
+        elif self.current_tok.matches(TT_DTYPE, 'bool') or self.current_tok.matches(TT_DTYPE, 'boolean'):
+            node = res.register(self.bool_declare())
+            if self.current_tok.type == TT_SEMICOLON:
+                return res.success(node)
+        
+        elif self.current_tok.matches(TT_DTYPE, 'char') or self.current_tok.matches(TT_DTYPE, 'character'):
+            node = res.register(self.char_declare())
+            if self.current_tok.type == TT_SEMICOLON:
+                return res.success(node)
+        
+        elif self.current_tok.matches(TT_DTYPE, 'text'):
+            node = res.register(self.text_declare())
+            if self.current_tok.type == TT_SEMICOLON:
+                return res.success(node)
+        
+        return self.var_assigns()
+
+    def expr(self):
+        res = ParseResult()
+
+        while self.current_tok.type == TT_COMMENT:
             res.register_advancement()
             self.advance()
 
-            if self.current_tok.type != TT_CHAR and not self.current_tok.matches(TT_KWORD, 'get'):
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected char literal, or 'get'"
-                ))
-            
-            char_value = res.register(self.expr())
+        if self.current_tok.type == TT_DTYPE:
+            node = res.register(self.var_declares())
             if res.error: return res
-            return res.success(CharAssignNode(var_name, char_value))
-            
-        # text identifier = str
-        if self.current_tok.matches(TT_DTYPE, 'text'):
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_ID:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    'Expected an identifier'
-                ))
-
-            var_name = self.current_tok
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_ASSIGN:
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected '='"
-                ))
-
-            res.register_advancement()
-            self.advance()
-
-            if self.current_tok.type != TT_STR and not self.current_tok.matches(TT_KWORD, 'get'):
-                res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected string literal, or 'get'"
-                ))
-
-            string_value = res.register(self.expr())
-            if res.error: return res
-            return res.success(StringAssignNode(var_name, string_value))
+            return res.success(node)
 
         node = res.register(self.arith_op(self.rel_expr, (TT_AND, TT_OR)))
 
@@ -1076,6 +1227,10 @@ class Parser:
                                self.current_tok.pos_start, self.current_tok.pos_end,
                                "Expected a data type keyword, int, float, identifier, str, char, 'build', 'while', 'repeat', 'ask', 'true', 'false', '+', '-', '(', '[', 'not', or 'NOT'"))
         
+        while self.current_tok.type == TT_COMMENT:
+            res.register_advancement()
+            self.advance()
+
         return res.success(node)
     
     def statements(self):
@@ -1109,7 +1264,7 @@ class Parser:
         while True:
             res.advance_count = 0
             newline_count = 1
-            while self.current_tok.type == TT_NEWLINE:
+            while self.current_tok.type == TT_NEWLINE and self.current_tok.type != TT_EOF:
                 res.register_advancement()
                 self.advance()
                 newline_count += 1
@@ -1149,6 +1304,7 @@ class Parser:
     def root(self):
         res = ParseResult()
         node = res.register(self.statements())
+        if res.error: return res
 
         # for checking if the statement ends with semicolon
         while self.current_tok.type != TT_EOF:

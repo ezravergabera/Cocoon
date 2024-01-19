@@ -24,6 +24,45 @@ class CharNode(NumberNode):
     def __init__(self, tok):
         super().__init__(tok)
 
+class UndefinedNode():
+    def __init__(self):
+        self.tok = None
+        
+        self.pos_start = None
+        self.pos_end = None
+
+    def __repr__(self):
+        return f'{self.tok}'
+
+class IdDeclareNode:
+    def __init__(self, var_name_tok, value_node):
+        self.var_name_tok = var_name_tok
+        self.value_node = value_node
+
+        self.pos_start = self.var_name_tok.pos_start
+        self.pos_end = self.var_name_tok.pos_end
+
+class numDeclareNode(IdDeclareNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
+
+class deciDeclareNode(IdDeclareNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
+class boolDeclareNode(IdDeclareNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
+class charDeclareNode(IdDeclareNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
+class textDeclareNode(IdDeclareNode):
+    def __init__(self, var_name_tok, value_node):
+        super().__init__(var_name_tok, value_node)
+
 class IdAccessNode:
     def __init__(self, var_name_tok):
         self.var_name_tok = var_name_tok
