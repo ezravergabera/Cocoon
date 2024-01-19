@@ -3,14 +3,33 @@ root            : statements
 
 statements      : NEWLINE* expr  NEWLINE* SEMICOLON ( NEWLINE* expr NEWLINE* SEMICOLON)*
 
-expr            : num-assign
-                : DTYPE:(deci | decimal) ID ASSIGN (expr | KWORD:get)
-                : DTYPE:(bool | boolean) ID ASSIGN (BOOL:(true | false) | KWORD:get)
-                : DTYPE:(char | character) ID ASSIGN (CHAR | KWORD:get)
-                : DTYPE:text ID ASSIGN (STR | KWORD:get)
+expr            : var-declares
                 : rel-expr ((AND | OR) rel-expr)*
 
+var-declares    : num-declare | deci-declare | bool-declare | char-declare | text-declare
+                : var-assigns
+
+num-declare     : DTYPE (num | number) ID
+
+deci-declare    : DTYPE: (deci | decimal) ID
+
+bool-declare    : DTYPE: (bool | boolean) ID
+
+char-declare    : DTYPE: (char | character) ID
+
+text-declare    : DTYPE: text ID
+
+var-assigns     : num-assign | deci-assign | bool-assign | char-assign | text-assign
+
 num-assign      : DTYPE:(num | number) ID ASSIGN (expr | KWORD:get)
+
+deci-assign     : DTYPE:(deci | decimal) ID ASSIGN (expr | KWORD:get)
+
+bool-assign     : DTYPE:(bool | boolean) ID ASSIGN (BOOL:(true | false) | KWORD:get)
+
+char-assign     : DTYPE:(char | character) ID ASSIGN (CHAR | KWORD:get)
+
+text-assign     : DTYPE:text ID ASSIGN (STR | KWORD:get)
                 
 rel-expr        : NOT rel-expr
                 : arith-expr ((GREATER | LESS | GREATEREQUAL | LESSEQUAL | EQUALTO | NOTEQUAL) arith-expr)*
