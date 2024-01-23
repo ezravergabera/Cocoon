@@ -1206,6 +1206,7 @@ class Parser:
             if self.current_tok.type == TT_SEMICOLON:
                 return res.success(node)
         
+        if res.error: return res
         return self.var_assigns()
 
     def expr(self):
