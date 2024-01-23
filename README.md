@@ -1,7 +1,7 @@
 <p align="center">
   <img src="public/img/cocoonLogo.png" width = 30%/>
 </p>
-<h1 align="center">Cocoon Lexical Analyzer</h1>
+<h1 align="center">Cocoon</h1>
 
 > A Python-based programming language designed for young learners.
 
