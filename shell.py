@@ -137,7 +137,7 @@ def run(fn, text):
 #* Function Calls
 # debug_lexer()
 # debug_parser()
-debug_interpreter()
+# debug_interpreter()
 
 def run_file(filename):
     if(filename):
