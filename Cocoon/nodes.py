@@ -42,26 +42,44 @@ class IdDeclareNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
 
+    def __repr__(self):
+        return f'{self.var_name_tok}'
+
 class numDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
+
+    def __repr__(self):
+        return f'(Datatype:int, {self.var_name_tok})'
 
 
 class deciDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
+    def __repr__(self):
+        return f'(Datatype:float, {self.var_name_tok})'
+
 class boolDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
+
+    def __repr__(self):
+        return f'(Datatype:bool, {self.var_name_tok})'
 
 class charDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
+    def __repr__(self):
+        return f'(Datatype:char, {self.var_name_tok})'
+
 class textDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
+
+    def __repr__(self):
+        return f'(Datatype:string, {self.var_name_tok})'
 
 class IdAccessNode:
     def __init__(self, var_name_tok):
@@ -69,6 +87,9 @@ class IdAccessNode:
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
+        
+    def __repr__(self):
+        return f'{self.var_name_tok}'
 
 class IdAssignNode:
     def __init__(self, var_name_tok, value_node):
@@ -77,26 +98,44 @@ class IdAssignNode:
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.value_node.pos_end
+
+    def __repr__(self):
+        return f'({self.var_name_tok}, =, {self.value_node})'
     
 class IntAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
+    def __repr__(self):
+        return f'(Datatype:int, {self.var_name_tok}, =, {self.value_node})'
+
 class FloatAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
         
+    def __repr__(self):
+        return f'(Datatype:float, {self.var_name_tok}, =, {self.value_node})'    
+
 class BoolAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
+
+    def __repr__(self):
+        return f'(Datatype:bool, {self.var_name_tok}, =, {self.value_node})'
 
 class CharAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
+    def __repr__(self):
+        return f'(Datatype:char, {self.var_name_tok}, =, {self.value_node})'
+
 class StringAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
+
+    def __repr__(self):
+        return f'(Datatype:string, {self.var_name_tok}, =, {self.value_node})'
     
 class ArithOpNode:
     def __init__(self, left_node, op_tok, right_node):
@@ -129,6 +168,9 @@ class IncrementNode:
 
         self.pos_start = var_name_tok.pos_start
         self.pos_end = op_tok2.pos_end
+
+    def __repr__(self):
+        return f'({self.var_name_tok}, {self.op_tok1.type}, {self.op_tok2.type})'
     
 class AskNode:
     def __init__(self, cases, more_case):
@@ -142,6 +184,9 @@ class AskNode:
         else:
             self.pos_end = (self.cases[len(self.cases) - 1])[0].pos_end
 
+    def __repr__(self):
+        return f"(if_elif_cases:({self.cases}), else_case:({self.more_case}))"
+
 class RepeatNode:
     def __init__(self, var_name_tok, value_node, cond_node, iter_node, body_node, should_return_empty):
         self.var_name_tok = var_name_tok
@@ -154,6 +199,9 @@ class RepeatNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.body_node.pos_end
 
+    def __repr__(self):
+        return f"(repeat, ({self.var_name_tok}, =, {self.value_node}), {self.cond_node}, {self.iter_node}, {self.body_node})"
+
 class WhileNode:
     def __init__(self, cond_node, body_node, should_return_empty):
         self.cond_node = cond_node
@@ -162,6 +210,9 @@ class WhileNode:
 
         self.pos_start = self.cond_node.pos_start
         self.pos_end = self.body_node.pos_end
+
+    def __repr__(self):
+        return f"(while, {self.cond_node}, {self.body_node})"
 
 class BuildDefNode:
     def __init__(self, var_name_tok, arg_name_toks, body_node, should_return_empty):
@@ -178,6 +229,16 @@ class BuildDefNode:
             self.pos_start = self.body_node.pos_start
 
         self.pos_end = self.body_node.pos_end
+    
+    def __repr__(self):
+        if self.var_name_tok and len(self.arg_name_toks) == 0:
+            str_to_repr = f"(build:{self.var_name_tok.value}, [{self.body_node}])"
+        elif self.var_name_tok and len(self.arg_name_toks) > 0:
+            str_to_repr = f"(build:{self.var_name_tok.value}, ({self.arg_name_toks}), [{self.body_node}])"
+        else:
+            str_to_repr = f"(build:<anonymous>, [{self.body_node}])"
+        
+        return str_to_repr
 
 class CallNode:
     def __init__(self, node_to_call, arg_nodes):
@@ -191,9 +252,25 @@ class CallNode:
         else:
             self.pos_end = self.node_to_call.pos_end
 
+    def __repr__(self):
+        if len(self.arg_nodes) == 1:
+            str_to_repr = f"({self.node_to_call}, ({self.arg_nodes[0]}))"
+        else:
+            str_to_repr = f"({self.node_to_call}, ({self.arg_nodes}))"
+
+        return str_to_repr
+
 class ListNode:
     def __init__(self, element_nodes, pos_start, pos_end):
         self.element_nodes = element_nodes
 
         self.pos_start = pos_start
         self.pos_end = pos_end
+
+    def __repr__(self):
+        if len(self.element_nodes) == 1:
+            str_to_repr = f"{self.element_nodes[0]}"
+        else:
+            str_to_repr = f"{self.element_nodes}"
+
+        return str_to_repr
