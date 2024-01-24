@@ -19,7 +19,7 @@ def debug_lexer():
     while True:
         text = input("lexer > ")
         if text.strip() == "": continue
-        result, error = run_lexer("<stdin>", text)
+        result, error, _ = run_lexer("<stdin>", text)
 
         if error:
             try:
@@ -37,7 +37,7 @@ def debug_parser():
     while True:
         text = input("parser > ")
         if text.strip() == "": continue
-        result, error = run_parser("<stdin>", text)
+        result, error, _ = run_parser("<stdin>", text)
 
         if error: 
             try:
@@ -52,7 +52,7 @@ def debug_interpreter():
     while True:
         text = input("interpreter > ")
         if text.strip() == "": continue
-        result, error = run_interpreter("<stdin>", text)
+        result, error, _ = run_interpreter("<stdin>", text)
 
         if error: 
             try:
@@ -79,12 +79,12 @@ def run_parser(fn, text):
     tokens, error = lexer.make_tokens()
 
     # Parser
-    if error: return None, error
+    if error: return None, error, None
 
     parser = Parser(tokens)
     ast = parser.parse()
 
-    return ast.node, ast.error
+    return ast.node, ast.error, tokens
 
 def run_interpreter(fn, text):
     # Lexer
@@ -92,13 +92,13 @@ def run_interpreter(fn, text):
     tokens, error = lexer.make_tokens()
 
     # Parser
-    if error: return None, error
+    if error: return None, error, None
 
     parser = Parser(tokens)
     ast = parser.parse()
 
     # Interpreter
-    if ast.error: return None, ast.error
+    if ast.error: return None, ast.error, None
 
     interpreter = Interpreter()
     # Context Initial route
@@ -106,7 +106,7 @@ def run_interpreter(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
-    return result.value, result.error
+    return result.value, result.error, tokens
 
 def run(fn, text):
     # Lexer
@@ -133,6 +133,33 @@ def run(fn, text):
     result = interpreter.visit(ast.node, context)
 
     return result.value, result.error
+
+def print_tokens(fn, tokens):
+    text = ''
+    text += f'{"File name:": >20}    {fn}\n'
+    text += f'{"TOKENS": >20}    LEXEMES\n'
+    text += '----------------------------------------\n'
+    text += tok_to_str(tokens)
+
+    return text
+
+def print_ast(fn, ast):
+    text = ''
+    text += f'File name:    {fn}\n'
+    text += "Abstract Syntax Tree:\n"
+    text += f'{" ": >5}{repr(ast)}\n'
+
+    return text
+
+def print_res(fn, res):
+    text = ''
+    text += f'File name:    {fn}\n'
+    text += "Result:\n"
+    result = str(res).split(", ")
+    for resout in result:
+        text += f'{" ": >5}{resout}\n'
+
+    return text
 
 #* Function Calls
 # debug_lexer()
