@@ -11,6 +11,8 @@ currentdir = os.path.dirname(os.path.abspath(__file__))
 dragged_file = None  # Global variable to store the dragged file path
 
 # RUNS THE LEXER
+
+
 def run_lexer():
     if fileName_label.get() != "Write a code: ":
         filename = fileName_label.get()
@@ -54,28 +56,31 @@ def run_lexer():
             resultBox.insert(INSERT, textResult)
             resultBox['state'] = 'disable'
 
+
 def get_file_path(string):
     files = []
-    
+
     while 'C:/' in string:
         idx = string.rfind('C:/')
         filepath = ''
-        
+
         while idx < len(string) and string[idx] is not None:
             filepath += string[idx]
             idx += 1
-        
+
         files.append(filepath)
         string = string.replace(filepath, "").strip()
 
     return files
 
 # DRAG AND DROP SECTION
+
+
 def handle_drop(event):
     if 'Drag and Drop Files Here' in listbox.get(0, END):
         listbox.delete(0, 0)
     fpath = event.data
-    file_path = fpath.replace('{' , '').replace('}', '')
+    file_path = fpath.replace('{', '').replace('}', '')
     files = get_file_path(file_path)
     if all(file.lower().endswith('.kkun') for file in files):
         if len(files) > 1:
@@ -84,11 +89,11 @@ def handle_drop(event):
                     listbox.insert(tk.END, os.path.basename(file))
                     dropped_files.append(file)
         else:
-                if os.path.basename(files[-1]) not in listbox.get(0, END):
-                    listbox.insert(tk.END, os.path.basename(files[-1]))
-                    dropped_files.append(files[-1])
+            if os.path.basename(files[-1]) not in listbox.get(0, END):
+                listbox.insert(tk.END, os.path.basename(files[-1]))
+                dropped_files.append(files[-1])
 
-        update_text_content(files[-1])   
+        update_text_content(files[-1])
 
         listbox.selection_clear(0, END)
         index = listbox.get(0, END).index(os.path.basename(files[-1]))
@@ -102,9 +107,12 @@ def handle_drop(event):
         fileName_label['state'] = 'readonly'
 
     else:
-        tk.messagebox.showwarning("Invalid File", "Please drop a file with .kkun extension.")
+        tk.messagebox.showwarning(
+            "Invalid File", "Please drop a file with .kkun extension.")
 
 # UPDATES THE TEXTBOX DISPLAY
+
+
 def update_text_content(file_path):
     with open(file_path, 'r') as file:
         content = file.read()
@@ -112,24 +120,29 @@ def update_text_content(file_path):
         textBox.insert(INSERT, content)
 
 # UPDATES THE TEXTBOX DISPLAY AND FILE NAME LABEL UPON SELECTION OF AN ELEMENT IN THE LISTBOX
+
+
 def update_text_on_selection(event=None):
     selected_index = listbox.curselection()
     if selected_index and len(dropped_files) >= 1:
         sfile = dropped_files[selected_index[0]]
-        selected_file = sfile.replace('{' , '').replace('}', '')
+        selected_file = sfile.replace('{', '').replace('}', '')
         update_text_content(selected_file)
 
-         # UPDATE FILENAME_LABEL WITH THE SELECTED FILENAME
+        # UPDATE FILENAME_LABEL WITH THE SELECTED FILENAME
         fname = os.path.basename(selected_file)
-        filename = fname.replace('{' , '').replace('}', '')
+        filename = fname.replace('{', '').replace('}', '')
         fileName_label['state'] = 'normal'
         fileName_label.delete(0, END)
         fileName_label.insert(INSERT, filename)
         fileName_label['state'] = 'readonly'
 
 # OPEN FILE
+
+
 def open_file_dialog():
-    fpath = filedialog.askopenfilename(initialdir=currentdir, filetypes=(("KKUN files", "*.kkun"),))
+    fpath = filedialog.askopenfilename(
+        initialdir=currentdir, filetypes=(("KKUN files", "*.kkun"),))
     file_path = fpath.replace('{', '').replace('}', '')
     if file_path.lower().endswith('.kkun'):
         fileName_label['state'] = 'normal'
@@ -152,6 +165,8 @@ def open_file_dialog():
         listbox.selection_anchor(index)
 
 # SAVE AS FILE
+
+
 def save_as_file():
     filename = filedialog.asksaveasfilename(
         initialdir=currentdir,
@@ -162,7 +177,7 @@ def save_as_file():
         with open(filename, "w") as f:
             code = textBox.get("0.0", END)
             f.write(code)
-        
+
         # Update fileName_label with the selected filename
         fileName_label['state'] = 'normal'
         fileName_label.delete(0, END)
@@ -173,9 +188,11 @@ def save_as_file():
         update_listbox_selection(filename)
 
 # UPDATE LIST BOX SELECTION
+
+
 def update_listbox_selection(filename):
     listbox.selection_clear(0, END)
-    
+
     if 'Drag and Drop Files Here' in listbox.get(0, END):
         listbox.delete(0, 0)
 
@@ -188,6 +205,8 @@ def update_listbox_selection(filename):
     listbox.selection_anchor(index)
 
 # UPDATE LINE NUMBERS
+
+
 def update_line_numbers():
     # Disable the binding temporarily to prevent updating line numbers
     textBox.unbind('<KeyRelease>')
@@ -205,7 +224,8 @@ def update_line_numbers():
 
     # Insert line numbers
     for i in range(1, int(total_lines) + 1):
-        line_numbers.insert(tk.END, f"{i}\n" if i < int(total_lines) else str(i))
+        line_numbers.insert(
+            tk.END, f"{i}\n" if i < int(total_lines) else str(i))
 
     # Update the scrollbar range and move the yview of the line numbers to the position of the scrollbar
     line_numbers.config(yscrollcommand=scrollbarY.set)
@@ -218,6 +238,8 @@ def update_line_numbers():
     textBox.bind('<KeyRelease>', lambda event: update_line_numbers())
 
 # TEXTBOX UPDATER WITH NUMBER LINE
+
+
 def update_text_content(file_path):
     # Clear existing content in line_numbers and textBox
     line_numbers.delete("1.0", tk.END)
@@ -232,13 +254,15 @@ def update_text_content(file_path):
             textBox.insert(tk.END, line)
             # Call the update_line_numbers function to set up initially
             update_line_numbers()
-       
-def combine_funcs(*funcs): 
-    def inner_combined_func(*args, **kwargs): 
-        for f in funcs: 
-            f(*args, **kwargs) 
-  
+
+
+def combine_funcs(*funcs):
+    def inner_combined_func(*args, **kwargs):
+        for f in funcs:
+            f(*args, **kwargs)
+
     return inner_combined_func
+
 
 def on_scroll(event):
     line_numbers.yview_moveto(scrollbarY.get()[0])
@@ -246,13 +270,16 @@ def on_scroll(event):
     textBox.xview_moveto(new_xview)
     update_line_numbers()
 
+
 def show_scrollbar():
     scrollbarX.place(x=315, y=319, height=14, width=613)
     update_line_numbers()
 
+
 def hide_scrollbar():
     scrollbarX.place_forget()
     update_line_numbers()
+
 
 def check_scrollbar(*args):
     if float(args[0]) <= 0.0 and float(args[1]) >= 1.0:
@@ -260,12 +287,15 @@ def check_scrollbar(*args):
     else:
         show_scrollbar()
 
+
 def on_wheelscroll(*args):
     line_numbers.yview_moveto(float(args[0]))
     textBox.yview_moveto(float(args[0]))
 
+
 def prevent_scroll(event):
     return "break"
+
 
 def new_file():
     fileName_label['state'] = 'normal'
@@ -278,64 +308,116 @@ def new_file():
     textBox.delete("1.0", END)
     update_line_numbers()
 
+
 def delete():
     listbox.delete(ANCHOR)
     new_file()
 
+
 def delete_all():
     listbox.delete(0, END)
     new_file()
+
+
+def run_buttons():
+    # RUN LEXER BUTTON.IMAGE
+    runLexerButton_img = PhotoImage(file=f"public/img/runLexerButton.png")
+
+    # RUN LEXER BUTTON.WIDGET
+    runLexerButton = tk.Button(
+        window,
+        image=runLexerButton_img,
+        command=run_lexer)
+    runLexerButton.image = runLexerButton_img
+    runLexerButton.pack()
+
+    # RUN LEXER BUTTON.POSITION
+    runLexerButton.place(x=768, y=318, width=149, height=37)
+
+    # RUN PARSER BUTTON.IMAGE
+    runParserButton_img = PhotoImage(file=f"public/img/runParserButton.png")
+
+    # RUN PARSER BUTTON.WIDGET
+    runParserButton = tk.Button(
+        window,
+        image=runParserButton_img,
+        command=run_lexer)
+    runParserButton.image = runParserButton_img
+    runParserButton.pack()
+
+    # RUN PARSER BUTTON.POSITION
+    runParserButton.place(x=768, y=283, width=149, height=37)
+
+    # RUN INTERPRETER BUTTON.IMAGE
+    runInterpreterButton_img = PhotoImage(
+        file=f"public/img/runInterpreterButton.png")
+
+    # RUN INTERPRETER BUTTON.WIDGET
+    runInterpreterButton = tk.Button(
+        window,
+        image=runInterpreterButton_img,
+        command=run_lexer)
+    runInterpreterButton.image = runInterpreterButton_img
+    runInterpreterButton.pack()
+
+    # RUN INTERPRETER BUTTON.POSITION
+    runInterpreterButton.place(x=768, y=248, width=149, height=37)
+
+
+def run_options():
+    run_buttons()
+
 
 # WINDOW
 window = TkinterDnD.Tk()
 window.geometry("983x689")
 window.iconbitmap("public/img/cocoonIcon.ico")
 window.title("Cocoon Lexical Analyzer")
-window.configure(bg = "#252525")
+window.configure(bg="#252525")
 dropped_files = []
 
 # CANVAS
 canvas = Canvas(
     window,
-    bg = "#252525",
-    height = 689,
-    width = 983,
-    bd = 0,
-    highlightthickness = 0,
-    relief = "ridge")
-canvas.place(x = 0, y = 0)
+    bg="#252525",
+    height=689,
+    width=983,
+    bd=0,
+    highlightthickness=0,
+    relief="ridge")
+canvas.place(x=0, y=0)
 
 # BACKGROUND
-background_img = PhotoImage(file = f"public/img/background.png")
+background_img = PhotoImage(file=f"public/img/background.png")
 background = canvas.create_image(
     489.5, 344.0,
     image=background_img)
 
 # RESULTBOX.IMAGE
-resultBox_img = PhotoImage(file = f"public/img/img_textBox0.png")
+resultBox_img = PhotoImage(file=f"public/img/img_textBox0.png")
 resultBox_bg = canvas.create_image(
     630.0, 564.0,
-    image = resultBox_img)
+    image=resultBox_img)
 
 # RESULTBOX.WIDGET
 resultBox = Text(
-    bd = 0,
-    bg = "#d5d5d5",
-    highlightthickness = 0)
+    bd=0,
+    bg="#d5d5d5",
+    highlightthickness=0)
 resultBox['state'] = 'disable'
 
 # RESULTBOX.POSITION
 resultBox.place(
-    x = 315, y = 471,
-    width = 613,
-    height = 186)
+    x=315, y=471,
+    width=613,
+    height=186)
 
 # FILES LABEL
 file_label = Label(
     window,
-    text = " Files:",
-    background= "#BEBEBE",
-    font = ("Anonymous Pro Regular", int(16.0)))
+    text=" Files:",
+    background="#BEBEBE",
+    font=("Anonymous Pro Regular", int(16.0)))
 file_label.place(x=79, y=29, width=58, height=18)
 
 # TEXTBOX.IMAGE
@@ -381,7 +463,8 @@ textBox.pack(side=LEFT, fill=Y)
 textBox.bind('<Configure>', lambda e: update_line_numbers())
 
 # YVIEW SCROLLBAR FOR TEXTBOX
-scrollbarY = Scrollbar(window, command=combine_funcs(textBox.yview, line_numbers.yview))
+scrollbarY = Scrollbar(window, command=combine_funcs(
+    textBox.yview, line_numbers.yview))
 scrollbarY.place(x=928, y=75, height=258, width=19)
 
 # YVIEW TEXTBOX.CONFIGURE
@@ -416,19 +499,19 @@ resultBox['yscrollcommand'] = result_scrollbar.set
 # RESULT TEXT
 canvas.create_text(
     349.0, 449,
-    text = " Result:",
-    fill = "#252525",
-    font = ("Anonymous Pro Regular", int(16.0)))
+    text=" Result:",
+    fill="#252525",
+    font=("Anonymous Pro Regular", int(16.0)))
 
 # FILE NAME LABEL
 fileName_label = Entry(
-    foreground = "#D5D5D5",
-    background = "#1A3A35",
-    disabledforeground = "#D5D5D5",
-    disabledbackground = "#1A3A35",
-    readonlybackground = "#1A3A35",
+    foreground="#D5D5D5",
+    background="#1A3A35",
+    disabledforeground="#D5D5D5",
+    disabledbackground="#1A3A35",
+    readonlybackground="#1A3A35",
     relief="flat",
-    font = ("Anonymous Pro Regular", int(16.0)))
+    font=("Anonymous Pro Regular", int(16.0)))
 fileName_label.insert(-1, 'Write a code: ')
 fileName_label['state'] = 'readonly'
 
@@ -488,21 +571,21 @@ saveAsButton.place(
     width=146, height=35.16
 )
 
-# RUN LEXER BUTTON.IMAGE
-runLexerButton_img = PhotoImage(file = f"public/img/runLexerButton.png")
+# RUN OPTIONS BUTTON.IMAGE
+runOptionsButton_img = PhotoImage(file=f"public/img/runOptionsButton.png")
 
-# RUN LEXER BUTTON.WIDGET
-runLexerButton = Button(
-    image = runLexerButton_img,
-    borderwidth = 0,
-    highlightthickness = 0,
-    command = run_lexer,
-    relief = "flat")
+# RUN OPTIONS BUTTON.WIDGET
+runOptionsButton = Button(
+    image=runOptionsButton_img,
+    borderwidth=0,
+    highlightthickness=0,
+    command=run_buttons,
+    relief="flat")
 
-# RUN LEXER BUTTON.POSITION
-runLexerButton.place(
-    x = 771, y = 353,
-    width = 146, height = 35.16)
+# RUN OPTIONS BUTTON.POSITION
+runOptionsButton.place(
+    x=768, y=353,
+    width=149, height=35.16)
 
 # OPEN FILE BUTTON.IMAGE
 openFileButton_img = PhotoImage(file=f"public/img/openFileButton.png")
