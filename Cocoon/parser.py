@@ -1306,26 +1306,6 @@ class Parser:
         res = ParseResult()
         node = res.register(self.statements())
         if res.error: return res
-
-        # for checking if the statement ends with semicolon
-        while self.current_tok.type != TT_EOF:
-            res.register_advancement()
-            self.advance()
-
-        res.register_backtrack()
-        self.backtrack()
-
-        if self.current_tok.type != TT_SEMICOLON:
-            res.register_advancement()
-            self.advance()
-            return res.failure(InvalidSyntaxError(
-                self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected ';'"
-            ))
-        else:
-            res.register_advancement()
-            self.advance()
-        if res.error: return res
         return res.success(node)
 
     def arith_op(self, func_a, ops, func_b=None):
