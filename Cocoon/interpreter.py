@@ -875,8 +875,7 @@ class BuiltInFunction(BaseFunction):
         return f"<built-in build {self.name}>"
     
     def execute_show(self, exec_ctx):
-        print(str(exec_ctx.symbol_table.get('value')))
-        return RTResult().success(Number.empty)
+        return RTResult().success(String(str(exec_ctx.symbol_table.get('value'))))
     execute_show.arg_names = ['value']
 
     def execute_get(self, exec_ctx):
