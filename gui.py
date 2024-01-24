@@ -11,8 +11,6 @@ currentdir = os.path.dirname(os.path.abspath(__file__))
 dragged_file = None  # Global variable to store the dragged file path
 
 # RUNS THE LEXER
-
-
 def run_lexer():
     if fileName_label.get() != "Write a code: ":
         filename = fileName_label.get()
@@ -56,31 +54,25 @@ def run_lexer():
             resultBox.insert(INSERT, textResult)
             resultBox['state'] = 'disable'
 
-
 def get_file_path(string):
     files = []
-
     while 'C:/' in string:
         idx = string.rfind('C:/')
         filepath = ''
-
         while idx < len(string) and string[idx] is not None:
             filepath += string[idx]
             idx += 1
-
         files.append(filepath)
         string = string.replace(filepath, "").strip()
 
     return files
 
 # DRAG AND DROP SECTION
-
-
 def handle_drop(event):
     if 'Drag and Drop Files Here' in listbox.get(0, END):
         listbox.delete(0, 0)
     fpath = event.data
-    file_path = fpath.replace('{', '').replace('}', '')
+    file_path = fpath.replace('{' , '').replace('}', '')
     files = get_file_path(file_path)
     if all(file.lower().endswith('.kkun') for file in files):
         if len(files) > 1:
@@ -107,12 +99,9 @@ def handle_drop(event):
         fileName_label['state'] = 'readonly'
 
     else:
-        tk.messagebox.showwarning(
-            "Invalid File", "Please drop a file with .kkun extension.")
+        tk.messagebox.showwarning("Invalid File", "Please drop a file with .kkun extension.")
 
 # UPDATES THE TEXTBOX DISPLAY
-
-
 def update_text_content(file_path):
     with open(file_path, 'r') as file:
         content = file.read()
@@ -120,29 +109,24 @@ def update_text_content(file_path):
         textBox.insert(INSERT, content)
 
 # UPDATES THE TEXTBOX DISPLAY AND FILE NAME LABEL UPON SELECTION OF AN ELEMENT IN THE LISTBOX
-
-
 def update_text_on_selection(event=None):
     selected_index = listbox.curselection()
     if selected_index and len(dropped_files) >= 1:
         sfile = dropped_files[selected_index[0]]
-        selected_file = sfile.replace('{', '').replace('}', '')
+        selected_file = sfile.replace('{' , '').replace('}', '')
         update_text_content(selected_file)
 
         # UPDATE FILENAME_LABEL WITH THE SELECTED FILENAME
         fname = os.path.basename(selected_file)
-        filename = fname.replace('{', '').replace('}', '')
+        filename = fname.replace('{' , '').replace('}', '')
         fileName_label['state'] = 'normal'
         fileName_label.delete(0, END)
         fileName_label.insert(INSERT, filename)
         fileName_label['state'] = 'readonly'
 
 # OPEN FILE
-
-
 def open_file_dialog():
-    fpath = filedialog.askopenfilename(
-        initialdir=currentdir, filetypes=(("KKUN files", "*.kkun"),))
+    fpath = filedialog.askopenfilename(initialdir=currentdir, filetypes=(("KKUN files", "*.kkun"),))
     file_path = fpath.replace('{', '').replace('}', '')
     if file_path.lower().endswith('.kkun'):
         fileName_label['state'] = 'normal'
@@ -165,8 +149,6 @@ def open_file_dialog():
         listbox.selection_anchor(index)
 
 # SAVE AS FILE
-
-
 def save_as_file():
     filename = filedialog.asksaveasfilename(
         initialdir=currentdir,
@@ -177,7 +159,6 @@ def save_as_file():
         with open(filename, "w") as f:
             code = textBox.get("0.0", END)
             f.write(code)
-
         # Update fileName_label with the selected filename
         fileName_label['state'] = 'normal'
         fileName_label.delete(0, END)
@@ -188,11 +169,8 @@ def save_as_file():
         update_listbox_selection(filename)
 
 # UPDATE LIST BOX SELECTION
-
-
 def update_listbox_selection(filename):
     listbox.selection_clear(0, END)
-
     if 'Drag and Drop Files Here' in listbox.get(0, END):
         listbox.delete(0, 0)
 
@@ -205,8 +183,6 @@ def update_listbox_selection(filename):
     listbox.selection_anchor(index)
 
 # UPDATE LINE NUMBERS
-
-
 def update_line_numbers():
     # Disable the binding temporarily to prevent updating line numbers
     textBox.unbind('<KeyRelease>')
@@ -224,8 +200,7 @@ def update_line_numbers():
 
     # Insert line numbers
     for i in range(1, int(total_lines) + 1):
-        line_numbers.insert(
-            tk.END, f"{i}\n" if i < int(total_lines) else str(i))
+        line_numbers.insert(tk.END, f"{i}\n" if i < int(total_lines) else str(i))
 
     # Update the scrollbar range and move the yview of the line numbers to the position of the scrollbar
     line_numbers.config(yscrollcommand=scrollbarY.set)
@@ -238,8 +213,6 @@ def update_line_numbers():
     textBox.bind('<KeyRelease>', lambda event: update_line_numbers())
 
 # TEXTBOX UPDATER WITH NUMBER LINE
-
-
 def update_text_content(file_path):
     # Clear existing content in line_numbers and textBox
     line_numbers.delete("1.0", tk.END)
@@ -255,7 +228,6 @@ def update_text_content(file_path):
             # Call the update_line_numbers function to set up initially
             update_line_numbers()
 
-
 def combine_funcs(*funcs):
     def inner_combined_func(*args, **kwargs):
         for f in funcs:
@@ -263,23 +235,19 @@ def combine_funcs(*funcs):
 
     return inner_combined_func
 
-
 def on_scroll(event):
     line_numbers.yview_moveto(scrollbarY.get()[0])
     new_xview = textBox.xview()[0]
     textBox.xview_moveto(new_xview)
     update_line_numbers()
 
-
 def show_scrollbar():
     scrollbarX.place(x=315, y=319, height=14, width=613)
     update_line_numbers()
 
-
 def hide_scrollbar():
     scrollbarX.place_forget()
     update_line_numbers()
-
 
 def check_scrollbar(*args):
     if float(args[0]) <= 0.0 and float(args[1]) >= 1.0:
@@ -287,15 +255,12 @@ def check_scrollbar(*args):
     else:
         show_scrollbar()
 
-
 def on_wheelscroll(*args):
     line_numbers.yview_moveto(float(args[0]))
     textBox.yview_moveto(float(args[0]))
 
-
 def prevent_scroll(event):
     return "break"
-
 
 def new_file():
     fileName_label['state'] = 'normal'
@@ -308,16 +273,13 @@ def new_file():
     textBox.delete("1.0", END)
     update_line_numbers()
 
-
 def delete():
     listbox.delete(ANCHOR)
     new_file()
 
-
 def delete_all():
     listbox.delete(0, END)
     new_file()
-
 
 def run_buttons():
     # RUN LEXER BUTTON.IMAGE
@@ -366,7 +328,6 @@ def run_buttons():
 
 def run_options():
     run_buttons()
-
 
 # WINDOW
 window = TkinterDnD.Tk()
@@ -463,8 +424,7 @@ textBox.pack(side=LEFT, fill=Y)
 textBox.bind('<Configure>', lambda e: update_line_numbers())
 
 # YVIEW SCROLLBAR FOR TEXTBOX
-scrollbarY = Scrollbar(window, command=combine_funcs(
-    textBox.yview, line_numbers.yview))
+scrollbarY = Scrollbar(window, command=combine_funcs(textBox.yview, line_numbers.yview))
 scrollbarY.place(x=928, y=75, height=258, width=19)
 
 # YVIEW TEXTBOX.CONFIGURE
