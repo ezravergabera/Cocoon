@@ -1,5 +1,5 @@
-from Cocoon.tokens import print_tokens, output_to_symbolTable
-from shell import run
+from Cocoon.tokens import  output_to_symbolTable
+from shell import run_lexer, run_parser, run_interpreter, print_tokens, print_ast, print_res
 import os
 import tkinter as tk
 from tkinter import *
@@ -10,49 +10,205 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 currentdir = os.path.dirname(os.path.abspath(__file__))
 dragged_file = None  # Global variable to store the dragged file path
 
-# RUNS THE LEXER
-def run_lexer():
+def run_lex():
+    """
+    Runs the lexer
+    """
     if fileName_label.get() != "Write a code: ":
-        filename = fileName_label.get()
         text = textBox.get("1.0", END)
+        if text.strip() != "":
+            filename = fileName_label.get()
+            text = textBox.get("1.0", END)
 
-        result, error = run(filename, text)
+            result, error = run_lexer(filename, text)
 
-        if error:
-            print(error.as_string())
-            resultBox['state'] = 'normal'
-            resultBox.delete("1.0", END)
-            resultBox.insert(INSERT, error.as_string())
-            resultBox['state'] = 'disable'
-        else:
-            output_to_symbolTable(result)
-            print(result)
-            textResult = print_tokens(filename, result)
-            resultBox['state'] = 'normal'
-            resultBox.delete("1.0", END)
-            resultBox.insert(INSERT, textResult)
-            resultBox['state'] = 'disable'
+            if error:
+                try:
+                    errout = ""
+                    for err in error:
+                        errout = errout + err.as_string()
+                        print(err.as_string())
+                except(TypeError):
+                    errout = error.as_string()
+                    print(error.as_string())
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, errout)
+                resultBox['state'] = 'disable'
+            else:
+                output_to_symbolTable(result)
+                print(result)
+                textResult = print_tokens(filename, result)
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, textResult)
+                resultBox['state'] = 'disable'
 
     else:
-        filename = "Unnamed KKUN File"
         text = textBox.get("1.0", END)
+        if text.strip() != "":
+            filename = "Unnamed KKUN File"
+            text = textBox.get("1.0", END)
 
-        result, error = run(filename, text)
+            result, error = run_lexer(filename, text)
 
-        if error:
-            print(error.as_string())
-            resultBox['state'] = 'normal'
-            resultBox.delete("1.0", END)
-            resultBox.insert(INSERT, error.as_string())
-            resultBox['state'] = 'disable'
-        else:
-            output_to_symbolTable(result)
-            print(result)
-            textResult = print_tokens(filename, result)
-            resultBox['state'] = 'normal'
-            resultBox.delete("1.0", END)
-            resultBox.insert(INSERT, textResult)
-            resultBox['state'] = 'disable'
+            if error:
+                try:
+                    errout = ""
+                    for err in error:
+                        errout = errout + err.as_string()
+                        print(err.as_string())
+                except(TypeError):
+                    errout = error.as_string()
+                    print(error.as_string())
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, errout)
+                resultBox['state'] = 'disable'
+            else:
+                output_to_symbolTable(result)
+                print(result)
+                textResult = print_tokens(filename, result)
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, textResult)
+                resultBox['state'] = 'disable'
+
+def run_pars():
+    """
+    Runs the parser
+    """
+    if fileName_label.get() != "Write a code: ":
+        text = textBox.get("1.0", END)
+        if text.strip() != "":
+            filename = fileName_label.get()
+            text = textBox.get("1.0", END)
+
+            result, error, tokens = run_parser(filename, text)
+
+            if error:
+                try:
+                    errout = ""
+                    for err in error:
+                        errout = errout + err.as_string()
+                        print(err.as_string())
+                except(TypeError):
+                    errout = error.as_string()
+                    print(error.as_string())
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, errout)
+                resultBox['state'] = 'disable'
+            else:
+                output_to_symbolTable(tokens)
+                textResult = print_ast(filename, result)
+                print(textResult)
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, textResult)
+                resultBox['state'] = 'disable'
+
+    else:
+        text = textBox.get("1.0", END)
+        if text.strip() != "":
+            text = textBox.get("1.0", END)
+            if text.strip() != "":
+                filename = "Unnamed KKUN File"
+                text = textBox.get("1.0", END)
+
+                result, error, tokens = run_parser(filename, text)
+
+                if error:
+                    try:
+                        errout = ""
+                        for err in error:
+                            errout = errout + err.as_string()
+                            print(err.as_string())
+                    except(TypeError):
+                        errout = error.as_string()
+                        print(error.as_string())
+                    resultBox['state'] = 'normal'
+                    resultBox.delete("1.0", END)
+                    resultBox.insert(INSERT, errout)
+                    resultBox['state'] = 'disable'
+                else:
+                    output_to_symbolTable(tokens)
+                    textResult = print_ast(filename, result)
+                    print(textResult)
+                    resultBox['state'] = 'normal'
+                    resultBox.delete("1.0", END)
+                    resultBox.insert(INSERT, textResult)
+                    resultBox['state'] = 'disable'
+
+def run_interp():
+    """
+    Runs the Interpreter
+    """
+    if fileName_label.get() != "Write a code: ":
+        text = textBox.get("1.0", END)
+        if text.strip() != "":
+            filename = fileName_label.get()
+            text = textBox.get("1.0", END)
+
+            result, error, tokens = run_interpreter(filename, text)
+
+            if error:
+                try:
+                    errout = ""
+                    for err in error:
+                        errout = errout + err.as_string()
+                        print(err.as_string())
+                except(TypeError):
+                    errout = error.as_string()
+                    print(error.as_string())
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, errout)
+                resultBox['state'] = 'disable'
+            else:
+                output_to_symbolTable(tokens)
+                if len(result.elements) == 1:
+                    textResult = print_res(filename, repr(result.elements[0]))
+                else:
+                    textResult = print_res(filename, str(result))
+                print(textResult)
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, textResult)
+                resultBox['state'] = 'disable'
+
+    else:
+        text = textBox.get("1.0", END)
+        if text.strip() != "":
+            filename = "Unnamed KKUN File"
+            text = textBox.get("1.0", END)
+
+            result, error, tokens = run_interpreter(filename, text)
+
+            if error:
+                try:
+                    errout = ""
+                    for err in error:
+                        errout = errout + err.as_string()
+                        print(err.as_string())
+                except(TypeError):
+                    errout = error.as_string()
+                    print(error.as_string())
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, errout)
+                resultBox['state'] = 'disable'
+            else:
+                output_to_symbolTable(tokens)
+                if len(result.elements) == 1:
+                    textResult = print_res(filename, repr(result.elements[0]))
+                else:
+                    textResult = print_res(filename, str(result))
+                print(textResult)
+                resultBox['state'] = 'normal'
+                resultBox.delete("1.0", END)
+                resultBox.insert(INSERT, textResult)
+                resultBox['state'] = 'disable'
 
 def get_file_path(string):
     files = []
@@ -288,8 +444,9 @@ def run_buttons():
     # RUN LEXER BUTTON.WIDGET
     runLexerButton = tk.Button(
         window,
+        name="runLexerButton",
         image=runLexerButton_img,
-        command=run_lexer)
+        command=run_lex)
     runLexerButton.image = runLexerButton_img
     runLexerButton.pack()
 
@@ -302,8 +459,9 @@ def run_buttons():
     # RUN PARSER BUTTON.WIDGET
     runParserButton = tk.Button(
         window,
+        name="runParserButton",
         image=runParserButton_img,
-        command=run_lexer)
+        command=run_pars)
     runParserButton.image = runParserButton_img
     runParserButton.pack()
 
@@ -317,17 +475,30 @@ def run_buttons():
     # RUN INTERPRETER BUTTON.WIDGET
     runInterpreterButton = tk.Button(
         window,
+        name="runInterpreterButton",
         image=runInterpreterButton_img,
-        command=run_lexer)
+        command=run_interp)
     runInterpreterButton.image = runInterpreterButton_img
     runInterpreterButton.pack()
 
     # RUN INTERPRETER BUTTON.POSITION
     runInterpreterButton.place(x=768, y=248, width=149, height=37)
 
+    # CHANGE THE COMMAND OF RUNOPTIONSBUTTON
+    runOptionsButton.config(command=hide_options)
+
 
 def run_options():
     run_buttons()
+
+def hide_options():
+    # REVERT THE COMMAND OF RUNOPTIONSBUTTON
+    runOptionsButton.config(command=run_options)
+
+    window.nametowidget("runLexerButton").place_forget()
+    window.nametowidget("runParserButton").place_forget()
+    window.nametowidget("runInterpreterButton").place_forget()
+
 
 # WINDOW
 window = TkinterDnD.Tk()
