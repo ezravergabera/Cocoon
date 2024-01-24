@@ -56,15 +56,12 @@ def run_lexer():
 
 def get_file_path(string):
     files = []
-    
     while 'C:/' in string:
         idx = string.rfind('C:/')
         filepath = ''
-        
         while idx < len(string) and string[idx] is not None:
             filepath += string[idx]
             idx += 1
-        
         files.append(filepath)
         string = string.replace(filepath, "").strip()
 
@@ -84,11 +81,11 @@ def handle_drop(event):
                     listbox.insert(tk.END, os.path.basename(file))
                     dropped_files.append(file)
         else:
-                if os.path.basename(files[-1]) not in listbox.get(0, END):
-                    listbox.insert(tk.END, os.path.basename(files[-1]))
-                    dropped_files.append(files[-1])
+            if os.path.basename(files[-1]) not in listbox.get(0, END):
+                listbox.insert(tk.END, os.path.basename(files[-1]))
+                dropped_files.append(files[-1])
 
-        update_text_content(files[-1])   
+        update_text_content(files[-1])
 
         listbox.selection_clear(0, END)
         index = listbox.get(0, END).index(os.path.basename(files[-1]))
@@ -119,7 +116,7 @@ def update_text_on_selection(event=None):
         selected_file = sfile.replace('{' , '').replace('}', '')
         update_text_content(selected_file)
 
-         # UPDATE FILENAME_LABEL WITH THE SELECTED FILENAME
+        # UPDATE FILENAME_LABEL WITH THE SELECTED FILENAME
         fname = os.path.basename(selected_file)
         filename = fname.replace('{' , '').replace('}', '')
         fileName_label['state'] = 'normal'
@@ -162,7 +159,6 @@ def save_as_file():
         with open(filename, "w") as f:
             code = textBox.get("0.0", END)
             f.write(code)
-        
         # Update fileName_label with the selected filename
         fileName_label['state'] = 'normal'
         fileName_label.delete(0, END)
@@ -175,7 +171,6 @@ def save_as_file():
 # UPDATE LIST BOX SELECTION
 def update_listbox_selection(filename):
     listbox.selection_clear(0, END)
-    
     if 'Drag and Drop Files Here' in listbox.get(0, END):
         listbox.delete(0, 0)
 
@@ -232,12 +227,12 @@ def update_text_content(file_path):
             textBox.insert(tk.END, line)
             # Call the update_line_numbers function to set up initially
             update_line_numbers()
-       
-def combine_funcs(*funcs): 
-    def inner_combined_func(*args, **kwargs): 
-        for f in funcs: 
-            f(*args, **kwargs) 
-  
+
+def combine_funcs(*funcs):
+    def inner_combined_func(*args, **kwargs):
+        for f in funcs:
+            f(*args, **kwargs)
+
     return inner_combined_func
 
 def on_scroll(event):
@@ -286,56 +281,104 @@ def delete_all():
     listbox.delete(0, END)
     new_file()
 
+def run_buttons():
+    # RUN LEXER BUTTON.IMAGE
+    runLexerButton_img = PhotoImage(file=f"public/img/runLexerButton.png")
+
+    # RUN LEXER BUTTON.WIDGET
+    runLexerButton = tk.Button(
+        window,
+        image=runLexerButton_img,
+        command=run_lexer)
+    runLexerButton.image = runLexerButton_img
+    runLexerButton.pack()
+
+    # RUN LEXER BUTTON.POSITION
+    runLexerButton.place(x=768, y=318, width=149, height=37)
+
+    # RUN PARSER BUTTON.IMAGE
+    runParserButton_img = PhotoImage(file=f"public/img/runParserButton.png")
+
+    # RUN PARSER BUTTON.WIDGET
+    runParserButton = tk.Button(
+        window,
+        image=runParserButton_img,
+        command=run_lexer)
+    runParserButton.image = runParserButton_img
+    runParserButton.pack()
+
+    # RUN PARSER BUTTON.POSITION
+    runParserButton.place(x=768, y=283, width=149, height=37)
+
+    # RUN INTERPRETER BUTTON.IMAGE
+    runInterpreterButton_img = PhotoImage(
+        file=f"public/img/runInterpreterButton.png")
+
+    # RUN INTERPRETER BUTTON.WIDGET
+    runInterpreterButton = tk.Button(
+        window,
+        image=runInterpreterButton_img,
+        command=run_lexer)
+    runInterpreterButton.image = runInterpreterButton_img
+    runInterpreterButton.pack()
+
+    # RUN INTERPRETER BUTTON.POSITION
+    runInterpreterButton.place(x=768, y=248, width=149, height=37)
+
+
+def run_options():
+    run_buttons()
+
 # WINDOW
 window = TkinterDnD.Tk()
 window.geometry("983x689")
 window.iconbitmap("public/img/cocoonIcon.ico")
 window.title("Cocoon Lexical Analyzer")
-window.configure(bg = "#252525")
+window.configure(bg="#252525")
 dropped_files = []
 
 # CANVAS
 canvas = Canvas(
     window,
-    bg = "#252525",
-    height = 689,
-    width = 983,
-    bd = 0,
-    highlightthickness = 0,
-    relief = "ridge")
-canvas.place(x = 0, y = 0)
+    bg="#252525",
+    height=689,
+    width=983,
+    bd=0,
+    highlightthickness=0,
+    relief="ridge")
+canvas.place(x=0, y=0)
 
 # BACKGROUND
-background_img = PhotoImage(file = f"public/img/background.png")
+background_img = PhotoImage(file=f"public/img/background.png")
 background = canvas.create_image(
     489.5, 344.0,
     image=background_img)
 
 # RESULTBOX.IMAGE
-resultBox_img = PhotoImage(file = f"public/img/img_textBox0.png")
+resultBox_img = PhotoImage(file=f"public/img/img_textBox0.png")
 resultBox_bg = canvas.create_image(
     630.0, 564.0,
-    image = resultBox_img)
+    image=resultBox_img)
 
 # RESULTBOX.WIDGET
 resultBox = Text(
-    bd = 0,
-    bg = "#d5d5d5",
-    highlightthickness = 0)
+    bd=0,
+    bg="#d5d5d5",
+    highlightthickness=0)
 resultBox['state'] = 'disable'
 
 # RESULTBOX.POSITION
 resultBox.place(
-    x = 315, y = 471,
-    width = 613,
-    height = 186)
+    x=315, y=471,
+    width=613,
+    height=186)
 
 # FILES LABEL
 file_label = Label(
     window,
-    text = " Files:",
-    background= "#BEBEBE",
-    font = ("Anonymous Pro Regular", int(16.0)))
+    text=" Files:",
+    background="#BEBEBE",
+    font=("Anonymous Pro Regular", int(16.0)))
 file_label.place(x=79, y=29, width=58, height=18)
 
 # TEXTBOX.IMAGE
@@ -416,19 +459,19 @@ resultBox['yscrollcommand'] = result_scrollbar.set
 # RESULT TEXT
 canvas.create_text(
     349.0, 449,
-    text = " Result:",
-    fill = "#252525",
-    font = ("Anonymous Pro Regular", int(16.0)))
+    text=" Result:",
+    fill="#252525",
+    font=("Anonymous Pro Regular", int(16.0)))
 
 # FILE NAME LABEL
 fileName_label = Entry(
-    foreground = "#D5D5D5",
-    background = "#1A3A35",
-    disabledforeground = "#D5D5D5",
-    disabledbackground = "#1A3A35",
-    readonlybackground = "#1A3A35",
+    foreground="#D5D5D5",
+    background="#1A3A35",
+    disabledforeground="#D5D5D5",
+    disabledbackground="#1A3A35",
+    readonlybackground="#1A3A35",
     relief="flat",
-    font = ("Anonymous Pro Regular", int(16.0)))
+    font=("Anonymous Pro Regular", int(16.0)))
 fileName_label.insert(-1, 'Write a code: ')
 fileName_label['state'] = 'readonly'
 
@@ -488,21 +531,21 @@ saveAsButton.place(
     width=146, height=35.16
 )
 
-# RUN LEXER BUTTON.IMAGE
-runLexerButton_img = PhotoImage(file = f"public/img/runLexerButton.png")
+# RUN OPTIONS BUTTON.IMAGE
+runOptionsButton_img = PhotoImage(file=f"public/img/runOptionsButton.png")
 
-# RUN LEXER BUTTON.WIDGET
-runLexerButton = Button(
-    image = runLexerButton_img,
-    borderwidth = 0,
-    highlightthickness = 0,
-    command = run_lexer,
-    relief = "flat")
+# RUN OPTIONS BUTTON.WIDGET
+runOptionsButton = Button(
+    image=runOptionsButton_img,
+    borderwidth=0,
+    highlightthickness=0,
+    command=run_buttons,
+    relief="flat")
 
-# RUN LEXER BUTTON.POSITION
-runLexerButton.place(
-    x = 771, y = 353,
-    width = 146, height = 35.16)
+# RUN OPTIONS BUTTON.POSITION
+runOptionsButton.place(
+    x=768, y=353,
+    width=149, height=35.16)
 
 # OPEN FILE BUTTON.IMAGE
 openFileButton_img = PhotoImage(file=f"public/img/openFileButton.png")
