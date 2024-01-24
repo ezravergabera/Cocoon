@@ -331,6 +331,18 @@ class Interpreter:
         
         if isinstance(value, Number):
             value = value.copy().set_pos(node.pos_start, node.pos_end)
+        elif isinstance(value, Float):
+            return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                "Data type mismatch\nFloat cannot be incremented.",
+                context
+            ))
+        else:
+            return res.failure(RuntimeError(
+                node.pos_start, node.pos_end,
+                "Data type mismatch",
+                context
+            ))
 
         error = None
 
