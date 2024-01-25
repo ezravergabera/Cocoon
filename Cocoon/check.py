@@ -100,6 +100,7 @@ operatorsDict = {
 specialSymbolDict = {
     ".":foundChar,
     ",":foundChar,
+    ":":foundChar,
     ";":foundChar,
     "(":foundChar,
     ")":foundChar,

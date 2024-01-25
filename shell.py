@@ -161,11 +161,13 @@ def print_res(fn, res):
 
     return text
 
-#* Function Calls
+#* For Debugging
 # debug_lexer()
 # debug_parser()
 # debug_interpreter()
 
+
+# Run File Command
 def run_file(filename):
     if(filename):
         if(filename.lower().endswith('.kkun')):
@@ -188,6 +190,8 @@ def run_file(filename):
         else:
             print("Invalid file name extension!")
 
+
+# Shell Commands
 OPTIONS = {'-f', '-file', '-c', 'cli'}
 lowercasedArgs = [arg.lower() for arg in sys.argv]
 

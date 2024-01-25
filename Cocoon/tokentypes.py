@@ -49,6 +49,7 @@ TT_COMMENT = 'Comment'
 # SPECIAL SYMBOLS
 TT_DOT = 'Dot'
 TT_COMMA = 'Comma'
+TT_COLON = 'Colon'
 TT_SEMICOLON = 'Semicolon'
 TT_LSQUARE = 'Left_Square'
 TT_RSQUARE = 'Right_Square'

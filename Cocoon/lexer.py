@@ -2,7 +2,7 @@ from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_COLON, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -18,7 +18,7 @@ class Lexer:
         self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
 
     # Look-Ahead Method
-    def check(self):
+    def nextState(self):
         try:
             char = self.text[self.pos.idx + 1] if self.pos.idx < len(self.text) else None
         except IndexError:
@@ -40,7 +40,7 @@ class Lexer:
 
         while self.current_char != None:
             char = self.current_char
-            check = self.check()
+            temptchar = self.nextState()
             
             # Skips through whitespaces
             if isWhitespace(char):
@@ -63,7 +63,7 @@ class Lexer:
                     errors.append(result)
                 
             # Scans for single line comment and multiline comment
-            elif char == '.' and check == '.' and not isWhitespace(check):
+            elif char == '.' and temptchar == '.' and not isWhitespace(temptchar):
                 result = self.make_comments()
                 if isinstance(result, Token):
                     tokens.append(result)
@@ -316,9 +316,9 @@ class Lexer:
                             lexeme += self.current_char
                             tokentype = TT_RWORD
                             self.advance()
-                            if (isWhitespace(self.check()) or self.check() == None) and self.fn != "<stdin>":
+                            if (isWhitespace(self.nextState()) or self.nextState() == None) and self.fn != "<stdin>":
                                 return ReferenceError(pos_start, self.pos.copy(), 'Usage of a reserved word.')
-                            elif isWhitespace(self.check()) or self.check() == None:
+                            elif isWhitespace(self.nextState()) or self.nextState() == None:
                                 exit()
                 # end
                 elif self.current_char == 'n':
@@ -651,10 +651,10 @@ class Lexer:
         comment_str = ''
         comment_str += self.current_char
         self.advance()
-        check = self.check()
+        temptchar = self.nextState()
         dot_count = 0
         
-        if self.current_char == '.' and check == '.':
+        if self.current_char == '.' and temptchar == '.':
             comment_str += self.current_char
             self.advance()
             comment_str += self.current_char
@@ -665,7 +665,7 @@ class Lexer:
                 else:
                     dot_count = 0
 
-                if self.check() == '' or self.check() == None:
+                if self.nextState() == '' or self.nextState() == None:
                     return LexicalError(pos_start, self.pos.copy(), 'Closing symbol not found.')
                 
                 comment_str += self.current_char
@@ -800,17 +800,17 @@ class Lexer:
         isIdentifier = False
 
         while self.current_char != None and (isAlphabet(self.current_char) or isDigits(self.current_char) or isWhitespace(self.current_char) or isUntracked(self.current_char) or self.current_char == '_' or self.current_char == '.'):
-            check = self.check()
+            temptchar = self.nextState()
 
             if isWhitespace(self.current_char):
                 break
-            elif num_str and self.current_char == '_' and check == '_' or isValid == False:
+            elif num_str and self.current_char == '_' and temptchar == '_' or isValid == False:
                 isValid = False
                 num_str += self.current_char
             elif isAlphabet(self.current_char) or isUntracked(self.current_char):
                 isValid = False
                 num_str += self.current_char
-            elif (not num_str and isDigits(self.current_char)) and isAlphabet(check) and not isWhitespace(check):
+            elif (not num_str and isDigits(self.current_char)) and isAlphabet(temptchar) and not isWhitespace(temptchar):
                 isIdentifier = True
                 num_str += self.current_char
             elif self.current_char == '.':
@@ -900,8 +900,10 @@ class Lexer:
             char = self.current_char
             if char == '.':
                 return Token(TT_DOT, char, self.pos.copy())
-            if char == ',':
+            elif char == ',':
                 return Token(TT_COMMA, char, self.pos.copy())
+            elif char == ':':
+                return Token(TT_COLON, char, self.pos.copy())
             elif char == ';':
                 return Token(TT_SEMICOLON, char, self.pos.copy())
             elif char == '[':
