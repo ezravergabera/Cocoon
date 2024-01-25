@@ -1,4 +1,4 @@
-from Cocoon.tokens import  output_to_symbolTable
+from Cocoon.tokens import output_to_symbolTable
 from shell import run_lexer, run_parser, run_interpreter, print_tokens, print_ast, print_res
 import os
 import tkinter as tk
@@ -9,6 +9,12 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 # VARIABLE DECLARATION
 currentdir = os.path.dirname(os.path.abspath(__file__))
 dragged_file = None  # Global variable to store the dragged file path
+
+runLexerButton = None
+runParserButton = None
+runInterpreterButton = None
+runOptionsButton = None
+
 
 def run_lex():
     """
@@ -437,7 +443,17 @@ def delete_all():
     listbox.delete(0, END)
     new_file()
 
+def on_window_click(event):
+    clicked_widget = event.widget
+    buttons = [runLexerButton, runParserButton,
+               runInterpreterButton, runOptionsButton]
+
+    if clicked_widget not in buttons:
+        hide_options()
+
 def run_buttons():
+    global runLexerButton, runParserButton, runInterpreterButton, runOptionsButton
+
     # RUN LEXER BUTTON.IMAGE
     runLexerButton_img = PhotoImage(file=f"public/img/runLexerButton.png")
 
@@ -484,6 +500,9 @@ def run_buttons():
     # RUN INTERPRETER BUTTON.POSITION
     runInterpreterButton.place(x=768, y=248, width=149, height=37)
 
+    # BIND hide_options TO WINDOW CLICK EVENT
+    window.bind("<Button-1>", on_window_click)
+
     # CHANGE THE COMMAND OF RUNOPTIONSBUTTON
     runOptionsButton.config(command=hide_options)
 
@@ -495,6 +514,10 @@ def hide_options():
     # REVERT THE COMMAND OF RUNOPTIONSBUTTON
     runOptionsButton.config(command=run_options)
 
+    # UNBIND hide_options FROM WINDOW CLICK EVENT
+    window.unbind("<Button-1>")
+
+    # HIDE THE BUTTONS
     window.nametowidget("runLexerButton").place_forget()
     window.nametowidget("runParserButton").place_forget()
     window.nametowidget("runInterpreterButton").place_forget()
