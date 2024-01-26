@@ -110,7 +110,7 @@ class Lexer:
         # End of File
         tokens.append(Token('TT_EOF', TT_EOF, pos_start=self.pos.copy()))
         if errors:
-            return [], errors
+            return tokens, errors
         else:
             return tokens, None
     

@@ -27,28 +27,26 @@ def run_lex():
             text = textBox.get("1.0", END)
 
             result, error = run_lexer(filename, text)
-
+            
+            output_to_symbolTable(result)
+            print(result)
+            textResult = print_tokens(filename, result)
+            textResult += '----------------------------------------\n\n'
             if error:
                 try:
                     errout = ""
                     for err in error:
-                        errout = errout + err.as_string()
+                        errout = errout + err.as_string() + "\n"
                         print(err.as_string())
+                    textResult += errout
                 except(TypeError):
                     errout = error.as_string()
+                    textResult += errout + "\n"
                     print(error.as_string())
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, errout)
-                resultBox['state'] = 'disable'
-            else:
-                output_to_symbolTable(result)
-                print(result)
-                textResult = print_tokens(filename, result)
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, textResult)
-                resultBox['state'] = 'disable'
+            resultBox['state'] = 'normal'
+            resultBox.delete("1.0", END)
+            resultBox.insert(INSERT, textResult)
+            resultBox['state'] = 'disable'
 
     else:
         text = textBox.get("1.0", END)
@@ -58,27 +56,25 @@ def run_lex():
 
             result, error = run_lexer(filename, text)
 
+            output_to_symbolTable(result)
+            print(result)
+            textResult = print_tokens(filename, result)
+            textResult += '----------------------------------------\n\n'
             if error:
                 try:
                     errout = ""
                     for err in error:
-                        errout = errout + err.as_string()
+                        errout = errout + err.as_string()+ "\n"
                         print(err.as_string())
+                    textResult += errout
                 except(TypeError):
                     errout = error.as_string()
+                    textResult += errout + "\n"
                     print(error.as_string())
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, errout)
-                resultBox['state'] = 'disable'
-            else:
-                output_to_symbolTable(result)
-                print(result)
-                textResult = print_tokens(filename, result)
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, textResult)
-                resultBox['state'] = 'disable'
+            resultBox['state'] = 'normal'
+            resultBox.delete("1.0", END)
+            resultBox.insert(INSERT, textResult)
+            resultBox['state'] = 'disable'
 
 def run_pars():
     """
