@@ -120,8 +120,7 @@ untrackedDict = {
     "`":foundChar,
     "?":foundChar,
     "}":foundChar,
-    "{":foundChar,
-    ":":foundChar
+    "{":foundChar
 }
 
 escapeCharsDict = {
