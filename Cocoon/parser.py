@@ -1,4 +1,4 @@
-from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, UndefinedNode, numDeclareNode, deciDeclareNode, boolDeclareNode, charDeclareNode, textDeclareNode, IdAccessNode, IdAssignNode, IntAssignNode, FloatAssignNode, BoolAssignNode, CharAssignNode, StringAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
+from .nodes import NumberNode, DecimalNode, BoolNode, StringNode, CharNode, ListNode, UndefinedNode, numDeclareNode, deciDeclareNode, boolDeclareNode, charDeclareNode, textDeclareNode, IdAccessNode, IdAssignNode, numAssignNode, deciAssignNode, boolAssignNode, charAssignNode, textAssignNode, ArithOpNode, UnaryOpNode, IncrementNode, AskNode, RepeatNode, WhileNode, BuildDefNode, CallNode
 from .tokentypes import TT_ID, TT_ASSIGN, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_COMMA, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
 from .errors import InvalidSyntaxError
 
@@ -920,7 +920,7 @@ class Parser:
 
             string_value = res.register(self.expr())
             if res.error: return res
-            return res.success(StringAssignNode(var_name, string_value))
+            return res.success(textAssignNode(var_name, string_value))
         
         return None
     
@@ -959,7 +959,7 @@ class Parser:
             
             char_value = res.register(self.expr())
             if res.error: return res
-            return res.success(CharAssignNode(var_name, char_value))
+            return res.success(charAssignNode(var_name, char_value))
         
         return None
     
@@ -998,7 +998,7 @@ class Parser:
 
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(BoolAssignNode(var_name, expr))
+            return res.success(boolAssignNode(var_name, expr))
         
         return None
     
@@ -1041,7 +1041,7 @@ class Parser:
                 ))
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(FloatAssignNode(var_name, expr))
+            return res.success(deciAssignNode(var_name, expr))
         
         return None
 
@@ -1081,7 +1081,7 @@ class Parser:
                 ))
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(IntAssignNode(var_name, expr))
+            return res.success(numAssignNode(var_name, expr))
         
         return None
         

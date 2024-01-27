@@ -210,7 +210,7 @@ class Interpreter:
         context.symbol_table.set(var_name, value)
         return res.success(value)
 
-    def visit_IntAssignNode(self, node, context):
+    def visit_numAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
@@ -219,7 +219,7 @@ class Interpreter:
         context.symbol_table.set(var_name, value)
         return res.success(value)
     
-    def visit_FloatAssignNode(self, node, context):
+    def visit_deciAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
@@ -228,16 +228,7 @@ class Interpreter:
         context.symbol_table.set(var_name, value)
         return res.success(value)
 
-    def visit_BoolAssignNode(self, node, context):
-        res = RTResult()
-        var_name = node.var_name_tok.value
-        value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
-
-        context.symbol_table.set(var_name, value)
-        return res.success(value)
-    
-    def visit_CharAssignNode(self, node, context):
+    def visit_boolAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
@@ -246,7 +237,16 @@ class Interpreter:
         context.symbol_table.set(var_name, value)
         return res.success(value)
     
-    def visit_StringAssignNode(self, node, context):
+    def visit_charAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = res.register(self.visit(node.value_node, context))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+        return res.success(value)
+    
+    def visit_textAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
