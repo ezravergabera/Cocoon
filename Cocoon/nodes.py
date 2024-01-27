@@ -5,8 +5,8 @@ class NumberNode:
         self.pos_start = self.tok.pos_start
         self.pos_end = self.tok.pos_end
 
-    def __repr__(self):
-        return f'{self.tok}'
+    def __repr__(self, indent=0):
+        return f'{{\n{" " * (indent + 4)}token type: {self.tok.type},\n{" " * (indent + 4)}token value: {self.tok.value}\n{" " * indent}}}'
     
 class DecimalNode(NumberNode):
     def __init__(self, tok):
@@ -31,8 +31,8 @@ class UndefinedNode():
         self.pos_start = None
         self.pos_end = None
 
-    def __repr__(self):
-        return f'{self.tok}'
+    def __repr__(self, indent=0):
+        return f'\nundf\n{self.tok}\nundf\n'
 
 class IdDeclareNode:
     def __init__(self, var_name_tok, value_node):
@@ -42,44 +42,62 @@ class IdDeclareNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
 
-    def __repr__(self):
-        return f'{self.var_name_tok}'
+    def __repr__(self, indent=0):
+        node_str = f'type: "IdDeclareNode",\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class numDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:int, {self.var_name_tok})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "numDeclareNode",\n{" " * (indent + 4)}accepted data type: int,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 
 class deciDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:float, {self.var_name_tok})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "deciDeclareNode",\n{" " * (indent + 4)}accepted data type: float,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class boolDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:bool, {self.var_name_tok})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "boolDeclareNode",\n{" " * (indent + 4)}accepted data type: bool,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class charDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:char, {self.var_name_tok})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "charDeclareNode",\n{" " * (indent + 4)}accepted data type: char,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class textDeclareNode(IdDeclareNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:string, {self.var_name_tok})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "textDeclareNode",\n{" " * (indent + 4)}accepted data type: string,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class IdAccessNode:
     def __init__(self, var_name_tok):
@@ -88,8 +106,10 @@ class IdAccessNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
         
-    def __repr__(self):
-        return f'{self.var_name_tok}'
+    def __repr__(self, indent=0):
+        node_str = f'type: "IdAccessNode",\n'
+        var_str = f'{" " * (indent + 4)}target variable: {self.var_name_tok}'
+        return f'{{\n{" " * indent}{node_str}{var_str}\n{" " * indent}}}'
 
 class IdAssignNode:
     def __init__(self, var_name_tok, value_node):
@@ -99,43 +119,60 @@ class IdAssignNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.value_node.pos_end
 
-    def __repr__(self):
-        return f'({self.var_name_tok}, =, {self.value_node})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "IdAssignNode",\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
     
 class IntAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:int, {self.var_name_tok}, =, {self.value_node})'
-
+    def __repr__(self, indent=0):
+        node_str = f'type: "IntAssignNode",\n{" " * (indent + 4)}accepted data type: int,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 class FloatAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
         
-    def __repr__(self):
-        return f'(Datatype:float, {self.var_name_tok}, =, {self.value_node})'    
+    def __repr__(self, indent=0):
+        node_str = f'type: "FloatAssignNode",\n{" " * (indent + 4)}accepted data type: float,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class BoolAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:bool, {self.var_name_tok}, =, {self.value_node})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "BoolAssignNode",\n{" " * (indent + 4)}accepted data type: bool,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class CharAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:char, {self.var_name_tok}, =, {self.value_node})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "CharAssignNode",\n{" " * (indent + 4)}accepted data type: char,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
 
 class StringAssignNode(IdAssignNode):
     def __init__(self, var_name_tok, value_node):
         super().__init__(var_name_tok, value_node)
 
-    def __repr__(self):
-        return f'(Datatype:string, {self.var_name_tok}, =, {self.value_node})'
+    def __repr__(self, indent=0):
+        node_str = f'type: "StringAssignNode",\n{" " * (indent + 4)}accepted data type: string,\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}value: {self.value_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}\n{" " * indent}}}'
     
 class ArithOpNode:
     def __init__(self, left_node, op_tok, right_node):
@@ -146,8 +183,11 @@ class ArithOpNode:
         self.pos_start = self.left_node.pos_start
         self.pos_end = self.right_node.pos_end
 
-    def __repr__(self):
-        return f'({self.left_node}, {self.op_tok}, {self.right_node})'
+    def __repr__(self, indent=0):
+        op_str = f'type: "ArithOpNode",\n{" " * (indent + 4)}operator: {self.op_tok},\n'
+        left_str = f'{" " * (indent + 4)}left node: {self.left_node.__repr__(indent + 4)},\n'
+        right_str = f'{" " * (indent + 4)}right node: {self.right_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{op_str}{left_str}{right_str}\n{" " * indent}}}'
     
 class UnaryOpNode:
     def __init__(self, op_tok, node):
@@ -157,8 +197,10 @@ class UnaryOpNode:
         self.pos_start = self.op_tok.pos_start
         self.pos_end = self.node.pos_end
 
-    def __repr__(self):
-        return f'({self.op_tok.type}, {self.node})'
+    def __repr__(self, indent=0):
+        op_str = f'type: "UnaryOpNode",\n{" " * (indent + 4)}operator: {self.op_tok},\n'
+        right_str = f'{" " * (indent + 4)}right node: {self.node.__repr__(indent + 4)}'
+        return f'{{\n{" " * (indent)}{op_str}{right_str}\n{" " * indent}}}'
     
 class IncrementNode:
     def __init__(self, var_name_tok, op_tok1, op_tok2):
@@ -169,8 +211,10 @@ class IncrementNode:
         self.pos_start = var_name_tok.pos_start
         self.pos_end = op_tok2.pos_end
 
-    def __repr__(self):
-        return f'({self.var_name_tok}, {self.op_tok1.type}, {self.op_tok2.type})'
+    def __repr__(self, indent=0):
+        op_str = f'type: "IncrementNode",\n{" " * (indent + 4)}operators: {self.op_tok1}, {self.op_tok2},\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok}'
+        return f'{{\n{" " * (indent)}{op_str}{var_str}\n{" " * indent}}}'
     
 class AskNode:
     def __init__(self, cases, more_case):
@@ -184,8 +228,14 @@ class AskNode:
         else:
             self.pos_end = (self.cases[len(self.cases) - 1])[0].pos_end
 
-    def __repr__(self):
-        return f"(if_elif_cases:({self.cases}), else_case:({self.more_case}))"
+    def __repr__(self, indent=0):
+        node_str = f'type: "AskNode",\n'
+        if_elif_cases_str = f'{" " * (indent + 4)}if and elif cases: {self.cases.__repr__(indent + 4)},\n'
+        if self.more_case:
+            else_case_str = f'{" " * (indent + 4)}else case: None'
+        else:
+            else_case_str = f'{" " * (indent + 4)}else case: {self.more_case.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{if_elif_cases_str}{else_case_str}\n{" " * indent}}}'
 
 class RepeatNode:
     def __init__(self, var_name_tok, value_node, cond_node, iter_node, body_node, should_return_empty):
@@ -199,8 +249,14 @@ class RepeatNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.body_node.pos_end
 
-    def __repr__(self):
-        return f"(repeat, ({self.var_name_tok}, =, {self.value_node}), {self.cond_node}, {self.iter_node}, {self.body_node})"
+    def __repr__(self, indent=0):
+        node_str = f'type: "RepeatNode",\n'
+        var_str = f'{" " * (indent + 4)}variable name: {self.var_name_tok},\n'
+        value_str = f'{" " * (indent + 4)}initial value: {self.value_node.__repr__(indent + 4)},\n'
+        cond_str = f'{" " * (indent + 4)}repeat condition: {self.cond_node.__repr__(indent + 4)},\n'
+        iter_str = f'{" " * (indent + 4)}iteration node: {self.iter_node.__repr__(indent + 4)},\n'
+        body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{var_str}{value_str}{cond_str}{iter_str}{body_str}\n{" " * indent}}}'
 
 class WhileNode:
     def __init__(self, cond_node, body_node, should_return_empty):
@@ -211,8 +267,11 @@ class WhileNode:
         self.pos_start = self.cond_node.pos_start
         self.pos_end = self.body_node.pos_end
 
-    def __repr__(self):
-        return f"(while, {self.cond_node}, {self.body_node})"
+    def __repr__(self, indent=0):
+        node_str = f'type: "WhileNode",\n'
+        cond_str = f'{" " * (indent + 4)}while condition: {self.cond_node.__repr__(indent + 4)},\n'
+        body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)}'
+        return f'{{\n{" " * indent}{node_str}{cond_str}{body_str}\n{" " * indent}}}'
 
 class BuildDefNode:
     def __init__(self, var_name_tok, arg_name_toks, body_node, should_return_empty):
@@ -230,15 +289,25 @@ class BuildDefNode:
 
         self.pos_end = self.body_node.pos_end
     
-    def __repr__(self):
+    def __repr__(self, indent=0):
+        node_str = f'type: "BuildDefNode",\n'
         if self.var_name_tok and len(self.arg_name_toks) == 0:
-            str_to_repr = f"(build:{self.var_name_tok.value}, [{self.body_node}])"
+            var_str = f'{" " * (indent + 4)}build: {self.var_name_tok},\n'
+            body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)},\n'
+            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return_empty}'
+            return f'{{\n{" " * indent}{node_str}{var_str}{body_str}{empty_str}\n{" " * indent}}}'
         elif self.var_name_tok and len(self.arg_name_toks) > 0:
-            str_to_repr = f"(build:{self.var_name_tok.value}, ({self.arg_name_toks}), [{self.body_node}])"
+            var_str = f'{" " * (indent + 4)}build: {self.var_name_tok},\n'
+            arg_name_str = f'{" " * (indent + 4)}arguments: {self.arg_name_toks},\n'
+            body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)},\n'
+            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return_empty}'
+            return f'{{\n{" " * indent}{node_str}{var_str}{arg_name_str}{body_str}{empty_str}\n{" " * indent}}}'
         else:
-            str_to_repr = f"(build:<anonymous>, [{self.body_node}])"
-        
-        return str_to_repr
+            var_str = f'{" " * (indent + 4)}build: <anonymous>,\n'
+            arg_name_str = f'{" " * (indent + 4)}arguments: {self.arg_name_toks},\n'
+            body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)},\n'
+            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return_empty}'
+            return f'{{\n{" " * indent}{node_str}{var_str}{arg_name_str}{body_str}{empty_str}\n{" " * indent}}}'
 
 class CallNode:
     def __init__(self, node_to_call, arg_nodes):
@@ -252,13 +321,15 @@ class CallNode:
         else:
             self.pos_end = self.node_to_call.pos_end
 
-    def __repr__(self):
+    def __repr__(self, indent=0):
+        node_str = f'type: "CallNode",\n'
+        node_to_call_str = f'{" " * (indent + 4)}node to call: {self.node_to_call.__repr__(indent + 4)},\n'
         if len(self.arg_nodes) == 1:
-            str_to_repr = f"({self.node_to_call}, ({self.arg_nodes[0]}))"
+            arg_nodes_str = f'{" " * (indent + 4)}arguments: {self.arg_nodes[0].__repr__(indent + 4)}'
         else:
-            str_to_repr = f"({self.node_to_call}, ({self.arg_nodes}))"
+            arg_nodes_str = f'{" " * (indent + 4)}arguments: {self.arg_nodes.__repr__(indent + 4)}'
 
-        return str_to_repr
+        return f'{{\n{" " * indent}{node_str}{node_to_call_str}{arg_nodes_str}\n{" " * indent}}}'
 
 class ListNode:
     def __init__(self, element_nodes, pos_start, pos_end):
@@ -267,10 +338,11 @@ class ListNode:
         self.pos_start = pos_start
         self.pos_end = pos_end
 
-    def __repr__(self):
+    def __repr__(self, indent=0):
+        node_str = f'type: "ListNode",\n'
         if len(self.element_nodes) == 1:
-            str_to_repr = f"{self.element_nodes[0]}"
+            elements_str = f'{" " * (indent + 4)}element: {self.element_nodes[0].__repr__(indent + 4)}'
         else:
-            str_to_repr = f"{self.element_nodes}"
+            elements_str = f'{" " * (indent + 4)}elements: {self.element_nodes.__repr__(indent + 4)}'
 
-        return str_to_repr
+        return f'{{\n{" " * indent}{node_str}{elements_str}\n{" " * indent}}}'
