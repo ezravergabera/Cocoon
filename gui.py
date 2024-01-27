@@ -1,6 +1,7 @@
-from Cocoon.tokens import output_to_symbolTable
-from shell import run_lexer, run_parser, run_interpreter, print_tokens, print_ast, print_res
+from Cocoon.tokens import output_to_symbolTable, tok_to_str
+from shell import run_lexer, run_parser, run_interpreter, print_tokens, print_ast, print_res, output_to_syntacticTable
 import os
+import pathlib
 import tkinter as tk
 from tkinter import *
 from tkinter import filedialog
@@ -28,8 +29,8 @@ def run_lex():
 
             result, error = run_lexer(filename, text)
             
-            output_to_symbolTable(result)
-            print(result)
+            output_to_symbolTable(filename, result)
+            print(tok_to_str(result))
             textResult = print_tokens(filename, result)
             textResult += '----------------------------------------\n\n'
             if error:
@@ -56,8 +57,8 @@ def run_lex():
 
             result, error = run_lexer(filename, text)
 
-            output_to_symbolTable(result)
-            print(result)
+            output_to_symbolTable(filename, result)
+            print(tok_to_str(result))
             textResult = print_tokens(filename, result)
             textResult += '----------------------------------------\n\n'
             if error:
@@ -88,59 +89,55 @@ def run_pars():
 
             result, error, tokens = run_parser(filename, text)
 
+            output_to_symbolTable(filename, tokens)
+            output_to_syntacticTable(filename, result)
+            print(result)
+            textResult = print_ast(filename, result)
+            textResult += '----------------------------------------\n\n'
             if error:
                 try:
                     errout = ""
                     for err in error:
-                        errout = errout + err.as_string()
+                        errout = errout + err.as_string() + "\n"
                         print(err.as_string())
+                    textResult += errout
                 except(TypeError):
                     errout = error.as_string()
+                    textResult += errout + "\n"
                     print(error.as_string())
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, errout)
-                resultBox['state'] = 'disable'
-            else:
-                output_to_symbolTable(tokens)
-                textResult = print_ast(filename, result)
-                print(textResult)
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, textResult)
-                resultBox['state'] = 'disable'
+            resultBox['state'] = 'normal'
+            resultBox.delete("1.0", END)
+            resultBox.insert(INSERT, textResult)
+            resultBox['state'] = 'disable'
 
     else:
         text = textBox.get("1.0", END)
         if text.strip() != "":
+            filename = "Unnamed KKUN File"
             text = textBox.get("1.0", END)
-            if text.strip() != "":
-                filename = "Unnamed KKUN File"
-                text = textBox.get("1.0", END)
 
-                result, error, tokens = run_parser(filename, text)
+            result, error, tokens = run_parser(filename, text)
 
-                if error:
-                    try:
-                        errout = ""
-                        for err in error:
-                            errout = errout + err.as_string()
-                            print(err.as_string())
-                    except(TypeError):
-                        errout = error.as_string()
-                        print(error.as_string())
-                    resultBox['state'] = 'normal'
-                    resultBox.delete("1.0", END)
-                    resultBox.insert(INSERT, errout)
-                    resultBox['state'] = 'disable'
-                else:
-                    output_to_symbolTable(tokens)
-                    textResult = print_ast(filename, result)
-                    print(textResult)
-                    resultBox['state'] = 'normal'
-                    resultBox.delete("1.0", END)
-                    resultBox.insert(INSERT, textResult)
-                    resultBox['state'] = 'disable'
+            output_to_symbolTable(filename, tokens)
+            output_to_syntacticTable(filename, result)
+            print(result)
+            textResult = print_ast(filename, result)
+            textResult += '----------------------------------------\n\n'
+            if error:
+                try:
+                    errout = ""
+                    for err in error:
+                        errout = errout + err.as_string() + "\n"
+                        print(err.as_string())
+                    textResult += errout
+                except(TypeError):
+                    errout = error.as_string()
+                    textResult += errout + "\n"
+                    print(error.as_string())
+            resultBox['state'] = 'normal'
+            resultBox.delete("1.0", END)
+            resultBox.insert(INSERT, textResult)
+            resultBox['state'] = 'disable'
 
 def run_interp():
     """
@@ -152,32 +149,32 @@ def run_interp():
             filename = fileName_label.get()
             text = textBox.get("1.0", END)
 
-            result, error, tokens = run_interpreter(filename, text)
+            result, error, tokens, ast = run_interpreter(filename, text)
 
+            output_to_symbolTable(filename, tokens)
+            output_to_syntacticTable(filename, ast)
+            #? output_to_interpreterLogFile(filename, result)
+            print(result)
+            if len(result.elements) == 1:
+                textResult = print_res(filename, repr(result.elements[0]))
+            else:
+                textResult = print_res(filename, str(result))
+            textResult += '----------------------------------------\n\n'
             if error:
                 try:
                     errout = ""
                     for err in error:
-                        errout = errout + err.as_string()
+                        errout = errout + err.as_string() + "\n"
                         print(err.as_string())
+                    textResult += errout
                 except(TypeError):
                     errout = error.as_string()
+                    textResult += errout + "\n"
                     print(error.as_string())
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, errout)
-                resultBox['state'] = 'disable'
-            else:
-                output_to_symbolTable(tokens)
-                if len(result.elements) == 1:
-                    textResult = print_res(filename, repr(result.elements[0]))
-                else:
-                    textResult = print_res(filename, str(result))
-                print(textResult)
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, textResult)
-                resultBox['state'] = 'disable'
+            resultBox['state'] = 'normal'
+            resultBox.delete("1.0", END)
+            resultBox.insert(INSERT, textResult)
+            resultBox['state'] = 'disable'
 
     else:
         text = textBox.get("1.0", END)
@@ -185,37 +182,44 @@ def run_interp():
             filename = "Unnamed KKUN File"
             text = textBox.get("1.0", END)
 
-            result, error, tokens = run_interpreter(filename, text)
+            result, error, tokens, ast = run_interpreter(filename, text)
 
+            output_to_symbolTable(filename, tokens)
+            output_to_syntacticTable(filename, ast)
+            #? output_to_interpreterLogFile(filename, result)
+            print(result)
+            if len(result.elements) == 1:
+                textResult = print_res(filename, repr(result.elements[0]))
+            else:
+                textResult = print_res(filename, str(result))
+            textResult += '----------------------------------------\n\n'
             if error:
                 try:
                     errout = ""
                     for err in error:
-                        errout = errout + err.as_string()
+                        errout = errout + err.as_string() + "\n"
                         print(err.as_string())
+                    textResult += errout
                 except(TypeError):
                     errout = error.as_string()
+                    textResult += errout + "\n"
                     print(error.as_string())
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, errout)
-                resultBox['state'] = 'disable'
-            else:
-                output_to_symbolTable(tokens)
-                if len(result.elements) == 1:
-                    textResult = print_res(filename, repr(result.elements[0]))
-                else:
-                    textResult = print_res(filename, str(result))
-                print(textResult)
-                resultBox['state'] = 'normal'
-                resultBox.delete("1.0", END)
-                resultBox.insert(INSERT, textResult)
-                resultBox['state'] = 'disable'
+            resultBox['state'] = 'normal'
+            resultBox.delete("1.0", END)
+            resultBox.insert(INSERT, textResult)
+            resultBox['state'] = 'disable'
 
 def get_file_path(string):
+    """
+    Separates file paths from the passed string and returns a list of file paths.
+
+    ?? There are still potential for error as this function does not have a graceful error handling yet
+    """
     files = []
-    while 'C:/' in string:
-        idx = string.rfind('C:/')
+    drive = pathlib.Path.home().drive
+    prefix = drive + '/'
+    while prefix in string:
+        idx = string.rfind(prefix)
         filepath = ''
         while idx < len(string) and string[idx] is not None:
             filepath += string[idx]

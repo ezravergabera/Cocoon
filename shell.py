@@ -52,7 +52,7 @@ def debug_interpreter():
     while True:
         text = input("interpreter > ")
         if text.strip() == "": continue
-        result, error, _ = run_interpreter("<stdin>", text)
+        result, error, _, __ = run_interpreter("<stdin>", text)
 
         if error: 
             try:
@@ -106,7 +106,7 @@ def run_interpreter(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
-    return result.value, result.error, tokens
+    return result.value, result.error, tokens, ast.node
 
 def run(fn, text):
     # Lexer
@@ -147,7 +147,7 @@ def print_ast(fn, ast):
     text = ''
     text += f'File name:    {fn}\n'
     text += "Abstract Syntax Tree:\n"
-    text += f'{" ": >5}{repr(ast)}\n'
+    text += f'{repr(ast)}\n'
 
     return text
 
@@ -160,6 +160,14 @@ def print_res(fn, res):
         text += f'{" ": >5}{resout}\n'
 
     return text
+
+def output_to_syntacticTable(fn, ast):
+    filename = 'syntacticTable.txt'
+
+    with open(filename, "w") as f:
+        f.write(f'File name:    {fn}\n')
+        f.write("Abstract Syntax Tree:\n")
+        f.write(repr(ast))
 
 #* For Debugging
 # debug_lexer()
@@ -175,16 +183,20 @@ def run_file(filename):
                 with open(filename, 'r') as f:
                     text = f.read()
                 
-                result, error = run_lexer(filename, text)
+                result, error, tokens, ast = run_interpreter(filename, text)
+
+                print_tokens(filename, tokens)
+                print_ast(filename, ast)
+                print_res(filename, result)
+                output_to_symbolTable(result)
+                output_to_syntacticTable(ast)
 
                 if error:
-                    print(error.as_string())
-                elif result:
-                    print(format("File name:", ">20") + "      " + filename)
-                    print(format('TOKENS', '>20') + '      ' + 'LEXEMES')
-                    print('-----------------------------------------------')
-                    print(tok_to_str(result))
-                    output_to_symbolTable(result)
+                    try:
+                        for err in error:
+                            print(err.as_string())
+                    except(TypeError):
+                        print(error.as_string())
             except FileNotFoundError:
                 print("File does not exist!")
         else:
