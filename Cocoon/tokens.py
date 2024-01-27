@@ -11,9 +11,13 @@ class Token:
         if pos_end:
             self.pos_end = pos_end.copy()
 
-    def __repr__(self):
+    def __str__(self):
         if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
+
+    def __repr__(self, indent=0):
+        if self.value: return f'{{\n{" " * (indent + 4)}token type: {self.type},\n{" " * (indent + 4)}token value: {self.value}\n{" " * indent}}}'
+        return f'{{\n{" " * (indent + 4)}token type: {self.type}\n{" " * indent}}}'
     
     def matches(self, type_, value):
         return self.type == type_ and self.value == value
@@ -31,11 +35,11 @@ def tok_to_str(tokens):
 
     return tok_str
 
-def output_to_symbolTable(tokens):
+def output_to_symbolTable(fn, tokens):
     filename = 'symbolTable.txt'
 
     with open(filename, "w") as f:
-        f.write(f'{"File name:": >20}    {filename}\n')
+        f.write(f'{"File name:": >20}    {fn}\n')
         f.write(f'{"TOKENS": >20}    LEXEMES\n')
         f.write('----------------------------------------\n')
         f.write(tok_to_str(tokens))
