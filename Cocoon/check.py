@@ -76,7 +76,6 @@ whitespacesDict = {
     "":foundChar,
     " ":foundChar,
     "\t":foundChar,
-    "\n":foundChar,
     "\v":foundChar,
     "\r":foundChar
 }
@@ -100,6 +99,7 @@ operatorsDict = {
 specialSymbolDict = {
     ".":foundChar,
     ",":foundChar,
+    "?":foundChar,
     ":":foundChar,
     ";":foundChar,
     "(":foundChar,
@@ -118,7 +118,6 @@ untrackedDict = {
     "#":foundChar,
     "@":foundChar,
     "`":foundChar,
-    "?":foundChar,
     "}":foundChar,
     "{":foundChar
 }
