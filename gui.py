@@ -155,7 +155,9 @@ def run_interp():
             output_to_syntacticTable(filename, ast)
             #? output_to_interpreterLogFile(filename, result)
             print(result)
-            if len(result.elements) == 1:
+            if not result:
+                textResult = "Parser Error\n"
+            elif len(result.elements) == 1:
                 textResult = print_res(filename, repr(result.elements[0]))
             else:
                 textResult = print_res(filename, str(result))
@@ -188,7 +190,9 @@ def run_interp():
             output_to_syntacticTable(filename, ast)
             #? output_to_interpreterLogFile(filename, result)
             print(result)
-            if len(result.elements) == 1:
+            if not result:
+                textResult = "Parser Error\n"
+            elif len(result.elements) == 1:
                 textResult = print_res(filename, repr(result.elements[0]))
             else:
                 textResult = print_res(filename, str(result))
