@@ -232,7 +232,12 @@ class AskNode:
             
     def __repr__(self, indent=0):
         node_str = f'type: "AskNode",\n'
-        if_elif_cases_str = f'{" " * (indent + 4)}if and elif cases: {self.cases},\n'
+        if_elif_cases_str = ''
+        if len(self.cases) == 1:
+            if_elif_cases_str += f'{" " * (indent + 4)}if case: {self.cases[0][0].__repr__(indent + 4)},\n'
+        else:
+            for idx, case in enumerate(self.cases, start=1):
+                if_elif_cases_str += f'{" " * (indent + 4)}case{idx}: {case[0].__repr__(indent + 4)},\n'
         if self.more_case:
             else_case_str = f'{" " * (indent + 4)}else case: None'
         else:
@@ -278,11 +283,11 @@ class WhileNode:
         return f'{{\n{" " * indent}{node_str}{cond_str}{body_str}{return_str}\n{" " * indent}}}'
 
 class BuildDefNode:
-    def __init__(self, var_name_tok, arg_name_toks, body_node, should_return_empty):
+    def __init__(self, var_name_tok, arg_name_toks, body_node, should_return):
         self.var_name_tok = var_name_tok
         self.arg_name_toks = arg_name_toks
         self.body_node = body_node
-        self.should_return_empty = should_return_empty
+        self.should_return = should_return
 
         if self.var_name_tok:
             self.pos_start = self.var_name_tok.pos_start
@@ -298,7 +303,7 @@ class BuildDefNode:
         if self.var_name_tok and len(self.arg_name_toks) == 0:
             var_str = f'{" " * (indent + 4)}build: {self.var_name_tok.__repr__(indent + 4)},\n'
             body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)},\n'
-            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return_empty}'
+            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return}'
             return f'{{\n{" " * indent}{node_str}{var_str}{body_str}{empty_str}\n{" " * indent}}}'
         elif self.var_name_tok and len(self.arg_name_toks) > 0:
             var_str = f'{" " * (indent + 4)}build: {self.var_name_tok.__repr__(indent + 4)},\n'
@@ -309,7 +314,7 @@ class BuildDefNode:
                 for idx, arg in enumerate(self.arg_name_toks, start=1):
                     arg_name_str += f'{" " * (indent + 4)}argument{idx}: {arg.__repr__(indent + 4)},\n'
             body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)},\n'
-            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return_empty}'
+            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return}'
             return f'{{\n{" " * indent}{node_str}{var_str}{arg_name_str}{body_str}{empty_str}\n{" " * indent}}}'
         else:
             var_str = f'{" " * (indent + 4)}build: <anonymous>,\n'
@@ -320,7 +325,7 @@ class BuildDefNode:
                 for idx, arg in enumerate(self.arg_name_toks, start=1):
                     arg_name_str += f'{" " * (indent + 4)}argument{idx}: {arg.__repr__(indent + 4)},\n'
             body_str = f'{" " * (indent + 4)}body node: {self.body_node.__repr__(indent + 4)},\n'
-            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return_empty}'
+            empty_str = f'{" " * (indent + 4)}should return empty: {self.should_return}'
             return f'{{\n{" " * indent}{node_str}{var_str}{arg_name_str}{body_str}{empty_str}\n{" " * indent}}}'
 
 class CallNode:
