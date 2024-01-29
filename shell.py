@@ -98,7 +98,7 @@ def run_interpreter(fn, text):
     ast = parser.parse()
 
     # Interpreter
-    if ast.error: return None, ast.error, None
+    if ast.error: return None, ast.error, None, None
 
     interpreter = Interpreter()
     # Context Initial route
@@ -155,9 +155,7 @@ def print_res(fn, res):
     text = ''
     text += f'File name:    {fn}\n'
     text += "Result:\n"
-    result = str(res).split(", ")
-    for resout in result:
-        text += f'{" ": >5}{resout}\n'
+    text += f'{" ": >5}{res}\n'
 
     return text
 
