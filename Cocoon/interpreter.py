@@ -37,7 +37,7 @@ class Interpreter:
 
         for element_node in node.element_nodes:
             elements.append(res.register(self.visit(element_node, context)))
-            if res.error: return res
+            if res.should_return(): return res
 
         return res.success(List(elements).set_context(context).set_pos(node.pos_start, node.pos_end))
     
@@ -187,7 +187,7 @@ class Interpreter:
         var_name = node.var_name_tok.value
         in_symbolTable = context.symbol_table.hasValue(var_name)
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         if not in_symbolTable and not isinstance(value, List) and not isinstance(node.value_node, AskNode):
             return res.failure(RuntimeError(
@@ -214,7 +214,7 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
@@ -223,7 +223,7 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
@@ -232,7 +232,7 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
@@ -241,7 +241,7 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
@@ -250,7 +250,7 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
@@ -258,9 +258,9 @@ class Interpreter:
     def visit_ArithOpNode(self, node, context):
         res = RTResult()
         left = res.register(self.visit(node.left_node, context))
-        if res.error: return res
+        if res.should_return(): return res
         right = res.register(self.visit(node.right_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         if node.op_tok.type == TT_PLUS:
             result, error = left.added_to(right)
@@ -301,7 +301,7 @@ class Interpreter:
     def visit_UnaryOpNode(self, node, context):
         res = RTResult()
         number = res.register(self.visit(node.node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         error = None
 
@@ -362,18 +362,18 @@ class Interpreter:
 
         for condition, expr, should_return_empty in node.cases:
             condition_value = res.register(self.visit(condition, context))
-            if res.error: return res
+            if res.should_return(): return res
 
             if condition_value.is_true():
                 expr_value = res.register(self.visit(expr, context))
-                if res.error: return res
-                return res.success(Number.empty if should_return_empty else expr_value)
+                if res.should_return(): return res
+                return res.success(expr_value)
             
         if node.more_case:
             expr, should_return_empty = node.more_case
             more_value = res.register(self.visit(expr, context))
-            if res.error: return res
-            return res.success(Number.empty if should_return_empty else more_value)
+            if res.should_return(): return res
+            return res.success(more_value)
         
         return res.success(Number.empty)
     
@@ -387,22 +387,22 @@ class Interpreter:
         except(KeyError):
             pass
         value = res.register(self.visit(node.value_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         
         cond = res.register(self.visit(node.cond_node, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         while cond.is_true():
             elements.append(res.register(self.visit(node.body_node, context)))
-            if res.error: return res
+            if res.should_return(): return res
 
             value = res.register(self.visit(node.iter_node, context))
-            if res.error: return res
+            if res.should_return(): return res
 
             cond = res.register(self.visit(node.cond_node, context))
-            if res.error: return res
+            if res.should_return(): return res
 
             context.symbol_table.set(var_name, value)
 
@@ -416,12 +416,12 @@ class Interpreter:
 
         while True:
             condition = res.register(self.visit(node.cond_node, context))
-            if res.error: return res
+            if res.should_return(): return res
 
             if not condition.is_true(): break
 
             elements.append(res.register(self.visit(node.body_node, context)))
-            if res.error: return res
+            if res.should_return(): return res
 
         return res.success(
             Number.empty if node.should_return_empty else 
@@ -433,7 +433,7 @@ class Interpreter:
         func_name = node.var_name_tok.value if node.var_name_tok else None
         body_node = node.body_node
         arg_names = [arg_name.value for arg_name in node.arg_name_toks]
-        func_value = Function(func_name, body_node, arg_names, node.should_return_empty).set_context(context).set_pos(node.pos_start, node.pos_end)
+        func_value = Function(func_name, body_node, arg_names, node.should_return).set_context(context).set_pos(node.pos_start, node.pos_end)
 
         if node.var_name_tok:
             context.symbol_table.set(func_name, func_value)
@@ -445,16 +445,16 @@ class Interpreter:
         args = []
 
         value_to_call = res.register(self.visit(node.node_to_call, context))
-        if res.error: return res
+        if res.should_return(): return res
 
         value_to_call = value_to_call.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
 
         for arg_node in node.arg_nodes:
             args.append(res.register(self.visit(arg_node, context)))
-            if res.error: return res
+            if res.should_return(): return res
 
         return_value = res.register(value_to_call.execute(args))
-        if res.error: return res
+        if res.should_return(): return res
         return_value = return_value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
         return res.success(return_value)
 
@@ -463,20 +463,38 @@ class Interpreter:
 
 class RTResult:
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.value = None
         self.error = None
+        self.return_value = None
 
     def register(self, res):
-        if res.error: self.error = res.error
+        self.error = res.error
+        self.return_value = res.return_value
         return res.value
     
     def success(self, value):
+        self.reset()
         self.value = value
+        return self
+    
+    def success_return(self, value):
+        self.reset()
+        self.return_value = value
         return self
 
     def failure(self, error):
+        self.reset()
         self.error = error
         return self
+    
+    def should_return(self):
+        return (
+            self.error or
+            self.return_value
+        )
     
 # Values
     
@@ -812,16 +830,16 @@ class BaseFunction(Value):
         res = RTResult()
 
         res.register(self.check_args(arg_names, args))
-        if res.error: return res
+        if res.should_return(): return res
         self.populate_args(arg_names, args, exec_ctx)
         return res.success(None)
 
 class Function(BaseFunction):
-    def __init__(self, name, body_node, arg_names, should_return_empty):
+    def __init__(self, name, body_node, arg_names, should_return):
         super().__init__(name)
         self.body_node = body_node
         self.arg_names = arg_names
-        self.should_return_empty = should_return_empty
+        self.should_return = should_return
 
     def execute(self, args):
         res = RTResult()
@@ -829,14 +847,16 @@ class Function(BaseFunction):
         exec_ctx = self.generate_new_context()
 
         res.register(self.check_and_populate_args(self.arg_names, args, exec_ctx))
-        if res.error: return res
+        if res.should_return(): return res
 
         value = res.register(interpreter.visit(self.body_node, exec_ctx))
-        if res.error: return res
-        return res.success(Number.empty if self.should_return_empty else value)
+        if res.should_return() and res.should_return == None: return res
+
+        ret_value = (value if self.should_return else None) or res.return_value or Number.empty
+        return res.success(ret_value)
     
     def copy(self):
-        copy = Function(self.name, self.body_node, self.arg_names, self.should_return_empty)
+        copy = Function(self.name, self.body_node, self.arg_names, self.should_return)
         copy.set_context(self.context)
         copy.set_pos(self.pos_start, self.pos_end)
         return copy
@@ -856,10 +876,10 @@ class BuiltInFunction(BaseFunction):
         method = getattr(self, method_name, self.no_visit_method)
 
         res.register(self.check_and_populate_args(method.arg_names, args, exec_ctx))
-        if res.error: return res
+        if res.should_return(): return res
 
         return_value = res.register(method(exec_ctx))
-        if res.error: return res
+        if res.should_return(): return res
         return res.success(return_value)
     
     def no_visit_method(self, node, context):
