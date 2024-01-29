@@ -2,7 +2,7 @@ from .check import *
 from .errors import Error, IllegalCharError, IllegalIdentifierError, IllegalNumberError, LexicalError, InvalidDecimalError, InvalidRelationalSymbol, ReferenceError
 from .position import Position
 from .tokens import Token
-from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_COLON, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
+from .tokentypes import TT_ID, TT_ASSIGN, TT_PLUS, TT_MINUS, TT_MUL, TT_DIV, TT_INTDIV, TT_EXPO, TT_MOD, TT_GREATER, TT_LESS, TT_GREATEREQUAL, TT_LESSEQUAL, TT_EQUALTO, TT_NOTEQUAL, TT_NOT, TT_AND, TT_OR, TT_INT, TT_FLOAT, TT_STR, TT_BOOL, TT_CHAR, TT_DTYPE, TT_KWORD, TT_RWORD, TT_NWORD, TT_COMMENT, TT_DOT, TT_COMMA, TT_COLON, TT_QUESTION, TT_SEMICOLON, TT_LSQUARE, TT_RSQUARE, TT_LPAREN, TT_RPAREN, TT_NEWLINE, TT_EOF
 
 class Lexer:
     def __init__(self, fn, text):
@@ -154,7 +154,7 @@ class Lexer:
                     self.advance()
                     if self.current_char == 'k':
                         lexeme += self.current_char
-                        tokentype = TT_RWORD
+                        tokentype = TT_KWORD
                         self.advance()
                         if self.current_char == 'm':
                             lexeme += self.current_char
@@ -168,7 +168,7 @@ class Lexer:
                                     self.advance()
                                     if self.current_char == 'e':
                                         lexeme += self.current_char
-                                        tokentype = TT_RWORD
+                                        tokentype = TT_KWORD
                                         self.advance()
 
             # boolean, build
@@ -210,7 +210,7 @@ class Lexer:
                             self.advance()
                             if self.current_char == 'd':
                                 lexeme += self.current_char
-                                tokentype = TT_RWORD
+                                tokentype = TT_KWORD
                                 self.advance()
 
             # character
@@ -261,7 +261,7 @@ class Lexer:
                         self.advance()
                         if self.current_char == 'e':
                             lexeme += self.current_char
-                            tokentype = TT_RWORD
+                            tokentype = TT_KWORD
                             self.advance()
                 # deci
                 elif self.current_char == 'e':
@@ -340,7 +340,7 @@ class Lexer:
                                 self.advance()
                                 if self.current_char == 'h':
                                     lexeme += self.current_char
-                                    tokentype = TT_RWORD
+                                    tokentype = TT_KWORD
                                     self.advance()
 
             # false                                    
@@ -381,7 +381,7 @@ class Lexer:
                         self.advance()
                         if self.current_char == 'e':
                             lexeme += self.current_char
-                            tokentype = TT_RWORD
+                            tokentype = TT_KWORD
                             self.advance()
                 # group
                 elif self.current_char == 'r':
@@ -395,7 +395,7 @@ class Lexer:
                             self.advance()
                             if self.current_char == 'p':
                                 lexeme += self.current_char
-                                tokentype = TT_RWORD
+                                tokentype = TT_KWORD
                                 self.advance()
 
             # more
@@ -410,7 +410,7 @@ class Lexer:
                         self.advance()
                         if self.current_char == 'e':
                             lexeme += self.current_char
-                            tokentype = TT_RWORD
+                            tokentype = TT_KWORD
                             self.advance()
 
             # NOT
@@ -437,7 +437,7 @@ class Lexer:
                         self.advance()
                         if self.current_char == 't':
                             lexeme += self.current_char
-                            tokentype = TT_RWORD
+                            tokentype = TT_KWORD
                             self.advance()
                 # not
                 elif self.current_char == 'o':
@@ -504,7 +504,7 @@ class Lexer:
                                 self.advance()
                                 if self.current_char == 't':
                                     lexeme += self.current_char
-                                    tokentype = TT_RWORD
+                                    tokentype = TT_KWORD
                                     self.advance()
                 # raising
                 elif self.current_char == 'a':
@@ -635,7 +635,7 @@ class Lexer:
                             self.advance()
                             if self.current_char =='e':
                                 lexeme += self.current_char
-                                tokentype = TT_RWORD
+                                tokentype = TT_KWORD
                                 self.advance()
 
             # other identifiers
@@ -902,6 +902,8 @@ class Lexer:
                 return Token(TT_DOT, char, self.pos.copy())
             elif char == ',':
                 return Token(TT_COMMA, char, self.pos.copy())
+            elif char == '?':
+                return Token(TT_QUESTION, char, self.pos.copy())
             elif char == ':':
                 return Token(TT_COLON, char, self.pos.copy())
             elif char == ';':
