@@ -58,23 +58,23 @@ ID              : ID (incre-expr|assign-expr)?
 list-expr       : LSQUARE (expr (COMMA expr)*)? RSQUARE
 
 ask-expr        : RWORD:ask LPAREN expr RPAREN (NWORD:do)? LSQUARE
-                  (expr SEMICOLON (RSQUARE | statements RSQUARE) askmore-expr|more-expr|SEMICOLON)
-                | NEWLINE statements RSQUARE (askmore-expr|more-expr|SEMICOLON)
+                  (expr SEMICOLON RSQUARE NEWLINE* askmore-expr|more-expr|SEMICOLON)
+                | NEWLINE statements RSQUARE NEWLINE* (askmore-expr|more-expr|SEMICOLON)
 
 askmore-expr    : RWORD:askmore LPAREN expr RPAREN (NWORD:do)? LSQUARE
-                  (expr SEMICOLON (RSQUARE | statements RSQUARE) askmore-expr|more-expr|SEMICOLON)
-                | NEWLINE statements RSQUARE (askmore-expr|more-expr|SEMICOLON)
+                  (expr SEMICOLON RSQUARE NEWLINE* askmore-expr|more-expr|SEMICOLON)
+                | NEWLINE statements RSQUARE NEWLINE* (askmore-expr|more-expr|SEMICOLON)
 
 more-expr       : RWORD:more LSQUARE 
-                  expr SEMICOLON (RSQUARE | statements RSQUARE)
+                  expr SEMICOLON RSQUARE
                 | NEWLINE statements RSQUARE
 
 repeat-expr     : RWORD:repeat LPAREN num-assign; var_name; expr RPAREN LSQUARE
-                  expr SEMICOLON (RSQUARE | statements RSQUARE)
+                  expr SEMICOLON RSQUARE
                 | (NEWLINE statements RSQUARE)
 
 while-expr      : RWORD:while LPAREN expr RPAREN (NWORD:do)? LSQUARE
-                  expr SEMICOLON (RSQUARE | statements RSQUARE)
+                  expr SEMICOLON RSQUARE
                 | (NEWLINE statements RSQUARE)
 
 incre-expr      : ID PLUS PLUS | ID MINUS MINUS
