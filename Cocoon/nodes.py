@@ -227,9 +227,7 @@ class AskNode:
             self.pos_end = self.more_case[0].pos_end
         else:
             self.pos_end = (self.cases[len(self.cases) - 1])[0].pos_end
-
-#!! hinde mo pa naaayos repr nito
-            
+       
     def __repr__(self, indent=0):
         node_str = f'type: "AskNode",\n'
         if_elif_cases_str = ''
