@@ -29,7 +29,7 @@ def tok_to_str(tokens):
     if(tokens != None):
         for tok in tokens:
             if tok.value == '\n':
-                tok_str += f'{tok.type: >20}    {r'\n'}\n'
+                tok_str += f'{tok.type: >20}    ' + '\\n\n'
             elif tok.value:
                 tok_str += f'{tok.type: >20}    {tok.value}\n'
             else:
