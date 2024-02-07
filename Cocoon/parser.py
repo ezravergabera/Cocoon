@@ -13,16 +13,6 @@ class Parser:
         self.update_current_tok()
         return self.current_tok
     
-    def backtrack(self):
-        self.token_idx -= 1
-        self.update_current_tok()
-        return self.current_tok
-    
-    def reverse(self, amount=1):
-        self.token_idx -= amount
-        self.update_current_tok()
-        return self.current_tok
-
     def update_current_tok(self):
         if self.token_idx < len(self.tokens):
             self.current_tok = self.tokens[self.token_idx]
@@ -33,10 +23,12 @@ class Parser:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Parse Error"))
+        print("End of log")
         return res
 
     # Production Rules
     def build_def(self):
+        print(f"Entered build_def. ({self.current_tok})")
         res = ParseResult()
 
         if not self.current_tok.matches(TT_KWORD, 'build'):
@@ -161,6 +153,7 @@ class Parser:
         return res.success(BuildDefNode(var_name_tok, arg_name_toks, node_to_return, True))
 
     def assign_expr(self):
+        print(f"Entered assign_expr. ({self.current_tok})")
         res = ParseResult()
 
         if self.current_tok.type == TT_ID:
@@ -187,6 +180,7 @@ class Parser:
             return res.success(IdAssignNode(var_name, expr))
 
     def incre_expr(self):
+        print(f"Entered incre_expr. ({self.current_tok})")
         res = ParseResult()
 
         if self.current_tok.type == TT_ID:
@@ -226,6 +220,7 @@ class Parser:
             return res.success(IncrementNode(var_name_tok, op_tok1, op_tok2))
         
     def while_expr(self):
+        print(f"Entered while_expr. ({self.current_tok})")
         res = ParseResult()
 
         if not self.current_tok.matches(TT_KWORD, 'while'):
@@ -304,6 +299,7 @@ class Parser:
         return res.success(WhileNode(cond_node, body_node, True))
 
     def repeat_expr(self):
+        print(f"Entered repeat_expr. ({self.current_tok})")
         res = ParseResult()
 
         if not self.current_tok.matches(TT_KWORD, 'repeat'):
@@ -442,6 +438,10 @@ class Parser:
         return res.success(RepeatNode(var_name, value_node, cond_node, iter_node, body_node, True))
     
     def ask_expr_cases(self, case_keyword):
+        if case_keyword == 'ask':
+            print(f"Entered ask-expr. ({self.current_tok})")
+        elif case_keyword == 'askmore':
+            print(f"Entered askmore-expr. ({self.current_tok})")
         res = ParseResult()
         cases = []
         more_case = None
@@ -574,6 +574,7 @@ class Parser:
         return self.ask_expr_cases('askmore')
     
     def more_expr(self):
+        print(f"Entered more-expr. ({self.current_tok})")
         res = ParseResult()
         more_case = None
 
@@ -630,6 +631,7 @@ class Parser:
         return res.success(more_case)
     
     def list_expr(self):
+        print(f"Entered list-expr. ({self.current_tok})")
         res = ParseResult()
         element_nodes = []
         pos_start = self.current_tok.pos_start.copy()
@@ -674,6 +676,7 @@ class Parser:
         return res.success(ListNode(element_nodes, pos_start, self.current_tok.pos_end.copy()))
 
     def atom(self):
+        print(f"Entered atom. ({self.current_tok})")
         res = ParseResult()
         tok = self.current_tok
             
@@ -725,6 +728,7 @@ class Parser:
             return res.success(DecimalNode(tok))
 
         elif tok.type == TT_ID or tok.matches(TT_RWORD, "empty") or tok.matches(TT_KWORD, "show") or tok.matches(TT_KWORD, "get"):
+            print(f"Entered ID. ({self.current_tok})")
             res.register_advancement()
             self.advance()
             pass_ = False
@@ -776,6 +780,7 @@ class Parser:
         return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected int, float, identifier, str, char, 'build', 'while', 'repeat', 'ask', 'true', 'false', 'ask', '+', '-', '(', or ,'['"))
             
     def call(self):
+        print(f"Entered call. ({self.current_tok})")
         res = ParseResult()
 
         atom = res.register(self.atom())
@@ -817,9 +822,11 @@ class Parser:
         return res.success(atom)
 
     def power(self):
+        print(f"Entered power. ({self.current_tok})")
         return self.arith_op(self.call, (TT_EXPO, ), self.factor)
 
     def factor(self):
+        print(f"Entered factor. ({self.current_tok})")
         res = ParseResult()
         tok = self.current_tok
 
@@ -833,12 +840,15 @@ class Parser:
         return self.power()
 
     def term(self):
+        print(f"Entered term. ({self.current_tok})")
         return self.arith_op(self.factor, (TT_MUL, TT_DIV, TT_INTDIV, TT_MOD))
 
     def arith_expr(self):
+        print(f"Entered arith-expr. ({self.current_tok})")
         return self.arith_op(self.term, (TT_PLUS, TT_MINUS))
 
     def rel_expr(self):
+        print(f"Entered rel-expr. ({self.current_tok})")
         res = ParseResult()
 
         if self.current_tok.type == TT_NOT:
@@ -860,6 +870,7 @@ class Parser:
         return res.success(node)
     
     def text_assign(self):
+        print(f"Entered text-assign. ({self.current_tok})")
         res = ParseResult()
 
         # text identifier = str
@@ -899,6 +910,7 @@ class Parser:
         return None
     
     def char_assign(self):
+        print(f"Entered char-assign. ({self.current_tok})")
         res = ParseResult()
 
         # character identifier = char
@@ -938,6 +950,7 @@ class Parser:
         return None
     
     def bool_assign(self):
+        print(f"Entered bool-assign. ({self.current_tok})")
         res = ParseResult()
 
         # boolean identifier = bool
@@ -977,6 +990,7 @@ class Parser:
         return None
     
     def  deci_assign(self):
+        print(f"Entered deci-assign. ({self.current_tok})")
         res = ParseResult()
 
         # decimal identifier = 1.9
@@ -1020,6 +1034,7 @@ class Parser:
         return None
 
     def num_assign(self):
+        print(f"Entered num-assign. ({self.current_tok})")
         res = ParseResult()
 
         # num identifier = expr
@@ -1060,6 +1075,7 @@ class Parser:
         return None
         
     def var_assigns(self):
+        print(f"Entered var-assigns. ({self.current_tok})")
         if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
             return self.num_assign()
         
@@ -1076,6 +1092,7 @@ class Parser:
             return self.text_assign()
 
     def text_declare(self):
+        print(f"Entered text-declare. ({self.current_tok})")
         res = ParseResult()
 
         node = res.register(self.base_declare())
@@ -1083,6 +1100,7 @@ class Parser:
         return res.success(node)
 
     def char_declare(self):
+        print(f"Entered char-declare. ({self.current_tok})")
         res = ParseResult()
 
         node = res.register(self.base_declare())
@@ -1090,6 +1108,7 @@ class Parser:
         return res.success(node)
 
     def bool_declare(self):
+        print(f"Entered bool-declare. ({self.current_tok})")
         res = ParseResult()
 
         node = res.register(self.base_declare())
@@ -1097,6 +1116,7 @@ class Parser:
         return res.success(node)
 
     def deci_declare(self):
+        print(f"Entered deci-declare. ({self.current_tok})")
         res = ParseResult()
 
         node = res.register(self.base_declare())
@@ -1104,6 +1124,7 @@ class Parser:
         return res.success(node)
 
     def num_declare(self):
+        print(f"Entered num-declare. ({self.current_tok})")
         res = ParseResult()
 
         node = res.register(self.base_declare())
@@ -1152,6 +1173,7 @@ class Parser:
         return res.success(None)
     
     def var_declares(self):
+        print(f"Entered var-declares. ({self.current_tok})")
         res = ParseResult()
 
         if self.current_tok.matches(TT_DTYPE, 'num') or self.current_tok.matches(TT_DTYPE, 'number'):
@@ -1183,6 +1205,7 @@ class Parser:
         return self.var_assigns()
 
     def expr(self):
+        print(f"Entered expr. ({self.current_tok})")
         res = ParseResult()
 
         while self.current_tok.type in (TT_COMMENT, TT_NEWLINE):
@@ -1208,6 +1231,7 @@ class Parser:
         return res.success(node)
     
     def statements(self):
+        print(f"Entered statements. ({self.current_tok})")
         res = ParseResult()
         statements = []
         pos_start = self.current_tok.pos_start.copy()
@@ -1268,7 +1292,6 @@ class Parser:
                 self.advance()
                 newline_count += 1
 
-        if res.error: return res
         return res.success(ListNode(
             statements,
             pos_start,
@@ -1276,6 +1299,7 @@ class Parser:
         ))
 
     def root(self):
+        print(f"Entered root. ({self.current_tok})")
         res = ParseResult()
         node = res.register(self.statements())
         if res.error: return res
@@ -1298,6 +1322,16 @@ class Parser:
             left = ArithOpNode(left, op_tok, right)
 
         return res.success(left)
+    
+    def backtrack(self):
+        self.token_idx -= 1
+        self.update_current_tok()
+        return self.current_tok
+    
+    def reverse(self, amount=1):
+        self.token_idx -= amount
+        self.update_current_tok()
+        return self.current_tok
     
 
 # Parse Result
