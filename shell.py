@@ -69,32 +69,32 @@ def debug_interpreter():
 def run_lexer(fn, text):
     # Lexer
     lexer = Lexer(fn, text)
-    tokens, error = lexer.make_tokens()
+    symboltable, error = lexer.make_tokens()
 
-    return tokens, error
+    return symboltable, error
 
 def run_parser(fn, text):
     # Lexer
     lexer = Lexer(fn, text)
-    tokens, error = lexer.make_tokens()
+    symboltable, error = lexer.make_tokens()
 
     # Parser
     if error: return None, error, None
 
-    parser = Parser(tokens)
+    parser = Parser(symboltable)
     ast = parser.parse()
 
-    return ast.node, ast.error, tokens
+    return ast.node, ast.error, symboltable
 
 def run_interpreter(fn, text):
     # Lexer
     lexer = Lexer(fn, text)
-    tokens, error = lexer.make_tokens()
+    symboltable, error = lexer.make_tokens()
 
     # Parser
     if error: return None, error, None
 
-    parser = Parser(tokens)
+    parser = Parser(symboltable)
     ast = parser.parse()
 
     # Interpreter
@@ -106,19 +106,19 @@ def run_interpreter(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
-    return result.value, result.error, tokens, ast.node
+    return result.value, result.error, symboltable, ast.node
 
 def run(fn, text):
     # Lexer
     lexer = Lexer(fn, text)
-    tokens, error = lexer.make_tokens()
+    symboltable, error = lexer.make_tokens()
 
     # return tokens, error
 
     # Parser
     if error: return None, error
 
-    parser = Parser(tokens)
+    parser = Parser(symboltable)
     ast = parser.parse()
 
     # return ast.node, ast.error
