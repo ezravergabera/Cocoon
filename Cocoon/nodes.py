@@ -360,13 +360,13 @@ class ListNode:
     def __repr__(self, indent=0):
         node_str = f'type: "ListNode",\n'
         if len(self.element_nodes) == 1:
-            elements_str = f'{" " * (indent + 4)}element: {self.element_nodes[0].__repr__(indent + 4)}\n'
+            elements_str = f'{" " * (indent + 4)}statement: {self.element_nodes[0].__repr__(indent + 4)}\n'
         else:
             elements_str = ''
             for idx, element in enumerate(self.element_nodes, start=1):
                 if idx == len(self.element_nodes):
-                    elements_str += f'{" " * (indent + 4)}element{idx}: {element.__repr__(indent + 4)}\n'
+                    elements_str += f'{" " * (indent + 4)}statement{idx}: {element.__repr__(indent + 4)}\n'
                 else:
-                    elements_str += f'{" " * (indent + 4)}element{idx}: {element.__repr__(indent + 4)},\n'
+                    elements_str += f'{" " * (indent + 4)}statement{idx}: {element.__repr__(indent + 4)},\n'
 
         return f'{{\n{" " * indent}{node_str}{elements_str}{" " * indent}}}'
