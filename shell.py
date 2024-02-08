@@ -79,7 +79,7 @@ def run_parser(fn, text):
     symboltable, error = lexer.make_tokens()
 
     # Parser
-    if error: return None, error, None
+    if error: return None, error, None, None
 
     parser = Parser(symboltable)
     ast = parser.parse()

@@ -1264,6 +1264,7 @@ class Parser:
         more_statements = True
 
         while True:
+            errors = False
             res.error = None
             res.advance_count = 0
             newline_count = 1
@@ -1279,8 +1280,9 @@ class Parser:
             if not more_statements: break
             statement = res.register(self.expr())
             if res.error:
+                errors = True
                 res.list_error(res.error)
-                while self.current_tok.type != TT_SEMICOLON:
+                while self.current_tok.type not in (TT_SEMICOLON, TT_NEWLINE) and self.current_tok.type != TT_EOF:
                     res.register_advancement()
                     self.advance()
                 
@@ -1296,7 +1298,7 @@ class Parser:
                 self.advance()
                 newline_count += 1
 
-            if self.current_tok.type != TT_SEMICOLON:
+            if self.current_tok.type != TT_SEMICOLON and not errors:
                 res.list_error(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected ';'"
@@ -1315,8 +1317,8 @@ class Parser:
     def root(self):
         print(f"Entered root. ({self.current_tok})")
         res = ParseResult()
-        node, errors = res.register_with_errors(self.statements())
-        return res.success_with_errors(node, errors)
+        result = res.register_with_errors(self.statements())
+        return res.success_with_errors(result.node, result.errors)
 
     def arith_op(self, func_a, ops, func_b=None):
         if func_b == None:
@@ -1369,7 +1371,9 @@ class ParseResult:
     
     def register_with_errors(self, res):
         self.advance_count += res.advance_count
-        return res.node, res.errors
+        self.node = res.node
+        self.errors = res.errors
+        return self
     
     def try_register(self, res):
         if res.error:
