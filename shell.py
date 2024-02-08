@@ -84,7 +84,7 @@ def run_parser(fn, text):
     parser = Parser(symboltable)
     ast = parser.parse()
 
-    return ast.node, ast.error, symboltable
+    return ast.node, ast.error, symboltable, ast.errors
 
 def run_interpreter(fn, text):
     # Lexer
@@ -106,7 +106,7 @@ def run_interpreter(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
-    return result.value, result.error, symboltable, ast.node
+    return result.value, result.error, symboltable, ast.node, ast.errors
 
 def run(fn, text):
     # Lexer

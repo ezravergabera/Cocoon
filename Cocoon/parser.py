@@ -19,7 +19,7 @@ class Parser:
 
     def parse(self):
         res = self.root()
-        if not res.error and self.current_tok.type != TT_EOF:
+        if not res.error and len(res.errors) <= 0 and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Parse Error"))
@@ -1241,15 +1241,20 @@ class Parser:
             self.advance()
 
         statement = res.register(self.expr())
-        if res.error: return res
-        statements.append(statement)
+        if res.error:
+            res.list_error(res.error)
+            while self.current_tok.type != TT_SEMICOLON:
+                    res.register_advancement()
+                    self.advance()
+        else:
+            statements.append(statement)
 
         while self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
         if self.current_tok.type != TT_SEMICOLON:
-            return res.failure(InvalidSyntaxError(
+            res.list_error(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected ';'"
             ))
@@ -1260,6 +1265,7 @@ class Parser:
         more_statements = True
 
         while True:
+            res.error = None
             res.advance_count = 0
             newline_count = 1
             while self.current_tok.type in (TT_NEWLINE, TT_COMMENT) and self.current_tok.type != TT_EOF:
@@ -1268,14 +1274,23 @@ class Parser:
                 newline_count += 1
             if newline_count == 0:
                 more_statements = False
+            if self.current_tok.type == TT_EOF:
+                more_statements = False
 
             if not more_statements: break
-            statement = res.try_register(self.expr())
-            if not statement:
-                self.reverse(res.to_reverse_count)
-                more_statements = False
+            statement = res.register(self.expr())
+            if res.error:
+                res.list_error(res.error)
+                while self.current_tok.type != TT_SEMICOLON:
+                    res.register_advancement()
+                    self.advance()
+                
+                if self.current_tok.type == TT_SEMICOLON:
+                    res.register_advancement()
+                    self.advance()
                 continue
-            statements.append(statement)
+            else:
+                statements.append(statement)
 
             while self.current_tok.type == TT_NEWLINE:
                 res.register_advancement()
@@ -1283,7 +1298,7 @@ class Parser:
                 newline_count += 1
 
             if self.current_tok.type != TT_SEMICOLON:
-                return res.failure(InvalidSyntaxError(
+                res.list_error(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     "Expected ';'"
                 ))
@@ -1292,18 +1307,17 @@ class Parser:
                 self.advance()
                 newline_count += 1
 
-        return res.success(ListNode(
+        return res.success_with_errors(ListNode(
             statements,
             pos_start,
             self.current_tok.pos_end.copy()
-        ))
+        ), res.errors)
 
     def root(self):
         print(f"Entered root. ({self.current_tok})")
         res = ParseResult()
-        node = res.register(self.statements())
-        if res.error: return res
-        return res.success(node)
+        node, errors = res.register_with_errors(self.statements())
+        return res.success_with_errors(node, errors)
 
     def arith_op(self, func_a, ops, func_b=None):
         if func_b == None:
@@ -1341,6 +1355,7 @@ class ParseResult:
         self.node = None
         self.advance_count = 0
         self.to_reverse_count = 0
+        self.errors = []
 
     def register_advancement(self):
         self.advance_count += 1
@@ -1353,6 +1368,10 @@ class ParseResult:
         if res.error: self.error = res.error
         return res.node
     
+    def register_with_errors(self, res):
+        self.advance_count += res.advance_count
+        return res.node, res.errors
+    
     def try_register(self, res):
         if res.error:
             self.to_reverse_count = self.advance_count
@@ -1362,8 +1381,16 @@ class ParseResult:
     def success(self, node):
         self.node = node
         return self
+    
+    def success_with_errors(self, node, errors):
+        self.node = node
+        self.errors = errors
+        return self
 
     def failure(self, error):
         if not self.error or self.advance_count == 0:
             self.error = error
         return self
+    
+    def list_error(self, error):
+        self.errors.append(error)

@@ -87,17 +87,17 @@ def run_pars():
             filename = fileName_label.get()
             text = textBox.get("1.0", END)
 
-            result, error, tokens = run_parser(filename, text)
+            result, error, tokens, errors = run_parser(filename, text)
 
             output_to_symbolTable(filename, tokens)
             output_to_syntacticTable(filename, result)
             print(result)
             textResult = print_ast(filename, result)
             textResult += '----------------------------------------\n\n'
-            if error:
+            if errors:
                 try:
                     errout = ""
-                    for err in error:
+                    for err in errors:
                         errout = errout + err.as_string() + "\n"
                         print(err.as_string())
                     textResult += errout
@@ -116,17 +116,17 @@ def run_pars():
             filename = "Unnamed KKUN File"
             text = textBox.get("1.0", END)
 
-            result, error, tokens = run_parser(filename, text)
+            result, error, tokens, errors = run_parser(filename, text)
 
             output_to_symbolTable(filename, tokens)
             output_to_syntacticTable(filename, result)
             print(result)
             textResult = print_ast(filename, result)
             textResult += '----------------------------------------\n\n'
-            if error:
+            if errors:
                 try:
                     errout = ""
-                    for err in error:
+                    for err in errors:
                         errout = errout + err.as_string() + "\n"
                         print(err.as_string())
                     textResult += errout
@@ -149,25 +149,31 @@ def run_interp():
             filename = fileName_label.get()
             text = textBox.get("1.0", END)
 
-            result, error, tokens, ast = run_interpreter(filename, text)
+            result, error, tokens, ast, ast_errors = run_interpreter(filename, text)
 
             output_to_symbolTable(filename, tokens)
             output_to_syntacticTable(filename, ast)
             #? output_to_interpreterLogFile(filename, result)
             print(result)
-            if not result:
+            textResult = ''
+            if not result or ast_errors:
                 textResult = "Parser Error\n"
             elif len(result.elements) == 1:
                 textResult = print_res(filename, repr(result.elements[0]))
             else:
                 textResult = print_res(filename, str(result))
             textResult += '----------------------------------------\n\n'
-            if error:
+            if error or ast_errors:
                 try:
                     errout = ""
-                    for err in error:
-                        errout = errout + err.as_string() + "\n"
-                        print(err.as_string())
+                    if error:
+                        for err in error:
+                            errout = errout + err.as_string() + "\n"
+                            print(err.as_string())
+                    if ast_errors:
+                        for errs in ast_errors:
+                            errout = errout + errs.as_string() + "\n"
+                            print(errs.as_string())
                     textResult += errout
                 except(TypeError):
                     errout = error.as_string()
@@ -184,25 +190,31 @@ def run_interp():
             filename = "Unnamed KKUN File"
             text = textBox.get("1.0", END)
 
-            result, error, tokens, ast = run_interpreter(filename, text)
+            result, error, tokens, ast, ast_errors = run_interpreter(filename, text)
 
             output_to_symbolTable(filename, tokens)
             output_to_syntacticTable(filename, ast)
             #? output_to_interpreterLogFile(filename, result)
             print(result)
-            if not result:
+            textResult = ''
+            if not result or ast_errors:
                 textResult = "Parser Error\n"
             elif len(result.elements) == 1:
                 textResult = print_res(filename, repr(result.elements[0]))
             else:
                 textResult = print_res(filename, str(result))
             textResult += '----------------------------------------\n\n'
-            if error:
+            if error or ast_errors:
                 try:
                     errout = ""
-                    for err in error:
-                        errout = errout + err.as_string() + "\n"
-                        print(err.as_string())
+                    if error:
+                        for err in error:
+                            errout = errout + err.as_string() + "\n"
+                            print(err.as_string())
+                    if ast_errors:
+                        for errs in ast_errors:
+                            errout = errout + errs.as_string() + "\n"
+                            print(errs.as_string())
                     textResult += errout
                 except(TypeError):
                     errout = error.as_string()
