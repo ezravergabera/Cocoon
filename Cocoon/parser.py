@@ -728,7 +728,6 @@ class Parser:
             return res.success(DecimalNode(tok))
 
         elif tok.type == TT_ID or tok.matches(TT_RWORD, "empty") or tok.matches(TT_KWORD, "show") or tok.matches(TT_KWORD, "get"):
-            print(f"Entered ID. ({self.current_tok})")
             res.register_advancement()
             self.advance()
             pass_ = False
